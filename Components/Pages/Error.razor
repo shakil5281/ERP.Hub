@@ -1,0 +1,74 @@
+@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>Error - ERPHub</PageTitle>
+
+<div class="min-h-[70vh] flex flex-col items-center justify-center p-6 text-center animate-fade-in font-body">
+    <div class="relative mb-6">
+        <!-- Decorative Glow Background -->
+        <div class="absolute inset-0 bg-red-500/5 blur-3xl rounded-full scale-150"></div>
+        
+        <!-- Icon/Illustration -->
+        <div class="relative bg-red-500 text-white w-24 h-24 rounded-full flex items-center justify-center shadow-xl mx-auto border-4 border-white">
+            <svg class="w-12 h-12 stroke-current stroke-2 stroke-linecap-round stroke-linejoin-round fill-none" viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+        </div>
+    </div>
+
+    <!-- Error Header -->
+    <span class="px-3 py-1 rounded-full text-xs font-extrabold text-red-600 bg-red-50/80 uppercase tracking-widest border border-red-200/50 mb-4 select-none">
+        System Error
+    </span>
+    
+    <h1 class="text-3xl font-extrabold text-zinc-950 tracking-tight mb-3 font-heading max-w-md">
+        Something went wrong
+    </h1>
+    
+    <p class="text-zinc-500 text-sm max-w-md leading-relaxed mb-6">
+        An unexpected error occurred while processing your request. Please try again, or contact support if the problem persists.
+    </p>
+
+    @if (_showDetails && !string.IsNullOrEmpty(_requestId))
+    {
+        <div class="w-full max-w-md bg-zinc-50 border border-zinc-200 rounded-lg p-4 mb-8 text-left text-xs font-mono text-zinc-600 break-all animate-slide-down">
+            <div class="font-semibold text-zinc-950 mb-1 border-b border-zinc-200/60 pb-1 uppercase tracking-wider text-[10px]">Request Identifier</div>
+            <div>@_requestId</div>
+        </div>
+    }
+    else
+    {
+        <!-- Collapsible Toggle -->
+        <button type="button" class="bg-transparent border-0 text-zinc-400 hover:text-zinc-600 text-xs font-semibold underline cursor-pointer mb-8 transition-colors" @onclick="ToggleDetails">
+            Show Technical Details
+        </button>
+    }
+
+    <!-- Navigation Options -->
+    <div class="flex gap-3 max-sm:flex-col justify-center w-full max-w-[280px]">
+        <a href="/" class="flex-1 inline-flex justify-center items-center gap-2 py-2.5 px-5 rounded-lg bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors shadow-md no-underline cursor-pointer">
+            <svg class="w-4 h-4 fill-none stroke-current stroke-2 stroke-linecap-round stroke-linejoin-round" viewBox="0 0 24 24">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            Back to Safety
+        </a>
+    </div>
+</div>
+
+@code {
+    private bool _showDetails = false;
+    private string? _requestId;
+
+    protected override void OnInitialized()
+    {
+        _requestId = Activity.Current?.Id ?? Guid.NewGuid().ToString();
+    }
+
+    private void ToggleDetails()
+    {
+        _showDetails = true;
+    }
+}

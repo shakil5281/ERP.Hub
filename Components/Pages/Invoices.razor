@@ -1,0 +1,278 @@
+@page "/invoices"
+
+<PageTitle>ERPHub - Sales Invoicing</PageTitle>
+
+<AuthorizeView Roles="Admin" Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+    <!-- Header Block -->
+    <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+        <div>
+            <h2 class="text-[22px] font-extrabold text-black tracking-tight">Sales & Billing</h2>
+            <p class="text-zinc-500 text-xs mt-0.5">Generate client invoices, track receivables, and calculate taxes in real-time.</p>
+        </div>
+    </div>
+
+    <!-- Active Invoice Designer Workspace -->
+    <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm mb-10 grid grid-cols-2 gap-8 max-xl:grid-cols-1">
+        <!-- Left Side: Interactive Editor -->
+        <div>
+            <h3 class="text-sm font-bold text-zinc-950 mb-5 border-b border-zinc-100 pb-2">Invoice Designer</h3>
+            
+            <EditForm Model="@_newInvoice" OnValidSubmit="SaveInvoice">
+                <DataAnnotationsValidator />
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1.5 mb-4">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Invoice Number</label>
+                        <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_newInvoice.InvoiceNumber" placeholder="e.g. INV-2026-005" />
+                        <ValidationMessage For="@(() => _newInvoice.InvoiceNumber)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                    </div>
+                    <div class="flex flex-col gap-1.5 mb-4">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Billing Status</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @bind="_newInvoice.Status">
+                            @foreach (var status in Enum.GetValues<InvoiceStatus>())
+                            {
+                                <option value="@status">@status</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5 mb-4">
+                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Client Organization</label>
+                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_newInvoice.ClientName" placeholder="Client company name" />
+                    <ValidationMessage For="@(() => _newInvoice.ClientName)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                </div>
+
+                <div class="flex flex-col gap-1.5 mb-4">
+                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Billing Email Address</label>
+                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_newInvoice.ClientEmail" placeholder="billing@client.com" />
+                    <ValidationMessage For="@(() => _newInvoice.ClientEmail)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                </div>
+
+                <!-- Custom DatePicker Component Integrations -->
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Issue Date</label>
+                        <DatePicker @bind-Value="_newInvoice.IssueDate" />
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Due Date</label>
+                        <DatePicker @bind-Value="_newInvoice.DueDate" />
+                    </div>
+                </div>
+
+                <!-- Item Builders -->
+                <div class="mt-6 mb-5">
+                    <div class="flex justify-between items-center mb-3">
+                        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Line Items</h4>
+                        <button type="button" class="inline-flex items-center py-1 px-2.5 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer" @onclick="AddLineItem">
+                            + Add Line
+                        </button>
+                    </div>
+
+                    <div class="flex flex-col gap-2.5">
+                        @for (int i = 0; i < _newInvoice.Items.Count; i++)
+                        {
+                            var index = i;
+                            var item = _newInvoice.Items[index];
+                            <div class="grid grid-cols-[3fr_1fr_1.2fr_auto] gap-2.5 items-center animate-fade-in">
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" placeholder="Description of services/goods" 
+                                       @bind="item.Description" />
+                                <input type="number" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" placeholder="Qty" min="1"
+                                       @bind="item.Quantity" />
+                                <input type="number" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" placeholder="Price" step="0.01" min="0.01"
+                                       @bind="item.UnitPrice" />
+                                <button type="button" class="py-2 px-3 rounded-md bg-red-500 hover:bg-red-600 text-white font-bold text-sm cursor-pointer transition-colors border-0" @onclick="() => RemoveLineItem(index)">
+                                    &times;
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 border-t border-zinc-100 pt-5 mb-5">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Tax Rate (%)</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @onchange="OnTaxRateChanged">
+                            <option value="0.00">0% Excluded</option>
+                            <option value="0.05">5% (General)</option>
+                            <option value="0.10">10% (Sales)</option>
+                            <option value="0.15" selected>15% (VAT Default)</option>
+                            <option value="0.20">20% (Premium)</option>
+                        </select>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Discount Amount ($)</label>
+                        <InputNumber class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_newInvoice.DiscountAmount" min="0" />
+                    </div>
+                </div>
+
+                <div class="flex gap-3 justify-end">
+                    <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer" @onclick="ResetForm">Clear Form</button>
+                    <button type="submit" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">Commit Invoice</button>
+                </div>
+            </EditForm>
+        </div>
+
+        <!-- Right Side: Live Premium PDF Preview -->
+        <div>
+            <h3 class="text-sm font-bold text-zinc-955 mb-5 border-b border-zinc-100 pb-2">Live Interactive Preview</h3>
+            
+            <div class="bg-white border border-zinc-200 rounded-lg p-8 shadow-sm box-border animate-fade-in max-sm:p-4">
+                <!-- Branding Header -->
+                <div class="grid grid-cols-2 gap-5 border-b border-zinc-200 pb-5 mb-5">
+                    <div>
+                        <div class="text-lg font-extrabold text-zinc-900">ERPHub LLC</div>
+                        <div class="text-[11px] text-zinc-500 leading-relaxed mt-1">
+                            100 Enterprise Way, Suite 400<br/>
+                            Silicon Valley, CA 94025<br/>
+                            billing@erphub.net
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <h2 class="text-2xl font-extrabold tracking-tight text-zinc-950">INVOICE</h2>
+                        <div class="text-xs font-bold text-indigo-600 mt-1">
+                            @(!string.IsNullOrEmpty(_newInvoice.InvoiceNumber) ? _newInvoice.InvoiceNumber : "INV-XXXX-XXX")
+                        </div>
+                        
+                        <!-- Paid / Sent Stamps -->
+                        <div class="mt-2.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold text-center capitalize
+                                         @(_newInvoice.Status == InvoiceStatus.Paid ? "bg-emerald-50 text-emerald-700" :
+                                           _newInvoice.Status == InvoiceStatus.Sent ? "bg-amber-50 text-amber-700" :
+                                           "bg-zinc-100 text-zinc-600")">
+                                @_newInvoice.Status
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Invoice Detail Metadata -->
+                <div class="grid grid-cols-2 gap-5 mb-6">
+                    <div>
+                        <div class="text-[10px] font-bold uppercase text-zinc-400">Bill To:</div>
+                        <div class="text-[13px] font-bold text-zinc-900 mt-1">
+                            @(!string.IsNullOrEmpty(_newInvoice.ClientName) ? _newInvoice.ClientName : "[Client Organization]")
+                        </div>
+                        <div class="text-[11.5px] text-zinc-500 mt-0.5">
+                            @(!string.IsNullOrEmpty(_newInvoice.ClientEmail) ? _newInvoice.ClientEmail : "client@email.com")
+                        </div>
+                    </div>
+                    <div class="text-right text-[11.5px] text-zinc-600 flex flex-col gap-0.5 justify-end">
+                        <div><strong>Issued:</strong> @_newInvoice.IssueDate.ToShortDateString()</div>
+                        <div><strong class="text-red-500">Due:</strong> @_newInvoice.DueDate.ToShortDateString()</div>
+                    </div>
+                </div>
+
+                <!-- Invoice items list -->
+                <table class="w-full border-collapse mb-5">
+                    <thead>
+                        <tr class="border-b border-zinc-200">
+                            <th class="text-[11px] font-bold text-zinc-400 uppercase py-2 text-left">Description</th>
+                            <th class="text-[11px] font-bold text-zinc-400 uppercase py-2 text-center w-12">Qty</th>
+                            <th class="text-[11px] font-bold text-zinc-400 uppercase py-2 text-right w-24">Unit Price</th>
+                            <th class="text-[11px] font-bold text-zinc-400 uppercase py-2 text-right w-24">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_newInvoice.Items.Any())
+                        {
+                            @foreach (var item in _newInvoice.Items)
+                            {
+                                <tr class="border-b border-zinc-100">
+                                    <td class="py-2.5 text-xs text-zinc-800">@(!string.IsNullOrEmpty(item.Description) ? item.Description : "[Empty Item Line]")</td>
+                                    <td class="py-2.5 text-xs text-zinc-800 text-center">@item.Quantity</td>
+                                    <td class="py-2.5 text-xs text-zinc-800 text-right">@item.UnitPrice.ToString("C")</td>
+                                    <td class="py-2.5 text-xs text-zinc-950 text-right font-bold">@item.TotalPrice.ToString("C")</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="4" class="text-center text-zinc-400 py-6 text-xs">
+                                    No line items added yet. Click "+ Add Line" to build.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+
+                <!-- Summary calculations -->
+                <div class="flex flex-col gap-1.5 items-end mt-5 border-t border-zinc-200 pt-4">
+                    <div class="flex justify-between w-[220px] text-xs text-zinc-500">
+                        <span>Subtotal:</span>
+                        <span class="text-zinc-900 font-medium">@_newInvoice.SubTotal.ToString("C")</span>
+                    </div>
+                    <div class="flex justify-between w-[220px] text-xs text-zinc-500">
+                        <span>Tax (@((_newInvoice.TaxRate * 100).ToString("F0"))%):</span>
+                        <span class="text-zinc-900 font-medium">@_newInvoice.TaxAmount.ToString("C")</span>
+                    </div>
+                    @if (_newInvoice.DiscountAmount > 0)
+                    {
+                        <div class="flex justify-between w-[220px] text-xs text-red-600">
+                            <span>Discount:</span>
+                            <span class="font-medium">-@_newInvoice.DiscountAmount.ToString("C")</span>
+                        </div>
+                    }
+                    <div class="flex justify-between w-[220px] text-sm text-zinc-900 border-t border-zinc-100 pt-1.5 mt-1 font-extrabold">
+                        <span>Grand Total:</span>
+                        <span class="text-black text-base">@_newInvoice.GrandTotal.ToString("C")</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Directory of Invoices using DataTable component -->
+    <DataTable TItem="Invoice" Items="_invoicesList">
+        <TabsContent>
+            <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">All Ledgers</button>
+        </TabsContent>
+        <HeaderTemplate>
+            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Invoice No</th>
+            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Recipient Organization</th>
+            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Billing Contact</th>
+            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Dates (Issue / Due)</th>
+            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Grand Total</th>
+            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Ledger Status</th>
+        </HeaderTemplate>
+        <RowTemplate Context="inv">
+            <td class="p-2.5 px-4 text-zinc-900 font-bold">@inv.InvoiceNumber</td>
+            <td class="p-2.5 px-4 text-zinc-900 font-semibold">@inv.ClientName</td>
+            <td class="p-2.5 px-4"><code class="text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded text-xs">@inv.ClientEmail</code></td>
+            <td class="p-2.5 px-4 text-zinc-600 text-xs">
+                <div>@inv.IssueDate.ToShortDateString()</div>
+                <div class="text-[10px] text-zinc-400 mt-0.5">Due: @inv.DueDate.ToShortDateString()</div>
+            </td>
+            <td class="p-2.5 px-4 text-zinc-900 font-bold">@inv.GrandTotal.ToString("C")</td>
+            <td class="p-2.5 px-4">
+                @if (inv.Status == InvoiceStatus.Paid)
+                {
+                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-green-700 border-green-200">
+                        <span class="text-green-600 font-bold text-[10px] mr-0.5">✓</span>
+                        Done
+                    </span>
+                }
+                else
+                {
+                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-zinc-600 border-zinc-200">
+                        <span class="w-1.5 h-1.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></span>
+                        In Process
+                    </span>
+                }
+            </td>
+        </RowTemplate>
+        <RowActionsContent Context="inv">
+            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => CopyToDesigner(inv)">Load</button>
+            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => DeleteInvoice(inv.Id)">Delete</button>
+        </RowActionsContent>
+    </DataTable>
+</div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>

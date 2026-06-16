@@ -1,0 +1,153 @@
+@page "/ot/daily-summary"
+@using ERPHub.Components.Common
+
+<PageTitle>ERPHub - Daily OT Summary</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight">Daily Overtime Summary Report</h2>
+                    <p class="text-zinc-500 text-sm mt-0.5">Summary of total overtime distributions, cost indicators, and budget compliance metrics.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="inline-flex items-center py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer">
+                        Filter Range
+                    </button>
+                    <button class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
+                        Print Summary
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats highlight cards -->
+            <div class="grid grid-cols-4 gap-6 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Total Overtime Hours</span>
+                        <span class="text-sm font-semibold text-zinc-955">142.5 Hrs</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Average OT / Employee</span>
+                        <span class="text-sm font-semibold text-zinc-955">2.1 Hrs</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Total Cost Accrued</span>
+                        <span class="text-sm font-semibold text-emerald-600">$2,850.00</span>
+                    </div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
+                    <div class="flex flex-col">
+                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Budget Allocation Status</span>
+                        <span class="text-sm font-semibold text-amber-500">78% Used</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget vs Actual Visual Bars -->
+            <div class="grid grid-cols-3 gap-6 mb-6 max-xl:grid-cols-1">
+                <!-- OT Budget Progress -->
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm col-span-2 max-xl:col-span-1">
+                    <h3 class="text-sm font-bold text-zinc-950 mb-5">Department Overtime Cost vs Budget Limit</h3>
+                    <div class="flex flex-col gap-4">
+                        @foreach (var dept in _departments)
+                        {
+                            <div>
+                                <div class="flex justify-between text-xs font-semibold text-zinc-700 mb-1">
+                                    <span>@dept.Name (Limit: @dept.BudgetLimit.ToString("C"))</span>
+                                    <span>@dept.CostAccrued.ToString("C") (@((int)(dept.CostAccrued / dept.BudgetLimit * 100))%)</span>
+                                </div>
+                                <div class="w-full bg-zinc-150 h-2.5 rounded-full overflow-hidden">
+                                    <div class="h-full rounded-full transition-all duration-500
+                                                @((dept.CostAccrued / dept.BudgetLimit) > 0.9m ? "bg-red-500" :
+                                                  (dept.CostAccrued / dept.BudgetLimit) > 0.7m ? "bg-amber-500" :
+                                                  "bg-emerald-500")" 
+                                         style="width: @(Math.Min(100, (int)(dept.CostAccrued / dept.BudgetLimit * 100)))%;"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Warnings and Notifications Card -->
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm col-span-1">
+                    <h3 class="text-sm font-bold text-zinc-955 mb-4">Budget Risk Audits</h3>
+                    <div class="flex flex-col gap-3.5">
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex gap-2 text-red-700 text-sm font-semibold">
+                            <span class="font-extrabold">🚨 Production Alert:</span>
+                            <span>Cost has reached 92% of the budget threshold.</span>
+                        </div>
+                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex gap-2 text-emerald-700 text-sm font-semibold">
+                            <span class="font-extrabold">✓ Finance:</span>
+                            <span>OT hours are perfectly inside the standard budget.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DataTable OT Summary Details -->
+            <DataTable TItem="DepartmentOtSummary" Items="_departments">
+                <TabsContent>
+                    <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">Overtime Metrics Table</button>
+                </TabsContent>
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">OT Headcount</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total OT Hours</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Cost Accrued</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Budget Limit</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="dept">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@dept.Name</td>
+                    <td class="p-2.5 px-4 text-zinc-800 font-semibold">@dept.OtHeadcount</td>
+                    <td class="p-2.5 px-4 text-zinc-800 font-bold">@dept.TotalOtHours hrs</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-extrabold">@dept.CostAccrued.ToString("C")</td>
+                    <td class="p-2.5 px-4 text-zinc-600">@dept.BudgetLimit.ToString("C")</td>
+                    <td class="p-2.5 px-4">
+                        @if ((dept.CostAccrued / dept.BudgetLimit) > 0.9m)
+                        {
+                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                Over Budget Risk
+                            </span>
+                        }
+                        else if ((dept.CostAccrued / dept.BudgetLimit) > 0.7m)
+                        {
+                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                Warning
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Safe
+                            </span>
+                        }
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<DepartmentOtSummary> _departments = new()
+    {
+        new("IT & Development", 3, 12.5, 250.00m, 500.00m),
+        new("Human Resources", 1, 4.0, 80.00m, 200.00m),
+        new("Finance & Accounts", 1, 3.0, 90.00m, 300.00m),
+        new("Production", 12, 120.0, 2400.00m, 2600.00m),
+        new("Marketing & Sales", 1, 3.0, 30.00m, 150.00m)
+    };
+
+    public record DepartmentOtSummary(string Name, int OtHeadcount, double TotalOtHours, decimal CostAccrued, decimal BudgetLimit);
+}

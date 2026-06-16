@@ -1,0 +1,72 @@
+@page "/payroll/process"
+
+<PageTitle>ERPHub - Salary Process</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Salary Process Wizard</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Execute direct deposits, reconcile pay cycles, and authorize monthly salary transfers.</p>
+                </div>
+            </div>
+
+            <!-- Payroll Process Steps DataTable -->
+            <DataTable TItem="ProcessStep" Items="_steps">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-12">Step</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Phase Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Description</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Dependency</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="step">
+                    <td class="p-2.5 px-4 text-center">
+                        <span class="bg-zinc-900 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold font-heading">@step.StepNo</span>
+                    </td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-heading">@step.PhaseName</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@step.Description</td>
+                    <td class="p-2.5 px-4 text-zinc-500 text-xs">@step.Dependency</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @step.BadgeClass">@step.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+
+            <!-- Action Panel -->
+            <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6 flex justify-between items-center mt-6 max-sm:flex-col max-sm:items-stretch gap-4">
+                <div>
+                    <h4 class="font-bold text-sm text-zinc-900 font-heading">Run Final Payroll Batch</h4>
+                    <p class="text-xs text-zinc-500 mt-0.5 font-body">This will lock the payroll cycle for June 2026 and generate PDF pay stubs.</p>
+                </div>
+                <button type="button" class="bg-black text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer max-sm:text-center">
+                    Execute Batch
+                </button>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class ProcessStep
+    {
+        public int StepNo { get; set; }
+        public string PhaseName { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Dependency { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<ProcessStep> _steps = new()
+    {
+        new ProcessStep { StepNo = 1, PhaseName = "Sync Time Sheets", Description = "Gather and compile all daily attendance logs, overtime hours, and night bills.", Dependency = "None", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
+        new ProcessStep { StepNo = 2, PhaseName = "Deduction & Tax Review", Description = "Apply advanced loans, tax rate tiers, and unpaid leave deduction flags.", Dependency = "Step 1", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
+        new ProcessStep { StepNo = 3, PhaseName = "Release Direct Deposit", Description = "Commit the finalized register and transfer salary payouts to banking API.", Dependency = "Step 2", Status = "Ready", BadgeClass = "bg-amber-50 text-amber-700" }
+    };
+}

@@ -1,0 +1,62 @@
+@page "/payroll/advance"
+
+<PageTitle>ERPHub - Salary Advances</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Salary Advances</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage employee loans, salary advances, and monthly amortization schedules.</p>
+                </div>
+            </div>
+
+            <!-- Advance Loans DataTable -->
+            <DataTable TItem="SalaryAdvance" Items="_advances">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Loan Amount</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Installments</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Monthly Deduction</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total Paid</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Remaining</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="adv">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@adv.EmployeeName</td>
+                    <td class="p-2.5 px-4 text-zinc-800 font-semibold font-body">@adv.LoanAmount</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-center font-medium font-body">@adv.Installments</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@adv.MonthlyDeduction</td>
+                    <td class="p-2.5 px-4 text-green-600 font-bold font-body">@adv.TotalPaid</td>
+                    <td class="p-2.5 px-4 text-red-600 font-bold font-body">@adv.Remaining</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100 font-semibold">@adv.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class SalaryAdvance
+    {
+        public string EmployeeName { get; set; } = string.Empty;
+        public string LoanAmount { get; set; } = string.Empty;
+        public string Installments { get; set; } = string.Empty;
+        public string MonthlyDeduction { get; set; } = string.Empty;
+        public string TotalPaid { get; set; } = string.Empty;
+        public string Remaining { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+    }
+
+    private List<SalaryAdvance> _advances = new()
+    {
+        new SalaryAdvance { EmployeeName = "Michael Scott", LoanAmount = "$5,000.00", Installments = "10 Months", MonthlyDeduction = "$500.00", TotalPaid = "$2,000.00", Remaining = "$3,000.00", Status = "Repaying" }
+    };
+}

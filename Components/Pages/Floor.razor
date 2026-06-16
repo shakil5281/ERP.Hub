@@ -1,0 +1,53 @@
+@page "/floor"
+
+<PageTitle>ERPHub - Floor & Workspace</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Floor & Workspace</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Map out department desks, cubicles, and building wings.</p>
+                </div>
+            </div>
+
+            <!-- Floor Mapping DataTable -->
+            <DataTable TItem="FloorMap" Items="_floors">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Floor Level</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Assigned Wing</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Description</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Desks capacity</th>
+                </HeaderTemplate>
+                <RowTemplate Context="fl">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@fl.Level</td>
+                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold">@fl.Wing</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@fl.Description</td>
+                    <td class="p-2.5 px-4 text-zinc-850 text-xs font-semibold">@fl.Capacity</td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class FloorMap
+    {
+        public string Level { get; set; } = string.Empty;
+        public string Wing { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string Capacity { get; set; } = string.Empty;
+    }
+
+    private List<FloorMap> _floors = new()
+    {
+        new FloorMap { Level = "Level 1", Wing = "Executive Suites & Admin", Description = "Houses the management, HR departments, boardrooms, and front-desk reception.", Capacity = "15 / 20 Desks Filled" },
+        new FloorMap { Level = "Level 2", Wing = "Engineering & Product", Description = "Assigned to engineering, QA testing rooms, research benches, and open collaborative zones.", Capacity = "45 / 50 Desks Filled" },
+        new FloorMap { Level = "Level 3", Wing = "Sales, Support & Cafe", Description = "Dedicated to customer service desks, marketing cubicles, cafeteria, and wellness spaces.", Capacity = "22 / 40 Desks Filled" }
+    };
+}

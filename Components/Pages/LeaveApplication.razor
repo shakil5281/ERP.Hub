@@ -1,0 +1,103 @@
+@page "/leave/application"
+
+<PageTitle>ERPHub - Leave Applications</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Leave Applications</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Submit new time-off requests and track the approval status of current applications.</p>
+                </div>
+            </div>
+
+            <!-- Main Layout: Form Left, History Right -->
+            <div class="grid grid-cols-3 gap-6 mb-6 max-xl:grid-cols-1">
+                <!-- Submission Form -->
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm col-span-1">
+                    <h3 class="text-sm font-bold text-zinc-955 mb-5 border-b border-zinc-100 pb-2 font-heading">Submit Leave Request</h3>
+                    
+                    <form class="flex flex-col gap-4">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Leave Category</label>
+                            <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer">
+                                <option value="annual">Annual Leave</option>
+                                <option value="medical">Medical Leave</option>
+                                <option value="casual">Casual Leave</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Start Date</label>
+                                <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer" />
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">End Date</label>
+                                <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer" />
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Reason / Remarks</label>
+                            <textarea class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" rows="3" placeholder="Briefly explain the reason for time-off..."></textarea>
+                        </div>
+                        <button type="button" class="w-full bg-black text-white text-xs font-semibold py-2.5 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer text-center">
+                            Submit Request
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Application History DataTable -->
+                <div class="col-span-2 max-xl:col-span-1">
+                    <DataTable TItem="LeaveRequest" Items="_applications">
+                        <HeaderTemplate>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Type</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Dates</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Days</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Reason</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Approver</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                        </HeaderTemplate>
+                        <RowTemplate Context="app">
+                            <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@app.Type</td>
+                            <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">
+                                <div>@app.StartDate</div>
+                                <div class="text-[10px] text-zinc-400 mt-0.5">to @app.EndDate</div>
+                            </td>
+                            <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold font-body">@app.TotalDays</td>
+                            <td class="p-2.5 px-4 text-zinc-700 text-xs">@app.Reason</td>
+                            <td class="p-2.5 px-4 text-zinc-600 text-xs font-heading">@app.Approver</td>
+                            <td class="p-2.5 px-4">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @app.BadgeClass">@app.Status</span>
+                            </td>
+                        </RowTemplate>
+                    </DataTable>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class LeaveRequest
+    {
+        public string Type { get; set; } = string.Empty;
+        public string StartDate { get; set; } = string.Empty;
+        public string EndDate { get; set; } = string.Empty;
+        public int TotalDays { get; set; }
+        public string Reason { get; set; } = string.Empty;
+        public string Approver { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<LeaveRequest> _applications = new()
+    {
+        new LeaveRequest { Type = "Annual Leave", StartDate = "2026-07-01", EndDate = "2026-07-05", TotalDays = 5, Reason = "Family vacation", Approver = "John Smith (HR)", Status = "Pending", BadgeClass = "bg-amber-50 text-amber-700 border border-amber-100" },
+        new LeaveRequest { Type = "Medical Leave", StartDate = "2026-05-12", EndDate = "2026-05-13", TotalDays = 2, Reason = "Dental extraction checkup", Approver = "System Auto-Approval", Status = "Approved", BadgeClass = "bg-green-50 text-green-700 border border-green-100" }
+    };
+}

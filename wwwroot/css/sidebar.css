@@ -1,0 +1,481 @@
+@font-face {
+    font-family: 'SutonnyMJ';
+    src: local('SutonnyMJ'), local('Sutonny MJ'), local('Sutonny-MJ'), local('Sutonny'), local('Sutonny Regular'), local('Sutonny-Regular'), local('SutonnyMJ-Regular'),
+         url("https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.woff2") format("woff2"),
+         url("https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.woff") format("woff"),
+         url("https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.ttf") format("truetype");
+}
+
+/* --- ERPHub Custom Modern Sidebar Stylesheet --- */
+
+/* Sidebar Layout Panel */
+.sidebar-panel {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100vh;
+    background-color: #ffffff;
+    border-right: 1px solid #e2e8f0; /* Slate 200 */
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    z-index: 1000;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+/* Brand Section */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 0 4px;
+}
+
+.brand-logo {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #000000;
+    border-radius: 50%;
+    position: relative;
+    box-sizing: border-box;
+}
+.brand-logo::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 6px;
+    height: 6px;
+    background: #000000;
+    border-radius: 50%;
+}
+
+.brand-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    color: #000000;
+}
+
+/* Action Rows (Quick Create + Mail) */
+.sidebar-actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.action-quick-create {
+    flex: 1;
+    background: #000000;
+    color: #ffffff;
+    border: none;
+    border-radius: 9999px;
+    padding: 10px 16px;
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+.action-quick-create:hover {
+    background: #27272a; /* Zinc 800 */
+}
+
+.action-mail {
+    width: 38px;
+    height: 38px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #09090b;
+    transition: background-color 0.2s ease;
+}
+.action-mail:hover {
+    background: #f4f4f5; /* Zinc 100 */
+}
+
+/* Scrollable Links List */
+.sidebar-nav-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 0;
+}
+
+/* Flat Link list */
+.sidebar-links {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-link-item a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    color: #09090b;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 500;
+    font-size: 13.5px;
+    transition: background-color 0.2s ease, font-weight 0.2s ease;
+}
+.sidebar-link-item a:hover {
+    background-color: #f4f4f5; /* Zinc 100 */
+}
+
+/* Active links custom indicators */
+.sidebar-link-item a.active {
+    font-weight: 700;
+    background-color: #f4f4f5;
+}
+
+.sidebar-link-item a svg {
+    width: 16px;
+    height: 16px;
+    color: #71717a; /* Zinc 500 */
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: color 0.2s ease, stroke 0.2s ease;
+}
+.sidebar-link-item a:hover svg,
+.sidebar-link-item a.active svg {
+    color: #000000;
+    stroke: #000000;
+}
+
+/* Collapsible Folder Sections */
+.sidebar-folder {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.sidebar-folder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    color: #09090b;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 13.5px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+.sidebar-folder-header:hover {
+    background-color: #f4f4f5;
+}
+
+.sidebar-folder-header.active {
+    background-color: #f4f4f5;
+    font-weight: 700;
+    color: #09090b;
+}
+
+.sidebar-folder-header.active .sidebar-folder-title span {
+    color: #09090b;
+}
+
+.sidebar-folder-header.active .sidebar-folder-arrow {
+    fill: #09090b;
+}
+
+.sidebar-folder-header:hover svg,
+.sidebar-folder-header.active svg {
+    color: #000000;
+    stroke: #000000;
+}
+
+.sidebar-folder-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sidebar-folder-title span {
+    font-size: 11px;
+    font-weight: 700;
+    color: #71717a;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.sidebar-folder-arrow {
+    width: 14px;
+    height: 14px;
+    fill: #71717a;
+    transition: transform 0.25s ease;
+}
+.sidebar-folder.expanded .sidebar-folder-arrow {
+    transform: rotate(180deg);
+}
+
+.sidebar-folder-items {
+    list-style: none;
+    padding-left: 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 0;
+}
+
+.sidebar-folder-items.hidden {
+    display: none !important;
+}
+
+/* Bottom Profile Section and Card */
+.sidebar-footer {
+    padding: 12px 4px 0 4px;
+    border-top: 1px solid #e2e8f0;
+    background: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: relative;
+    margin-top: auto;
+}
+
+.profile-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.profile-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e4e4e7;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.profile-avatar svg {
+    width: 20px;
+    height: 20px;
+    fill: #71717a;
+}
+
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.3;
+}
+.profile-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #09090b;
+}
+.profile-email {
+    font-size: 11.5px;
+    color: #71717a;
+}
+
+.profile-options-trigger {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #71717a;
+    padding: 4px;
+    border-radius: 4px;
+    display: inline-flex;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+.profile-options-trigger:hover {
+    background-color: #f4f4f5;
+    color: #000000;
+}
+
+/* Smooth Slide-in Profile Dropdown Popover */
+.profile-popover-menu {
+    position: absolute;
+    bottom: 50px;
+    left: 0;
+    width: 200px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1050;
+    animation: slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.popover-header {
+    padding: 8px;
+}
+.popover-user-name {
+    font-weight: 700;
+    font-size: 13px;
+    color: #09090b;
+    margin: 0;
+}
+.popover-user-email {
+    font-size: 11px;
+    color: #71717a;
+    margin: 0;
+}
+
+.popover-divider {
+    height: 1px;
+    background-color: #f1f5f9;
+    margin: 6px 0;
+}
+
+.popover-item {
+    padding: 8px;
+    border-radius: 6px;
+    color: #09090b;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.15s ease;
+}
+.popover-item:hover {
+    background-color: #f4f4f5;
+}
+.popover-item.text-red {
+    color: #ef4444;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Drawer Backdrp Overlay */
+.sidebar-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    z-index: 950;
+}
+.sidebar-backdrop.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Responsive Viewports Styles */
+@media (min-width: 768px) {
+    .sidebar-panel {
+        transform: translateX(0) !important; /* Always visible on desktop */
+    }
+    .sidebar-backdrop {
+        display: none !important;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .sidebar-panel {
+        transform: translateX(-100%); /* Hidden off-screen on mobile */
+    }
+    .sidebar-panel.open {
+        transform: translateX(0); /* Slides in when active */
+        box-shadow: 10px 0 30px -5px rgba(0,0,0,0.1);
+    }
+}
+/* Force all elements inside the data table to use text-sm font size */
+.data-table-base,
+.data-table-base th, 
+.data-table-base td, 
+.data-table-base span, 
+.data-table-base div, 
+.data-table-base p,
+.data-table-base code,
+.data-table-base a {
+    font-size: 0.875rem !important; /* 14px / text-sm */
+}
+
+/* Prevent text wrapping in header and data cells to enable clean horizontal scroll */
+.data-table-base th, 
+.data-table-base td {
+    white-space: nowrap !important;
+}
+
+
+/* Custom font class for SutonnyMJ (overridden to use normal font and sm size) */
+.font-sutonnymj {
+    font-family: inherit !important;
+    font-size: 0.875rem !important;
+    font-weight: normal !important;
+}
+
+/* Mail & Notifications Popover Dropdown */
+.mail-popover-menu {
+    position: absolute;
+    top: 45px;
+    left: 0;
+    width: 290px;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.05);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1050;
+    box-sizing: border-box;
+    animation: slideUpFade 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.popover-items-list {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.popover-note-item {
+    padding: 10px;
+    border-radius: 6px;
+    border-bottom: 1px solid #f8fafc;
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+.popover-note-item:hover {
+    background-color: #f8fafc;
+}
+.popover-note-item:last-child {
+    border-bottom: none;
+}

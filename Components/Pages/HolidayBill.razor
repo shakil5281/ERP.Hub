@@ -1,0 +1,62 @@
+@page "/payroll/holiday-bill"
+
+<PageTitle>ERPHub - Holiday Work Bills</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Holiday Duty Billing</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage and calculate employee overtime compensations for public holiday shifts.</p>
+                </div>
+            </div>
+
+            <!-- Holiday Bills DataTable -->
+            <DataTable TItem="HolidayWorkClaim" Items="_claims">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Holiday Date</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Holiday Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Hours Logged</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Payout Rate</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total Bill</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="claim">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@claim.EmployeeName</td>
+                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@claim.HolidayDate</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@claim.HolidayName</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold font-body">@claim.HoursLogged</td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">@claim.PayoutRate</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@claim.TotalBill</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@claim.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class HolidayWorkClaim
+    {
+        public string EmployeeName { get; set; } = string.Empty;
+        public string HolidayDate { get; set; } = string.Empty;
+        public string HolidayName { get; set; } = string.Empty;
+        public string HoursLogged { get; set; } = string.Empty;
+        public string PayoutRate { get; set; } = string.Empty;
+        public string TotalBill { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+    }
+
+    private List<HolidayWorkClaim> _claims = new()
+    {
+        new HolidayWorkClaim { EmployeeName = "Steve Rogers", HolidayDate = "2026-05-25", HolidayName = "Memorial Day", HoursLogged = "8 hrs", PayoutRate = "$50.00 / hr", TotalBill = "$400.00", Status = "Approved" }
+    };
+}

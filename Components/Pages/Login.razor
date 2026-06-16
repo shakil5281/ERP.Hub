@@ -1,0 +1,170 @@
+@page "/login"
+@layout EmptyLayout
+@using ERPHub.Models
+@using ERPHub.Services
+@using ERPHub.Data
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Authorization
+@inject ErpDbContext DbContext
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager NavigationManager
+
+<PageTitle>ERPHub - Sign In</PageTitle>
+
+<div class="min-h-screen flex items-center justify-center bg-zinc-950 font-body p-4 relative overflow-hidden select-none">
+    <!-- Background subtle lights/blobs -->
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px]"></div>
+
+    <div class="w-full max-w-[400px] bg-zinc-900/70 border border-zinc-800 backdrop-blur-md rounded-2xl p-8 shadow-2xl relative z-10 animate-fade-in flex flex-col gap-6">
+        <!-- Logo Header -->
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-indigo-500 to-emerald-500 text-white font-extrabold text-xl shadow-lg shadow-indigo-500/20 mb-3 select-none">
+                EH
+            </div>
+            <h1 class="text-xl font-black text-white tracking-tight">Welcome to ERPHub</h1>
+            <p class="text-zinc-400 text-xs mt-1">Please sign in to access your dashboard</p>
+        </div>
+
+        @if (!string.IsNullOrEmpty(_errorMessage))
+        {
+            <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 px-4 flex items-center gap-2.5 text-red-400 text-xs font-semibold animate-fade-in">
+                <svg class="w-4 h-4 text-red-400 flex-shrink-0 fill-current" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                </svg>
+                <span>@_errorMessage</span>
+            </div>
+        }
+
+        <form @onsubmit="HandleLogin" class="flex flex-col gap-4">
+            <!-- Username Input -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Username</label>
+                <div class="relative flex items-center">
+                    <svg class="absolute left-3.5 w-4 h-4 text-zinc-500 fill-current" viewBox="0 0 24 24">
+                        <path d="M7.5 6.5C7.5 8.981 9.519 11 12 11s4.5-2.019 4.5-4.5S14.481 2 12 2 7.5 4.019 7.5 6.5zM20 21h1v-1c0-3.859-3.141-7-7-7h-4c-3.86 0-7 3.141-7 7v1h17z"/>
+                    </svg>
+                    <input type="text" 
+                           class="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 pl-11 text-zinc-100 font-body text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-zinc-600" 
+                           placeholder="Enter username" 
+                           @bind="_username" 
+                           required />
+                </div>
+            </div>
+
+            <!-- Password Input -->
+            <div class="flex flex-col gap-1.5">
+                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Password</label>
+                <div class="relative flex items-center">
+                    <svg class="absolute left-3.5 w-4 h-4 text-zinc-500 fill-current" viewBox="0 0 24 24">
+                        <path d="M12 2C9.24 2 7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5zm-3 5c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V7zm3 9c-.83 0-1.5-.67-1.5-1.5S11.17 13 12 13s1.5.67 1.5 1.5S12.83 16 12 16z"/>
+                    </svg>
+                    <input type="password" 
+                           class="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 pl-11 text-zinc-100 font-body text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-zinc-600" 
+                           placeholder="Enter password" 
+                           @bind="_password" 
+                           required />
+                </div>
+            </div>
+
+            <!-- Sign In Button -->
+            <button type="submit" 
+                    disabled="@_loading"
+                    class="w-full bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-600 hover:to-emerald-600 text-white font-bold text-sm py-3 rounded-xl cursor-pointer transition-all border-0 shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                @if (_loading)
+                {
+                    <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span>Signing in...</span>
+                }
+                else
+                {
+                    <span>Sign In</span>
+                }
+            </button>
+        </form>
+
+        <!-- Seeding Details for testing -->
+        <div class="border-t border-zinc-800/80 pt-4 flex flex-col gap-2.5">
+            <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">Demo Credentials</p>
+            <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-400">
+                <div class="bg-zinc-950/40 p-2 rounded-lg border border-zinc-800/50 cursor-pointer hover:bg-zinc-800/20 transition-all" @onclick='() => SetDemoCredentials("admin", "admin123")'>
+                    <div class="font-bold text-indigo-400">Administrator</div>
+                    <div class="mt-0.5">Username: <span class="font-mono">admin</span></div>
+                    <div>Password: <span class="font-mono">admin123</span></div>
+                </div>
+                <div class="bg-zinc-950/40 p-2 rounded-lg border border-zinc-800/50 cursor-pointer hover:bg-zinc-800/20 transition-all" @onclick='() => SetDemoCredentials("user", "user123")'>
+                    <div class="font-bold text-emerald-400">Staff User</div>
+                    <div class="mt-0.5">Username: <span class="font-mono">user</span></div>
+                    <div>Password: <span class="font-mono">user123</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _username = string.Empty;
+    private string _password = string.Empty;
+    private string _errorMessage = string.Empty;
+    private bool _loading = false;
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? ReturnUrl { get; set; }
+
+    private void SetDemoCredentials(string user, string pass)
+    {
+        _username = user;
+        _password = pass;
+        _errorMessage = string.Empty;
+    }
+
+    private async Task HandleLogin()
+    {
+        _errorMessage = string.Empty;
+        _loading = true;
+
+        try
+        {
+            var hashed = HashPassword(_password);
+            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Username == _username && u.PasswordHash == hashed);
+
+            if (user == null)
+            {
+                _errorMessage = "Invalid username or password. Please try again.";
+                _loading = false;
+                return;
+            }
+
+            var customProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
+            await customProvider.UpdateAuthenticationState(new UserSession
+            {
+                Username = user.Username,
+                FullName = user.FullName,
+                Role = user.Role
+            });
+
+            // Redirect back to returnUrl or homepage
+            var target = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
+            NavigationManager.NavigateTo(target, forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            _errorMessage = $"Authentication failed: {ex.Message}";
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private string HashPassword(string password)
+    {
+        using (var sha = System.Security.Cryptography.SHA256.Create())
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(password);
+            var hash = sha.ComputeHash(bytes);
+            return Convert.ToHexString(hash);
+        }
+    }
+}

@@ -1,0 +1,64 @@
+@page "/payroll/increment"
+
+<PageTitle>ERPHub - Increment Tracker</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Increment Tracker</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage salary appraisal policies, effective dates, and grade level promotions.</p>
+                </div>
+            </div>
+
+            <!-- Increments DataTable -->
+            <DataTable TItem="AppraisalCycle" Items="_appraisals">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Previous Pay</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">New Pay</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Increment</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Percentage</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Effective Date</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="app">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@app.EmployeeName</td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">@app.PreviousPay</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@app.NewPay</td>
+                    <td class="p-2.5 px-4 text-green-600 font-bold font-body">@app.IncrementAmount</td>
+                    <td class="p-2.5 px-4 text-green-600 font-bold font-body">@app.Percentage</td>
+                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@app.EffectiveDate</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @app.BadgeClass">@app.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class AppraisalCycle
+    {
+        public string EmployeeName { get; set; } = string.Empty;
+        public string PreviousPay { get; set; } = string.Empty;
+        public string NewPay { get; set; } = string.Empty;
+        public string IncrementAmount { get; set; } = string.Empty;
+        public string Percentage { get; set; } = string.Empty;
+        public string EffectiveDate { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<AppraisalCycle> _appraisals = new()
+    {
+        new AppraisalCycle { EmployeeName = "John Smith", PreviousPay = "$9,000.00", NewPay = "$10,000.00", IncrementAmount = "+$1,000.00", Percentage = "11.1%", EffectiveDate = "2026-06-01", Status = "Approved", BadgeClass = "bg-green-50 text-green-700" },
+        new AppraisalCycle { EmployeeName = "Peter Parker", PreviousPay = "$5,000.00", NewPay = "$5,500.00", IncrementAmount = "+$500.00", Percentage = "10.0%", EffectiveDate = "2026-06-15", Status = "Pending Review", BadgeClass = "bg-amber-50 text-amber-700" }
+    };
+}

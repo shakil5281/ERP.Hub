@@ -1,0 +1,451 @@
+@page "/organogram"
+
+<PageTitle>ERPHub - Company Organogram</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Company Organogram</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage departments, sections, designations, and production lines.</p>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="flex gap-1 mb-6 bg-white border border-zinc-200 rounded-lg p-1 shadow-sm max-sm:overflow-x-auto">
+                @foreach (var tab in _tabs)
+                {
+                    <button type="button"
+                            class="py-2 px-5 rounded-md text-xs font-bold transition-all cursor-pointer border-0 whitespace-nowrap @(_activeTab == tab.Key ? "bg-black text-white shadow-sm" : "bg-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100")"
+                            @onclick="() => SwitchTab(tab.Key)">
+                        @tab.Value
+                    </button>
+                }
+            </div>
+
+            <!-- ==================== TREE TAB ==================== -->
+            @if (_activeTab == "tree")
+            {
+                <div class="animate-fade-in bg-white border border-zinc-200 rounded-lg p-6 shadow-sm mb-6">
+                    @if (!_organogramTree.Any())
+                    {
+                        <p class="text-zinc-500 text-sm">No organogram data available.</p>
+                    }
+                    else
+                    {
+                        <div class="flex flex-col gap-6">
+                            @foreach (var company in _organogramTree)
+                            {
+                                <div class="border border-zinc-200 rounded-lg p-4 bg-zinc-50 shadow-sm">
+                                    <div class="flex items-center gap-3 mb-4">
+                                        <div class="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h3 class="text-lg font-bold text-zinc-900 font-body">@company.NameEn</h3>
+                                            <p class="text-sm text-zinc-600 font-sutonnymj">@company.NameBn</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="ml-5 border-l-2 border-zinc-300 pl-5 flex flex-col gap-5">
+                                        @foreach (var dept in company.Departments)
+                                        {
+                                            <div class="bg-white border border-zinc-200 rounded-md p-4 shadow-sm hover:border-indigo-300 transition-colors">
+                                                <div class="flex items-center gap-2 mb-3">
+                                                    <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                                    <div>
+                                                        <h4 class="text-[15px] font-bold text-indigo-800">@dept.NameEn</h4>
+                                                        <p class="text-xs text-zinc-500 font-sutonnymj">@dept.NameBn</p>
+                                                    </div>
+                                                </div>
+                                                
+                                                <div class="ml-3 border-l-2 border-indigo-100 pl-4 flex flex-col gap-3">
+                                                    @foreach (var sec in dept.Sections)
+                                                    {
+                                                        <div class="bg-indigo-50/30 border border-indigo-100 rounded-md p-3">
+                                                            <div class="mb-3 border-b border-indigo-100 pb-2">
+                                                                <h5 class="text-sm font-bold text-emerald-700">@sec.NameEn</h5>
+                                                                <p class="text-xs text-zinc-500 font-sutonnymj">@sec.NameBn</p>
+                                                            </div>
+                                                            <div class="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
+                                                                <div class="bg-white rounded border border-zinc-100 p-2 shadow-sm">
+                                                                    <h6 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-zinc-400" viewBox="0 0 20 20" fill="currentColor">
+                                                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
+                                                                        </svg>
+                                                                        Designations
+                                                                    </h6>
+                                                                    <ul class="text-[13px] text-zinc-700 space-y-1">
+                                                                        @foreach (var desig in sec.Designations)
+                                                                        {
+                                                                            <li class="flex items-center gap-1.5">
+                                                                                <div class="w-1 h-1 rounded-full bg-zinc-300"></div>
+                                                                                <span class="font-semibold text-zinc-800">@desig.NameEn</span> 
+                                                                                <span class="text-zinc-400 font-sutonnymj text-[11px]">(@desig.NameBn)</span>
+                                                                            </li>
+                                                                        }
+                                                                        @if(!sec.Designations.Any()) { <li class="text-zinc-400 italic text-xs">No designations</li> }
+                                                                    </ul>
+                                                                </div>
+                                                                <div class="bg-white rounded border border-zinc-100 p-2 shadow-sm">
+                                                                    <h6 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-zinc-400" viewBox="0 0 20 20" fill="currentColor">
+                                                                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                                                                        </svg>
+                                                                        Lines
+                                                                    </h6>
+                                                                    <ul class="text-[13px] text-zinc-700 space-y-1">
+                                                                        @foreach (var line in sec.Lines)
+                                                                        {
+                                                                            <li class="flex items-center gap-1.5">
+                                                                                <div class="w-1 h-1 rounded-full bg-zinc-300"></div>
+                                                                                <span class="font-semibold text-zinc-800">@line.NameEn</span> 
+                                                                                <span class="text-zinc-400 font-sutonnymj text-[11px]">(@line.NameBn)</span>
+                                                                            </li>
+                                                                        }
+                                                                        @if(!sec.Lines.Any()) { <li class="text-zinc-400 italic text-xs">No lines</li> }
+                                                                    </ul>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+                                                    @if(!dept.Sections.Any()) { <div class="text-xs text-zinc-400 italic p-2">No sections</div> }
+                                                </div>
+                                            </div>
+                                        }
+                                        @if(!company.Departments.Any()) { <div class="text-sm text-zinc-400 italic p-2">No departments</div> }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- ==================== DEPARTMENT TAB ==================== -->
+            @if (_activeTab == "department")
+            {
+                <div class="animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                        <div class="flex-1 max-w-[320px] max-sm:max-w-none">
+                            <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors"
+                                   placeholder="Search departments..."
+                                   @bind="_deptSearch" @bind:event="oninput" />
+                        </div>
+                    </div>
+
+                    <DataTable TItem="Department" Items="FilteredDepartments">
+                        <ActionsContent>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddDept">+ Add Department</button>
+                        </ActionsContent>
+                        <HeaderTemplate>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
+                        </HeaderTemplate>
+                        <RowTemplate Context="item">
+                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredDepartments.ToList().IndexOf(item) + 1)</td>
+                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
+                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
+                        </RowTemplate>
+                        <RowActionsContent Context="item">
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditDept(item)">Edit</button>
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteDept(item.Id)">Delete</button>
+                        </RowActionsContent>
+                    </DataTable>
+                </div>
+            }
+
+            <!-- ==================== SECTION TAB ==================== -->
+            @if (_activeTab == "section")
+            {
+                <div class="animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                        <div class="flex-1 max-w-[320px] max-sm:max-w-none">
+                            <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors"
+                                   placeholder="Search sections..."
+                                   @bind="_sectionSearch" @bind:event="oninput" />
+                        </div>
+                        <div class="flex gap-2 items-center max-sm:justify-between">
+                            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department:</span>
+                            <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-xs w-[180px] max-sm:w-[150px] cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_sectionDeptFilter">
+                                <option value="0">All Departments</option>
+                                @foreach (var dept in _departments)
+                                {
+                                    <option value="@dept.Id">@dept.NameEn</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <DataTable TItem="Section" Items="FilteredSections">
+                        <ActionsContent>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddSection">+ Add Section</button>
+                        </ActionsContent>
+                        <HeaderTemplate>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
+                        </HeaderTemplate>
+                        <RowTemplate Context="item">
+                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredSections.ToList().IndexOf(item) + 1)</td>
+                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
+                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
+                            <td class="p-2.5 px-4">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">@item.DepartmentNameEn</span>
+                            </td>
+                        </RowTemplate>
+                        <RowActionsContent Context="item">
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditSection(item)">Edit</button>
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteSection(item.Id)">Delete</button>
+                        </RowActionsContent>
+                    </DataTable>
+                </div>
+            }
+
+            <!-- ==================== DESIGNATION TAB ==================== -->
+            @if (_activeTab == "designation")
+            {
+                <div class="animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                        <div class="flex-1 max-w-[320px] max-sm:max-w-none">
+                            <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors"
+                                   placeholder="Search designations..."
+                                   @bind="_desigSearch" @bind:event="oninput" />
+                        </div>
+                        <div class="flex gap-2 items-center max-sm:justify-between">
+                            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
+                            <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-xs w-[180px] max-sm:w-[150px] cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_desigSectionFilter">
+                                <option value="0">All Sections</option>
+                                @foreach (var sec in _sections)
+                                {
+                                    <option value="@sec.Id">@sec.NameEn</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <DataTable TItem="Designation" Items="FilteredDesignations">
+                        <ActionsContent>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddDesig">+ Add Designation</button>
+                        </ActionsContent>
+                        <HeaderTemplate>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Section</th>
+                        </HeaderTemplate>
+                        <RowTemplate Context="item">
+                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredDesignations.ToList().IndexOf(item) + 1)</td>
+                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
+                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
+                            <td class="p-2.5 px-4">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">@item.SectionNameEn</span>
+                            </td>
+                        </RowTemplate>
+                        <RowActionsContent Context="item">
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditDesig(item)">Edit</button>
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteDesig(item.Id)">Delete</button>
+                        </RowActionsContent>
+                    </DataTable>
+                </div>
+            }
+
+            <!-- ==================== LINE TAB ==================== -->
+            @if (_activeTab == "line")
+            {
+                <div class="animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                        <div class="flex-1 max-w-[320px] max-sm:max-w-none">
+                            <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors"
+                                   placeholder="Search lines..."
+                                   @bind="_lineSearch" @bind:event="oninput" />
+                        </div>
+                        <div class="flex gap-2 items-center max-sm:justify-between">
+                            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
+                            <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-xs w-[180px] max-sm:w-[150px] cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_lineSectionFilter">
+                                <option value="0">All Sections</option>
+                                @foreach (var sec in _sections)
+                                {
+                                    <option value="@sec.Id">@sec.NameEn</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <DataTable TItem="Line" Items="FilteredLines">
+                        <ActionsContent>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddLine">+ Add Line</button>
+                        </ActionsContent>
+                        <HeaderTemplate>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
+                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Section</th>
+                        </HeaderTemplate>
+                        <RowTemplate Context="item">
+                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredLines.ToList().IndexOf(item) + 1)</td>
+                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
+                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
+                            <td class="p-2.5 px-4">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">@item.SectionNameEn</span>
+                            </td>
+                        </RowTemplate>
+                        <RowActionsContent Context="item">
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditLine(item)">Edit</button>
+                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteLine(item.Id)">Delete</button>
+                        </RowActionsContent>
+                    </DataTable>
+                </div>
+            }
+
+            <!-- ==================== MODALS ==================== -->
+
+            <!-- Department Modal -->
+            @if (_showDeptModal)
+            {
+                <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4 animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col">
+                        <div class="p-4 px-5 border-b border-zinc-100 flex justify-between items-center bg-white">
+                            <h3 class="font-bold text-sm text-zinc-950">@(_isEditDept ? "Edit Department" : "New Department")</h3>
+                            <button type="button" class="bg-transparent border-0 text-zinc-400 text-xl cursor-pointer hover:text-black transition-colors" @onclick="CloseDeptModal">&times;</button>
+                        </div>
+                        <div class="p-5 flex flex-col gap-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingDept.NameEn" placeholder="e.g. Production" />
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (Bengali)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingDept.NameBn" placeholder="e.g. উৎপাদন" />
+                            </div>
+                        </div>
+                        <div class="p-4 px-5 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/75">
+                            <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer" @onclick="CloseDeptModal">Cancel</button>
+                            <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveDept">@(_isEditDept ? "Update" : "Save")</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Section Modal -->
+            @if (_showSectionModal)
+            {
+                <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4 animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col">
+                        <div class="p-4 px-5 border-b border-zinc-100 flex justify-between items-center bg-white">
+                            <h3 class="font-bold text-sm text-zinc-950">@(_isEditSection ? "Edit Section" : "New Section")</h3>
+                            <button type="button" class="bg-transparent border-0 text-zinc-400 text-xl cursor-pointer hover:text-black transition-colors" @onclick="CloseSectionModal">&times;</button>
+                        </div>
+                        <div class="p-5 flex flex-col gap-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department</label>
+                                <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @bind="_editingSection.DepartmentId">
+                                    <option value="0">-- Select Department --</option>
+                                    @foreach (var dept in _departments)
+                                    {
+                                        <option value="@dept.Id">@dept.NameEn</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingSection.NameEn" placeholder="e.g. Sewing" />
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (Bengali)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingSection.NameBn" placeholder="e.g. সেয়িং" />
+                            </div>
+                        </div>
+                        <div class="p-4 px-5 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/75">
+                            <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer" @onclick="CloseSectionModal">Cancel</button>
+                            <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveSection">@(_isEditSection ? "Update" : "Save")</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Designation Modal -->
+            @if (_showDesigModal)
+            {
+                <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4 animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col">
+                        <div class="p-4 px-5 border-b border-zinc-100 flex justify-between items-center bg-white">
+                            <h3 class="font-bold text-sm text-zinc-950">@(_isEditDesig ? "Edit Designation" : "New Designation")</h3>
+                            <button type="button" class="bg-transparent border-0 text-zinc-400 text-xl cursor-pointer hover:text-black transition-colors" @onclick="CloseDesigModal">&times;</button>
+                        </div>
+                        <div class="p-5 flex flex-col gap-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
+                                <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @bind="_editingDesig.SectionId">
+                                    <option value="0">-- Select Section --</option>
+                                    @foreach (var sec in _sections)
+                                    {
+                                        <option value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingDesig.NameEn" placeholder="e.g. Operator" />
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (Bengali)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingDesig.NameBn" placeholder="e.g. অপারেটর" />
+                            </div>
+                        </div>
+                        <div class="p-4 px-5 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/75">
+                            <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer" @onclick="CloseDesigModal">Cancel</button>
+                            <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveDesig">@(_isEditDesig ? "Update" : "Save")</button>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Line Modal -->
+            @if (_showLineModal)
+            {
+                <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4 animate-fade-in">
+                    <div class="bg-white border border-zinc-200 rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col">
+                        <div class="p-4 px-5 border-b border-zinc-100 flex justify-between items-center bg-white">
+                            <h3 class="font-bold text-sm text-zinc-950">@(_isEditLine ? "Edit Line" : "New Line")</h3>
+                            <button type="button" class="bg-transparent border-0 text-zinc-400 text-xl cursor-pointer hover:text-black transition-colors" @onclick="CloseLineModal">&times;</button>
+                        </div>
+                        <div class="p-5 flex flex-col gap-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
+                                <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @bind="_editingLine.SectionId">
+                                    <option value="0">-- Select Section --</option>
+                                    @foreach (var sec in _sections)
+                                    {
+                                        <option value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingLine.NameEn" placeholder="e.g. Assembly Line A" />
+                            </div>
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (Bengali)</label>
+                                <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingLine.NameBn" placeholder="e.g. অ্যাসেম্বলি লাইন এ" />
+                            </div>
+                        </div>
+                        <div class="p-4 px-5 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/75">
+                            <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer" @onclick="CloseLineModal">Cancel</button>
+                            <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveLine">@(_isEditLine ? "Update" : "Save")</button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>

@@ -1,0 +1,53 @@
+@page "/address"
+
+<PageTitle>ERPHub - Address Directory</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Address Directory</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage physical office locations, factories, and warehouses.</p>
+                </div>
+            </div>
+
+            <!-- Address Locations DataTable -->
+            <DataTable TItem="BranchLocation" Items="_locations">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Branch Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Type</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Street Address</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Country</th>
+                </HeaderTemplate>
+                <RowTemplate Context="loc">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@loc.BranchName</td>
+                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold">@loc.Type</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@loc.StreetAddress</td>
+                    <td class="p-2.5 px-4 text-zinc-650 text-xs">@loc.Country</td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class BranchLocation
+    {
+        public string BranchName { get; set; } = string.Empty;
+        public string Type { get; set; } = string.Empty;
+        public string StreetAddress { get; set; } = string.Empty;
+        public string Country { get; set; } = string.Empty;
+    }
+
+    private List<BranchLocation> _locations = new()
+    {
+        new BranchLocation { BranchName = "Silicon Valley Office", Type = "Corporate HQ", StreetAddress = "100 Enterprise Way, Suite 400, Silicon Valley, CA 94025", Country = "United States" },
+        new BranchLocation { BranchName = "Austin Factory", Type = "Manufacturing Unit", StreetAddress = "500 Innovation Boulevard, Austin, TX 78701", Country = "United States" },
+        new BranchLocation { BranchName = "Rotterdam Hub", Type = "Distribution Center", StreetAddress = "Port of Rotterdam, Quay 12, Rotterdam, 3011 AA", Country = "Netherlands" }
+    };
+}

@@ -1,0 +1,191 @@
+@page "/ot/daily-sheet"
+@using ERPHub.Components.Common
+
+<PageTitle>ERPHub - Daily Overtime Sheet</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight">Daily Overtime (OT) Sheet</h2>
+                    <p class="text-zinc-500 text-sm mt-0.5">Approve employee overtime hours, track shift extensions, and audit hourly premiums.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="inline-flex items-center py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer">
+                        Approve All Pending
+                    </button>
+                    <button class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
+                        Export Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- OT Metrics Grid -->
+            <div class="grid grid-cols-4 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Total OT Hours</div>
+                    <div class="text-sm font-semibold text-zinc-950 mt-1">42.5 Hours</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-emerald-600">Total OT Cost</div>
+                    <div class="text-sm font-semibold text-emerald-600 mt-1">$850.00</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-amber-500">Pending Approvals</div>
+                    <div class="text-sm font-semibold text-amber-500 mt-1">3 Applications</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-indigo-500">OT Headcount</div>
+                    <div class="text-sm font-semibold text-indigo-500 mt-1">12 Employees</div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                <div class="flex gap-3 flex-1 max-w-[500px] max-sm:flex-col">
+                    <input type="text" 
+                           class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" 
+                           placeholder="Search by ID or Name..." 
+                           @bind="_searchQuery" @bind:event="oninput" />
+                    
+                    <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-sm w-[180px] max-sm:w-full cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_deptFilter">
+                        <option value="">All Departments</option>
+                        <option value="Production">Production</option>
+                        <option value="IT">IT & Dev</option>
+                        <option value="Finance">Finance</option>
+                    </select>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
+                    <input type="date" class="border border-zinc-200 rounded-lg p-1.5 px-3 bg-white outline-none text-sm cursor-pointer hover:bg-zinc-50 transition-colors" value="@_otDate.ToString("yyyy-MM-dd")" @onchange="OnDateChanged" />
+                </div>
+            </div>
+
+            <!-- DataTable OT Listing -->
+            <DataTable TItem="OtRecord" Items="FilteredRecords">
+                <TabsContent>
+                    <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">OT Logs</button>
+                </TabsContent>
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Emp ID</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Employee Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Regular Hrs</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">OT Hrs</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">OT Rate</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">OT Amount</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Approver</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="ot">
+                    <td class="p-2.5 px-4 text-zinc-600 font-mono text-xs">@ot.EmpId</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ot.Name</td>
+                    <td class="p-2.5 px-4 text-zinc-700">@ot.Department</td>
+                    <td class="p-2.5 px-4 text-zinc-750">@ot.RegularHours hrs</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ot.OtHours hrs</td>
+                    <td class="p-2.5 px-4 text-zinc-700">@ot.OtRate.ToString("F1")x</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ot.OtAmount.ToString("C")</td>
+                    <td class="p-2.5 px-4 text-zinc-600">@ot.Approver</td>
+                    <td class="p-2.5 px-4">
+                        @if (ot.Status == "Approved")
+                        {
+                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                Approved
+                            </span>
+                        }
+                        else if (ot.Status == "Pending")
+                        {
+                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                Pending
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
+                                Rejected
+                            </span>
+                        }
+                    </td>
+                </RowTemplate>
+                <RowActionsContent Context="ot">
+                    <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-emerald-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ApproveOt(ot)">Approve</button>
+                    <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => RejectOt(ot)">Reject</button>
+                </RowActionsContent>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private string _searchQuery = string.Empty;
+    private string _deptFilter = string.Empty;
+    private DateTime _otDate = DateTime.Today;
+
+    private void OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate))
+        {
+            _otDate = parsedDate;
+        }
+    }
+
+    private List<OtRecord> _records = new()
+    {
+        new("EMP-001", "Bruce Wayne", "IT", 8, 2.5, 1.5, 75.00, "Clark Kent", "Approved"),
+        new("EMP-002", "Tony Stark", "IT", 8, 4.0, 2.0, 160.00, "Clark Kent", "Pending"),
+        new("EMP-004", "Peter Parker", "Production", 8, 3.5, 1.5, 105.00, "Diana Prince", "Approved"),
+        new("EMP-006", "Steve Rogers", "Production", 8, 2.0, 1.5, 60.00, "Diana Prince", "Approved"),
+        new("EMP-007", "Natasha Romanoff", "HR", 8, 1.5, 1.5, 45.00, "Diana Prince", "Pending"),
+        new("EMP-009", "Wanda Maximoff", "Finance", 8, 3.0, 1.5, 90.00, "Arthur Curry", "Approved"),
+        new("EMP-010", "Barry Allen", "Marketing", 8, 2.0, 1.5, 60.00, "Arthur Curry", "Rejected")
+    };
+
+    private void ApproveOt(OtRecord record)
+    {
+        record.Status = "Approved";
+    }
+
+    private void RejectOt(OtRecord record)
+    {
+        record.Status = "Rejected";
+    }
+
+    private IEnumerable<OtRecord> FilteredRecords =>
+        _records.Where(r => 
+            (string.IsNullOrEmpty(_deptFilter) || r.Department == _deptFilter) &&
+            (string.IsNullOrEmpty(_searchQuery) || 
+             r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
+             r.EmpId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+        );
+
+    public class OtRecord
+    {
+        public string EmpId { get; set; }
+        public string Name { get; set; }
+        public string Department { get; set; }
+        public int RegularHours { get; set; }
+        public double OtHours { get; set; }
+        public double OtRate { get; set; }
+        public double OtAmount { get; set; }
+        public string Approver { get; set; }
+        public string Status { get; set; }
+
+        public OtRecord(string empId, string name, string dept, int regHrs, double otHrs, double otRate, double otAmt, string approver, string status)
+        {
+            EmpId = empId;
+            Name = name;
+            Department = dept;
+            RegularHours = regHrs;
+            OtHours = otHrs;
+            OtRate = otRate;
+            OtAmount = otAmt;
+            Approver = approver;
+            Status = status;
+        }
+    }
+}

@@ -1,0 +1,57 @@
+@page "/group"
+
+<PageTitle>ERPHub - Business Groups</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Business Groups</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Define corporate entities, divisions, and geographical groups.</p>
+                </div>
+            </div>
+
+            <!-- Business Groups DataTable -->
+            <DataTable TItem="BusinessGroup" Items="_groups">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Group Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Division Type</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total Locations</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total Departments</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="grp">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@grp.GroupName</td>
+                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold">@grp.DivisionType</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold">@grp.TotalLocations</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold">@grp.TotalDepartments</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">@grp.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class BusinessGroup
+    {
+        public string GroupName { get; set; } = string.Empty;
+        public string DivisionType { get; set; } = string.Empty;
+        public int TotalLocations { get; set; }
+        public int TotalDepartments { get; set; }
+        public string Status { get; set; } = string.Empty;
+    }
+
+    private List<BusinessGroup> _groups = new()
+    {
+        new BusinessGroup { GroupName = "North America Group", DivisionType = "Domestic Division", TotalLocations = 4, TotalDepartments = 12, Status = "Active" },
+        new BusinessGroup { GroupName = "EMEA Group", DivisionType = "International Division", TotalLocations = 2, TotalDepartments = 5, Status = "Active" }
+    };
+}

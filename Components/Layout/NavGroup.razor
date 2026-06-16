@@ -1,0 +1,133 @@
+@inject NavigationManager NavigationManager
+@implements IDisposable
+
+<div class="sidebar-folder @(IsExpanded ? "expanded" : "")">
+    <div class="sidebar-folder-header @(HasActiveChild ? "active" : "")" @onclick="ToggleGroup">
+        <div class="sidebar-folder-title">
+            @if (Icon != null)
+            {
+                @Icon
+            }
+            <span>@Title</span>
+        </div>
+        <svg class="sidebar-folder-arrow" viewBox="0 0 24 24">
+            <path d="M16.293 9.293 12 13.586 7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z"/>
+        </svg>
+    </div>
+    
+    <ul class="sidebar-folder-items @(IsExpanded ? "" : "hidden")">
+        <CascadingValue Value="this">
+            @ChildContent
+        </CascadingValue>
+    </ul>
+</div>
+
+@code {
+    [Parameter] [EditorRequired] public string Title { get; set; } = string.Empty;
+    [Parameter] public RenderFragment? Icon { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public bool DefaultExpanded { get; set; } = true;
+
+    private bool IsExpanded { get; set; }
+    private bool HasActiveChild { get; set; }
+    private readonly List<NavItem> _children = new();
+
+    protected override void OnInitialized()
+    {
+        IsExpanded = DefaultExpanded;
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        CheckActiveState();
+    }
+
+    public void RegisterChild(NavItem child)
+    {
+        if (!_children.Contains(child))
+        {
+            _children.Add(child);
+            CheckActiveState();
+        }
+    }
+
+    public void UnregisterChild(NavItem child)
+    {
+        if (_children.Contains(child))
+        {
+            _children.Remove(child);
+            CheckActiveState();
+        }
+    }
+
+    private void CheckActiveState()
+    {
+        var relativePath = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        
+        var queryIndex = relativePath.IndexOf('?');
+        if (queryIndex >= 0) relativePath = relativePath.Substring(0, queryIndex);
+        var hashIndex = relativePath.IndexOf('#');
+        if (hashIndex >= 0) relativePath = relativePath.Substring(0, hashIndex);
+
+        var pathClean = relativePath.TrimStart('/');
+
+        bool anyActive = false;
+        foreach (var child in _children)
+        {
+            var hrefClean = child.Href.TrimStart('/');
+            if (child.Match == NavLinkMatch.All)
+            {
+                if (string.Equals(hrefClean, pathClean, StringComparison.OrdinalIgnoreCase))
+                {
+                    anyActive = true;
+                    break;
+                }
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(hrefClean))
+                {
+                    if (string.IsNullOrEmpty(pathClean))
+                    {
+                        anyActive = true;
+                        break;
+                    }
+                }
+                else if (pathClean.StartsWith(hrefClean, StringComparison.OrdinalIgnoreCase))
+                {
+                    anyActive = true;
+                    break;
+                }
+            }
+        }
+
+        bool stateChanged = false;
+        if (anyActive != HasActiveChild)
+        {
+            HasActiveChild = anyActive;
+            stateChanged = true;
+        }
+
+        if (IsExpanded != HasActiveChild)
+        {
+            IsExpanded = HasActiveChild;
+            stateChanged = true;
+        }
+
+        if (stateChanged)
+        {
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void ToggleGroup()
+    {
+        IsExpanded = !IsExpanded;
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
+}

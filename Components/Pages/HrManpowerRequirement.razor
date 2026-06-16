@@ -1,0 +1,65 @@
+@page "/hr/manpower-requirement"
+
+<PageTitle>ERPHub - Manpower Requirements</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Manpower Requirements</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Review active job openings, staffing requisitions, and recruitment approvals.</p>
+                </div>
+            </div>
+
+            <!-- Recruitment Requisitions DataTable -->
+            <DataTable TItem="Requisition" Items="_requisitions">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Role Title</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Headcount Needed</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Target Date</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Priority</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="req">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@req.RoleTitle</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@req.Department</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold">@req.HeadcountNeeded</td>
+                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@req.TargetDate</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @req.PriorityBadge">@req.Priority</span>
+                    </td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @req.StatusBadge">@req.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class Requisition
+    {
+        public string RoleTitle { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public int HeadcountNeeded { get; set; }
+        public string TargetDate { get; set; } = string.Empty;
+        public string Priority { get; set; } = string.Empty;
+        public string PriorityBadge { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string StatusBadge { get; set; } = string.Empty;
+    }
+
+    private List<Requisition> _requisitions = new()
+    {
+        new Requisition { RoleTitle = "Senior Full-Stack Engineer", Department = "Engineering", HeadcountNeeded = 2, TargetDate = "2026-07-15", Priority = "High", PriorityBadge = "bg-red-50 text-red-700", Status = "Approved", StatusBadge = "bg-indigo-50 text-indigo-700 border border-indigo-100" },
+        new Requisition { RoleTitle = "Account Executive", Department = "Sales", HeadcountNeeded = 3, TargetDate = "2026-08-01", Priority = "Medium", PriorityBadge = "bg-amber-50 text-amber-700", Status = "Recruiting", StatusBadge = "bg-green-50 text-green-700 border border-green-100" },
+        new Requisition { RoleTitle = "HR Generalist", Department = "HR Admin", HeadcountNeeded = 1, TargetDate = "2026-08-20", Priority = "Low", PriorityBadge = "bg-green-50 text-green-700", Status = "Pending", StatusBadge = "bg-zinc-50 text-zinc-600 border border-zinc-100" }
+    };
+}

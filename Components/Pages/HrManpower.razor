@@ -1,0 +1,57 @@
+@page "/hr/manpower"
+
+<PageTitle>ERPHub - Manpower Dashboard</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Manpower Dashboard</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Track team size capacities, departmental headcounts, and organizational vacancies.</p>
+                </div>
+            </div>
+
+            <!-- Manpower Stats DataTable -->
+            <DataTable TItem="ManpowerStat" Items="_manpowerStats">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Department</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Active Headcount</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Vacancies</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Target Capacity</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Utilization</th>
+                </HeaderTemplate>
+                <RowTemplate Context="stat">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-heading">@stat.Department</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold">@stat.ActiveHeadcount</td>
+                    <td class="p-2.5 px-4 text-indigo-600 text-center font-semibold">@stat.Vacancies</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-center font-semibold">@stat.TargetCapacity</td>
+                    <td class="p-2.5 px-4 text-zinc-850 text-xs font-semibold">@stat.Utilization</td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class ManpowerStat
+    {
+        public string Department { get; set; } = string.Empty;
+        public int ActiveHeadcount { get; set; }
+        public int Vacancies { get; set; }
+        public int TargetCapacity { get; set; }
+        public string Utilization { get; set; } = string.Empty;
+    }
+
+    private List<ManpowerStat> _manpowerStats = new()
+    {
+        new ManpowerStat { Department = "Engineering & Development", ActiveHeadcount = 54, Vacancies = 4, TargetCapacity = 58, Utilization = "93.1%" },
+        new ManpowerStat { Department = "Customer Success & Operations", ActiveHeadcount = 36, Vacancies = 2, TargetCapacity = 38, Utilization = "94.7%" },
+        new ManpowerStat { Department = "Sales & Marketing", ActiveHeadcount = 28, Vacancies = 2, TargetCapacity = 30, Utilization = "93.3%" },
+        new ManpowerStat { Department = "Finance & HR Admin", ActiveHeadcount = 24, Vacancies = 0, TargetCapacity = 24, Utilization = "100.0%" }
+    };
+}

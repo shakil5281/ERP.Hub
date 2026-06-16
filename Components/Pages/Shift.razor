@@ -1,0 +1,62 @@
+@page "/shift"
+
+<PageTitle>ERPHub - Shift Management</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Shift Management</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage shift rosters, timing schedules, and Grace Period policies.</p>
+                </div>
+            </div>
+
+            <!-- Shift Configurations DataTable -->
+            <DataTable TItem="ShiftConfig" Items="_shifts">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Shift Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Start Time</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">End Time</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Grace Period</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Break Duration</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="shift">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@shift.Name</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@shift.StartTime</td>
+                    <td class="p-2.5 px-4 text-zinc-750 text-xs">@shift.EndTime</td>
+                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-semibold">@shift.GracePeriod</td>
+                    <td class="p-2.5 px-4 text-zinc-650 text-xs">@shift.BreakTime</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @shift.BadgeClass">@shift.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class ShiftConfig
+    {
+        public string Name { get; set; } = string.Empty;
+        public string StartTime { get; set; } = string.Empty;
+        public string EndTime { get; set; } = string.Empty;
+        public string GracePeriod { get; set; } = string.Empty;
+        public string BreakTime { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<ShiftConfig> _shifts = new()
+    {
+        new ShiftConfig { Name = "Shift A (General)", StartTime = "09:00 AM", EndTime = "05:00 PM", GracePeriod = "15 minutes", BreakTime = "1 hour (Lunch)", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
+        new ShiftConfig { Name = "Shift B (Afternoon)", StartTime = "03:00 PM", EndTime = "11:00 PM", GracePeriod = "15 minutes", BreakTime = "30 minutes (Dinner)", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
+        new ShiftConfig { Name = "Shift C (Nocturnal)", StartTime = "11:00 PM", EndTime = "07:00 AM", GracePeriod = "10 minutes", BreakTime = "30 minutes", Status = "Inactive", BadgeClass = "bg-zinc-100 text-zinc-600" }
+    };
+}

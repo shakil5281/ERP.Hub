@@ -1,0 +1,84 @@
+@page "/payroll/payslip"
+
+<PageTitle>ERPHub - Employee Payslips</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Employee Payslips</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Generate, review, and print detailed pay stubs for individual employees.</p>
+                </div>
+            </div>
+
+            <!-- Filter Panel -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-5 shadow-sm mb-6 flex gap-4 items-end max-sm:flex-col max-sm:items-stretch">
+                <div class="flex-1 flex flex-col gap-1.5">
+                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Select Employee</label>
+                    <select class="border border-zinc-200 rounded-lg p-2.5 px-3.5 bg-white outline-none text-xs cursor-pointer hover:bg-zinc-50 transition-colors">
+                        <option value="1">Jane Doe (Leadership - CEO)</option>
+                        <option value="2">John Smith (HR Admin - Director)</option>
+                        <option value="3">Sarah Connor (Finance - CFO)</option>
+                    </select>
+                </div>
+                <div class="flex-1 flex flex-col gap-1.5">
+                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Pay Cycle Month</label>
+                    <select class="border border-zinc-200 rounded-lg p-2.5 px-3.5 bg-white outline-none text-xs cursor-pointer hover:bg-zinc-50 transition-colors">
+                        <option value="2026-06">June 2026</option>
+                        <option value="2026-05">May 2026</option>
+                        <option value="2026-04">April 2026</option>
+                    </select>
+                </div>
+                <button type="button" class="bg-black text-white text-xs font-semibold py-2.5 px-5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer max-sm:text-center">
+                    Preview Payslip
+                </button>
+            </div>
+
+            <!-- Generated Payslips DataTable -->
+            <DataTable TItem="PayslipRecord" Items="_payslips">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Emp ID</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Gross Earnings</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Deductions</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Net Payout</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Print Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="pay">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@pay.EmpId</td>
+                    <td class="p-2.5 px-4 text-zinc-800 font-semibold font-heading">@pay.Name</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@pay.GrossEarnings</td>
+                    <td class="p-2.5 px-4 text-red-600 font-medium font-body">@pay.Deductions</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@pay.NetPayout</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">@pay.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class PayslipRecord
+    {
+        public string EmpId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string GrossEarnings { get; set; } = string.Empty;
+        public string Deductions { get; set; } = string.Empty;
+        public string NetPayout { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+    }
+
+    private List<PayslipRecord> _payslips = new()
+    {
+        new PayslipRecord { EmpId = "EMP-2026-001", Name = "Jane Doe", GrossEarnings = "$18,500.00", Deductions = "-$2,100.00", NetPayout = "$16,400.00", Status = "Printed" },
+        new PayslipRecord { EmpId = "EMP-2026-002", Name = "John Smith", GrossEarnings = "$11,200.00", Deductions = "-$1,200.00", NetPayout = "$10,000.00", Status = "Printed" },
+        new PayslipRecord { EmpId = "EMP-2026-003", Name = "Sarah Connor", GrossEarnings = "$13,400.00", Deductions = "-$1,400.00", NetPayout = "$12,000.00", Status = "Pending" }
+    };
+}

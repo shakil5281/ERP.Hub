@@ -1,0 +1,62 @@
+@page "/datacollect/monthly-process"
+
+<PageTitle>ERPHub - Monthly Process</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Monthly Process</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Consolidate end-of-month registers, freeze time sheets, and prepare payroll audits.</p>
+                </div>
+            </div>
+
+            <!-- Monthly Closure Checklist DataTable -->
+            <DataTable TItem="ClosureCheck" Items="_checks">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Verification Target</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Assigned Role</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="check">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@check.Target</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs font-heading">@check.Role</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @check.BadgeClass">@check.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+
+            <div class="flex gap-3 justify-end mt-6">
+                <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer">
+                    Cancel
+                </button>
+                <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
+                    Freeze Month Logs
+                </button>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class ClosureCheck
+    {
+        public string Target { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<ClosureCheck> _checks = new()
+    {
+        new ClosureCheck { Target = "Validate all daily attendance registries", Role = "Operations Manager", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
+        new ClosureCheck { Target = "Lock biometric logs for current month", Role = "System Administrator", Status = "Pending", BadgeClass = "bg-amber-50 text-amber-700" },
+        new ClosureCheck { Target = "Generate monthly time sheet audit summaries", Role = "HR Director", Status = "Pending", BadgeClass = "bg-amber-50 text-amber-700" }
+    };
+}

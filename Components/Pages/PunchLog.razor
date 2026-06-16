@@ -1,0 +1,62 @@
+@page "/datacollect/punch-log"
+
+<PageTitle>ERPHub - Collect Punch Log</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Collect Punch Logs</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Ingest and review raw biometric punch-in and punch-out terminal records.</p>
+                </div>
+            </div>
+
+            <!-- Punch Logs DataTable -->
+            <DataTable TItem="PunchLogRecord" Items="_logs">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Log Date</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Time Logged</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Log Type</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Device Terminal</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Verification Mode</th>
+                </HeaderTemplate>
+                <RowTemplate Context="log">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@log.EmployeeName</td>
+                    <td class="p-2.5 px-4 text-zinc-750 text-xs font-body">@log.LogDate</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@log.TimeLogged</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @log.BadgeClass">@log.LogType</span>
+                    </td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@log.DeviceTerminal</td>
+                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@log.VerificationMode</td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class PunchLogRecord
+    {
+        public string EmployeeName { get; set; } = string.Empty;
+        public string LogDate { get; set; } = string.Empty;
+        public string TimeLogged { get; set; } = string.Empty;
+        public string LogType { get; set; } = string.Empty;
+        public string DeviceTerminal { get; set; } = string.Empty;
+        public string VerificationMode { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<PunchLogRecord> _logs = new()
+    {
+        new PunchLogRecord { EmployeeName = "Peter Parker", LogDate = "2026-06-12", TimeLogged = "08:56:12 AM", LogType = "PUNCH IN", DeviceTerminal = "Main Entrance Terminal 1", VerificationMode = "Fingerprint", BadgeClass = "bg-green-50 text-green-700" },
+        new PunchLogRecord { EmployeeName = "Peter Parker", LogDate = "2026-06-12", TimeLogged = "05:04:45 PM", LogType = "PUNCH OUT", DeviceTerminal = "Main Entrance Terminal 1", VerificationMode = "Fingerprint", BadgeClass = "bg-red-50 text-red-700" },
+        new PunchLogRecord { EmployeeName = "Bruce Wayne", LogDate = "2026-06-12", TimeLogged = "09:02:10 AM", LogType = "PUNCH IN", DeviceTerminal = "Secondary Gate Terminal 3", VerificationMode = "RFID Card", BadgeClass = "bg-green-50 text-green-700" }
+    };
+}

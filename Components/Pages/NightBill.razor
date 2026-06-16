@@ -1,0 +1,59 @@
+@page "/payroll/night-bill"
+
+<PageTitle>ERPHub - Night Shift Bills</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Night Shift Billing</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Calculate and process nocturnal shift duty allowances and night premiums.</p>
+                </div>
+            </div>
+
+            <!-- Night Bills DataTable -->
+            <DataTable TItem="NightAllowanceClaim" Items="_claims">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Night Shifts Logged</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Allowance Rate</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total Allowance</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Period</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="claim">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@claim.EmployeeName</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold font-body">@claim.NightShiftsLogged</td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">@claim.AllowanceRate</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@claim.TotalAllowance</td>
+                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@claim.Period</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@claim.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class NightAllowanceClaim
+    {
+        public string EmployeeName { get; set; } = string.Empty;
+        public int NightShiftsLogged { get; set; }
+        public string AllowanceRate { get; set; } = string.Empty;
+        public string TotalAllowance { get; set; } = string.Empty;
+        public string Period { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+    }
+
+    private List<NightAllowanceClaim> _claims = new()
+    {
+        new NightAllowanceClaim { EmployeeName = "Logan (Wolverine)", NightShiftsLogged = 15, AllowanceRate = "$20.00 / Shift", TotalAllowance = "$300.00", Period = "June 2026", Status = "Approved" }
+    };
+}

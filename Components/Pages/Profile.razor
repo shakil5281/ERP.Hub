@@ -1,0 +1,189 @@
+@page "/profile"
+
+<PageTitle>ERPHub - My Profile</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">My Profile</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage your personal information, credentials, and account preferences.</p>
+                </div>
+            </div>
+
+            @if (_profileUser != null)
+            {
+                <!-- Profile Hero Card -->
+                <div class="bg-white border border-zinc-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+                    <div class="h-[100px] bg-gradient-to-r from-indigo-500/10 via-emerald-500/10 to-indigo-500/10 border-b border-zinc-100"></div>
+                    <div class="px-6 pb-6 -mt-12">
+                        <div class="flex items-end gap-5 max-sm:flex-col max-sm:items-center max-sm:text-center">
+                            <div class="w-20 h-20 rounded-xl bg-zinc-100 border-2 border-white shadow-md flex items-center justify-center text-zinc-600 font-bold text-2xl overflow-hidden select-none flex-shrink-0">
+                                @GetInitials(_profileUser.FullName)
+                            </div>
+                            <div class="flex-1 pt-3 max-sm:pt-0">
+                                <h3 class="text-lg font-extrabold text-zinc-950 font-heading">@_profileUser.FullName</h3>
+                                <div class="flex items-center gap-2 mt-0.5 max-sm:justify-center">
+                                    <span class="text-xs text-zinc-500">@@@_profileUser.Username</span>
+                                    <span class="w-1 h-1 rounded-full bg-zinc-300"></span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @(_profileUser.Role == "Admin" ? "bg-indigo-50 text-indigo-700" : "bg-emerald-50 text-emerald-700")">
+                                        @_profileUser.Role
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="flex gap-4 text-center max-sm:flex-wrap max-sm:justify-center">
+                                <div class="px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-100">
+                                    <div class="text-sm font-extrabold text-zinc-950">@_totalCompanies</div>
+                                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Companies</div>
+                                </div>
+                                <div class="px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-100">
+                                    <div class="text-sm font-extrabold text-zinc-950">@_totalProducts</div>
+                                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Products</div>
+                                </div>
+                                <div class="px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-100">
+                                    <div class="text-sm font-extrabold text-zinc-950">@_totalInvoices</div>
+                                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Invoices</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-6 max-xl:grid-cols-1">
+                    <!-- Personal Information -->
+                    <div class="col-span-2 max-xl:col-span-1 bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+                        <div class="p-5 px-6 border-b border-zinc-100">
+                            <h3 class="font-bold text-sm text-zinc-950 font-heading">Personal Information</h3>
+                        </div>
+                        <div class="p-5 px-6">
+                            <div class="grid grid-cols-2 gap-5 max-sm:grid-cols-1">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Full Name</label>
+                                    <input type="text"
+                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           @bind="_editFullName"
+                                           placeholder="Enter full name" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Username</label>
+                                    <input type="text"
+                                           class="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-500 font-body text-[13.5px] outline-none cursor-not-allowed"
+                                           value="@_profileUser.Username"
+                                           readonly disabled />
+                                    <span class="text-[10px] text-zinc-400">Username cannot be changed.</span>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-5 mt-4 max-sm:grid-cols-1">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Email Address</label>
+                                    <input type="email"
+                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           @bind="_editEmail"
+                                           placeholder="user@example.com" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Role</label>
+                                    <input type="text"
+                                           class="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-500 font-body text-[13.5px] outline-none cursor-not-allowed"
+                                           value="@_profileUser.Role"
+                                           readonly disabled />
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-3 mt-6 pt-5 border-t border-zinc-100">
+                                <button type="button"
+                                        class="py-2 px-5 border border-zinc-200 rounded-lg bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-50 transition-colors cursor-pointer"
+                                        @onclick="ResetForm">Cancel</button>
+                                <button type="button"
+                                        class="py-2 px-5 rounded-lg bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                                        disabled="@(!_hasChanges)"
+                                        @onclick="SaveProfile">Save Changes</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column -->
+                    <div class="col-span-1 flex flex-col gap-6">
+                        <!-- Change Password -->
+                        <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+                            <div class="p-5 px-6 border-b border-zinc-100">
+                                <h3 class="font-bold text-sm text-zinc-950 font-heading">Change Password</h3>
+                            </div>
+                            <div class="p-5 px-6 flex flex-col gap-4">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Current Password</label>
+                                    <input type="password"
+                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           @bind="_currentPassword"
+                                           placeholder="Enter current password" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">New Password</label>
+                                    <input type="password"
+                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           @bind="_newPassword"
+                                           placeholder="Enter new password" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Confirm New Password</label>
+                                    <input type="password"
+                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           @bind="_confirmPassword"
+                                           placeholder="Confirm new password" />
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(_passwordMessage))
+                                {
+                                    <div class="text-[11px] font-semibold @(_passwordSuccess ? "text-emerald-600" : "text-red-500") flex items-center gap-1.5">
+                                        <span>@(_passwordSuccess ? "✓" : "✗")</span>
+                                        <span>@_passwordMessage</span>
+                                    </div>
+                                }
+
+                                <button type="button"
+                                        class="w-full py-2.5 px-4 rounded-lg bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer mt-1"
+                                        @onclick="ChangePassword">Update Password</button>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
+                            <div class="p-5 px-6 border-b border-zinc-100">
+                                <h3 class="font-bold text-sm text-zinc-950 font-heading">Recent Activity</h3>
+                            </div>
+                            <div class="p-5 px-6 flex flex-col gap-3.5">
+                                @foreach (var activity in _activities)
+                                {
+                                    <div class="flex gap-3 pb-3.5 border-b border-zinc-100 last:border-0 last:pb-0">
+                                        <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style="background-color: @activity.Color;"></div>
+                                        <div class="flex-1">
+                                            <p class="font-semibold text-zinc-800 text-xs leading-snug">@activity.Title</p>
+                                            <span class="text-[10px] text-zinc-400">@activity.TimeDescription</span>
+                                        </div>
+                                    </div>
+                                }
+                                @if (!_activities.Any())
+                                {
+                                    <div class="text-center py-6 text-xs text-zinc-400">No recent activity.</div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Success Toast -->
+                @if (_showToast)
+                {
+                    <div class="fixed bottom-6 right-6 bg-emerald-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
+                        <span>✓</span>
+                        <span>@_toastMessage</span>
+                    </div>
+                }
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>

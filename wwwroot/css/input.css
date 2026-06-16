@@ -1,0 +1,67 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  @keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 1s linear infinite;
+  }
+}
+
+.font-sutonnymj,
+.font-bn,
+input.font-sutonnymj,
+select.font-sutonnymj,
+textarea.font-sutonnymj {
+  font-family: "SutonnyMJ", sans-serif !important;
+}
+
+.data-table-sutonny th, 
+.data-table-sutonny td, 
+.data-table-sutonny span, 
+.data-table-sutonny div, 
+.data-table-sutonny p,
+.data-table-sutonny code,
+.data-table-sutonny a {
+  font-family: inherit !important;
+  font-size: 0.875rem !important; /* 14px / text-sm */
+}
+
+/* Force all database tables and cells to text-sm (14px) */
+table,
+table th,
+table td,
+.data-table-base,
+.data-table-base th,
+.data-table-base td,
+.data-table-base span,
+.data-table-base div,
+.data-table-base p,
+.data-table-base a,
+.data-table-base code {
+  font-size: 0.875rem !important; /* 14px / text-sm */
+}
+
+/* Force all buttons and their child elements to text-sm (14px) */
+button,
+button span,
+button div,
+button p,
+input[type="button"],
+input[type="submit"],
+.action-quick-create span {
+  font-size: 0.875rem !important; /* 14px / text-sm */
+}
+
+
+@font-face {
+    font-family: 'SutonnyMJ';
+    src: url('https://raw.githubusercontent.com/tazihad/bangla-fonts/master/SutonnyMJ/SutonnyMJ.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}

@@ -1,0 +1,102 @@
+@page "/reports/payroll"
+
+<PageTitle>ERPHub - Monthly Report</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Monthly Reports</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Generate and export consolidated payroll registries, deduction audits, and tax sheets.</p>
+                </div>
+            </div>
+
+            <!-- Report selector criteria card -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm mb-6 max-w-xl">
+                <h3 class="text-sm font-bold text-zinc-955 mb-4 border-b border-zinc-100 pb-2 font-heading">Configure Report Criteria</h3>
+                
+                <form class="flex flex-col gap-4">
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Report Category</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer">
+                            <option value="consolidated-payroll">Consolidated Payroll Registry</option>
+                            <option value="provident-fund">Provident Fund Deductions</option>
+                            <option value="tax-variance">Tax Tier Allocations</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Target Month</label>
+                            <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer">
+                                <option value="2026-06">June 2026</option>
+                                <option value="2026-05">May 2026</option>
+                                <option value="2026-04">April 2026</option>
+                            </select>
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department Division</label>
+                            <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer">
+                                <option value="all">All Departments</option>
+                                <option value="eng">Engineering</option>
+                                <option value="sales">Sales</option>
+                                <option value="ops">Operations</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 justify-end mt-2">
+                        <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer">
+                            View Report
+                        </button>
+                        <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
+                            Export PDF / Excel
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Recent Generated Reports DataTable -->
+            <DataTable TItem="ReportLog" Items="_reports">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Report ID</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Period Month</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Report Type</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Created By</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Format</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Action</th>
+                </HeaderTemplate>
+                <RowTemplate Context="rep">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@rep.ReportId</td>
+                    <td class="p-2.5 px-4 text-zinc-800 font-semibold font-body">@rep.PeriodMonth</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@rep.ReportType</td>
+                    <td class="p-2.5 px-4 text-zinc-650 text-xs font-heading">@rep.CreatedBy</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-xs font-body">@rep.Format</td>
+                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-bold cursor-pointer hover:underline">Download</td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class ReportLog
+    {
+        public string ReportId { get; set; } = string.Empty;
+        public string PeriodMonth { get; set; } = string.Empty;
+        public string ReportType { get; set; } = string.Empty;
+        public string CreatedBy { get; set; } = string.Empty;
+        public string Format { get; set; } = string.Empty;
+    }
+
+    private List<ReportLog> _reports = new()
+    {
+        new ReportLog { ReportId = "REP-202606-01", PeriodMonth = "June 2026", ReportType = "Consolidated Payroll Registry", CreatedBy = "Jane Doe", Format = "PDF" },
+        new ReportLog { ReportId = "REP-202605-02", PeriodMonth = "May 2026", ReportType = "Provident Fund Deductions", CreatedBy = "John Smith", Format = "XLSX" }
+    };
+}

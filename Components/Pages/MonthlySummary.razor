@@ -1,0 +1,59 @@
+@page "/reports/monthly"
+
+<PageTitle>ERPHub - Monthly Summary</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Monthly Summary</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Consolidated high-level performance metrics, work hour statistics, and operational audits.</p>
+                </div>
+            </div>
+
+            <!-- Operations Summary DataTable -->
+            <DataTable TItem="KpiMetric" Items="_metrics">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Metric Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Current Value</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Target / Limit</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Monthly Growth</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Variance Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="kpi">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@kpi.MetricName</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@kpi.CurrentValue</td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">@kpi.Target</td>
+                    <td class="p-2.5 px-4 text-green-600 font-bold font-body">@kpi.Growth</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @kpi.BadgeClass">@kpi.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class KpiMetric
+    {
+        public string MetricName { get; set; } = string.Empty;
+        public string CurrentValue { get; set; } = string.Empty;
+        public string Target { get; set; } = string.Empty;
+        public string Growth { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<KpiMetric> _metrics = new()
+    {
+        new KpiMetric { MetricName = "Total Work Hours", CurrentValue = "22,450 hrs", Target = "20,000 hrs Min", Growth = "↑ 4.2%", Status = "Optimal", BadgeClass = "bg-green-50 text-green-700" },
+        new KpiMetric { MetricName = "Turnover Rate", CurrentValue = "0.85%", Target = "2.00% Max", Growth = "↓ 0.2%", Status = "Optimal", BadgeClass = "bg-green-50 text-green-700" },
+        new KpiMetric { MetricName = "Payroll Budget Variance", CurrentValue = "$4,850.00", Target = "$5,000.00 Allow", Growth = "↑ 0.5%", Status = "Within Bounds", BadgeClass = "bg-green-50 text-green-700" }
+    };
+}

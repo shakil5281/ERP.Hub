@@ -1,0 +1,56 @@
+@page "/leave/details"
+
+<PageTitle>ERPHub - Leave Ledger Details</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Leave Balance Ledger</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Detailed breakdown of individual employee leave balances, taken history, and accrual audits.</p>
+                </div>
+            </div>
+
+            <!-- Leave Details DataTable -->
+            <DataTable TItem="LeaveLedger" Items="_ledgers">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Leave Category</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Allocated Days</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Consumed Days</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Balance Remaining</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Accrual Rate</th>
+                </HeaderTemplate>
+                <RowTemplate Context="led">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@led.Category</td>
+                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold font-body">@led.Allocated</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-center font-semibold font-body">@led.Consumed</td>
+                    <td class="p-2.5 px-4 text-indigo-600 text-center font-bold font-body">@led.Balance</td>
+                    <td class="p-2.5 px-4 text-zinc-650 text-xs">@led.AccrualRate</td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class LeaveLedger
+    {
+        public string Category { get; set; } = string.Empty;
+        public int Allocated { get; set; }
+        public int Consumed { get; set; }
+        public int Balance { get; set; }
+        public string AccrualRate { get; set; } = string.Empty;
+    }
+
+    private List<LeaveLedger> _ledgers = new()
+    {
+        new LeaveLedger { Category = "Annual Leave", Allocated = 15, Consumed = 3, Balance = 12, AccrualRate = "1.25 Days / Month" },
+        new LeaveLedger { Category = "Medical Leave", Allocated = 10, Consumed = 2, Balance = 8, AccrualRate = "Yearly Lump-Sum" },
+        new LeaveLedger { Category = "Casual Leave", Allocated = 5, Consumed = 0, Balance = 5, AccrualRate = "Yearly Lump-Sum" }
+    };
+}

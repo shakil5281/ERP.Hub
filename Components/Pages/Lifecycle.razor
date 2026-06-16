@@ -1,0 +1,56 @@
+@page "/lifecycle"
+
+<PageTitle>ERPHub - System Lifecycle</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">System Lifecycle</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Track, monitor, and audit system background services, scheduled jobs, and system events in real-time.</p>
+                </div>
+            </div>
+
+            <!-- Lifecycle DataTable -->
+            <DataTable TItem="SystemEvent" Items="_events">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Event Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Details</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Timestamp</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Severity</th>
+                </HeaderTemplate>
+                <RowTemplate Context="ev">
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ev.EventName</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@ev.Details</td>
+                    <td class="p-2.5 px-4 text-zinc-500 text-xs">@ev.Timestamp</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @ev.BadgeClass">@ev.Severity</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class SystemEvent
+    {
+        public string EventName { get; set; } = string.Empty;
+        public string Details { get; set; } = string.Empty;
+        public string Timestamp { get; set; } = string.Empty;
+        public string Severity { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<SystemEvent> _events = new()
+    {
+        new SystemEvent { EventName = "Attendance Sync", Details = "Successfully pulled 452 raw punch logs from main biometric terminal.", Timestamp = "Just now", Severity = "Success", BadgeClass = "bg-green-50 text-green-700" },
+        new SystemEvent { EventName = "DB Connection", Details = "Entity Framework SQL Server connection successfully pooled and validated.", Timestamp = "10 minutes ago", Severity = "Info", BadgeClass = "bg-green-50 text-green-700" },
+        new SystemEvent { EventName = "Backup Complete", Details = "Database snapshot securely backed up to local storage volume.", Timestamp = "1 hour ago", Severity = "Warning", BadgeClass = "bg-amber-50 text-amber-700" }
+    };
+}

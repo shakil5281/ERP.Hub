@@ -1,0 +1,60 @@
+@page "/leave/type"
+
+<PageTitle>ERPHub - Leave Types</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Leave Policies</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Configure different leave categories, maximum day allocations, and accrual types.</p>
+                </div>
+            </div>
+
+            <!-- Leave Policies DataTable -->
+            <DataTable TItem="LeavePolicy" Items="_policies">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Leave Policy Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Category</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Day Limit</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Accrual Type</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="policy">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@policy.Name</td>
+                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold">@policy.Category</td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@policy.Limit</td>
+                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@policy.AccrualType</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @policy.BadgeClass">@policy.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class LeavePolicy
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string Limit { get; set; } = string.Empty;
+        public string AccrualType { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<LeavePolicy> _policies = new()
+    {
+        new LeavePolicy { Name = "Annual Leave", Category = "Paid Leave", Limit = "15 Days", AccrualType = "Monthly Accrual (1.25 / Month)", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
+        new LeavePolicy { Name = "Medical Leave", Category = "Paid Leave", Limit = "10 Days", AccrualType = "Yearly Lump-Sum", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
+        new LeavePolicy { Name = "Casual Leave", Category = "Paid Leave", Limit = "5 Days", AccrualType = "Yearly Lump-Sum", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
+        new LeavePolicy { Name = "Maternity Leave", Category = "Special Paid Leave", Limit = "90 Days", AccrualType = "On Requisition Event", Status = "Active", BadgeClass = "bg-green-50 text-green-700" }
+    };
+}

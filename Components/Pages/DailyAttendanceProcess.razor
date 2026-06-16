@@ -1,0 +1,62 @@
+@page "/datacollect/daily-attendance-process"
+
+<PageTitle>ERPHub - Daily Attendance Process</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Daily Attendance Process</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Calculate daily shifts, trace exception flags, and publish finalized rosters.</p>
+                </div>
+            </div>
+
+            <!-- Daily Attendance Process Tasks DataTable -->
+            <DataTable TItem="ReconcileTask" Items="_tasks">
+                <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Task Description</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Last Run Timestamp</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                </HeaderTemplate>
+                <RowTemplate Context="task">
+                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@task.Description</td>
+                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@task.LastRun</td>
+                    <td class="p-2.5 px-4">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @task.BadgeClass">@task.Status</span>
+                    </td>
+                </RowTemplate>
+            </DataTable>
+
+            <div class="flex gap-3 justify-end mt-6">
+                <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer">
+                    Reset State
+                </button>
+                <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
+                    Run Reconcile
+                </button>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    public class ReconcileTask
+    {
+        public string Description { get; set; } = string.Empty;
+        public string LastRun { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<ReconcileTask> _tasks = new()
+    {
+        new ReconcileTask { Description = "Pull and ingest raw terminal biometric logs", LastRun = "2026-06-12 05:10 PM", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
+        new ReconcileTask { Description = "Calculate shift hours and grace period deductions", LastRun = "2026-06-12 05:12 PM", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
+        new ReconcileTask { Description = "Flag anomalies (unexcused absences, half-days, early outs)", LastRun = "Pending", Status = "Ready", BadgeClass = "bg-amber-50 text-amber-700" }
+    };
+}

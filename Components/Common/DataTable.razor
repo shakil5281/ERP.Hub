@@ -1,0 +1,141 @@
+@typeparam TItem
+
+<div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden mb-6 animate-fade-in">
+    <!-- Top toolbar: Tabs on left, Buttons on right -->
+    @if (TabsContent != null || ActionsContent != null)
+    {
+        <div class="p-4 px-5 border-b border-zinc-200 flex justify-between items-center bg-white max-sm:flex-col max-sm:gap-3 max-sm:items-stretch">
+            <div class="flex flex-wrap gap-2">
+                @if (TabsContent != null)
+                {
+                    @TabsContent
+                }
+            </div>
+            <div class="flex gap-2 justify-end">
+                @if (ActionsContent != null)
+                {
+                    @ActionsContent
+                }
+            </div>
+        </div>
+    }
+    
+    @if (FilterContent != null)
+    {
+        <div class="p-4 px-5 border-b border-zinc-200 bg-zinc-50/20">
+            @FilterContent
+        </div>
+    }
+
+    <!-- Table Container -->
+    <div class="w-full overflow-x-auto min-h-[240px]">
+        <table class="w-full border-collapse data-table-base">
+            <thead>
+                <tr class="border-b border-zinc-200 bg-zinc-50/75">
+                    <!-- Drag handle spacer -->
+                    <th class="w-10 text-center p-3"></th>
+                    <!-- Checkbox column -->
+                    <th class="w-[45px] text-center p-3">
+                        <input type="checkbox" class="w-[15px] h-[15px] accent-black rounded border-zinc-300 cursor-pointer" checked="@IsAllSelected" @onchange="ToggleSelectAll" />
+                    </th>
+                    @HeaderTemplate
+                    <!-- Action spacer -->
+                    <th class="w-[50px] p-3"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (PaginatedItems.Any())
+                {
+                    var paginatedList = PaginatedItems.ToList();
+                    @for (int i = 0; i < paginatedList.Count; i++)
+                    {
+                        var item = paginatedList[i];
+                        var isSelected = SelectedItems.Contains(item);
+                        var currentItem = item;
+                        bool openUpward = paginatedList.Count > 1 && i >= paginatedList.Count - 2;
+                        <tr class="border-b border-zinc-100 hover:bg-zinc-50/50 transition-colors @(isSelected ? "bg-zinc-50/30" : "")">
+                            <!-- Drag handle icon -->
+                            <td class="w-10 text-center p-3 cursor-grab">
+                                <svg class="w-3.5 h-3.5 fill-zinc-400 mx-auto" viewBox="0 0 24 24">
+                                    <path d="M8.5 7a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm0 6.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm0 6.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm7-13a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm0 6.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zm0 6.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>
+                                </svg>
+                            </td>
+                            <!-- Checkbox cell -->
+                            <td class="text-center p-3">
+                                <input type="checkbox" class="w-[15px] h-[15px] accent-black rounded border-zinc-300 cursor-pointer" checked="@isSelected" @onchange="() => ToggleSelectItem(currentItem)" />
+                            </td>
+                            
+                            @RowTemplate(currentItem)
+
+                            <!-- Actions vertical menu dot ⋮ -->
+                            <td class="text-center p-3 relative">
+                                <div class="relative inline-block">
+                                    <button type="button" class="bg-transparent border-0 cursor-pointer text-zinc-400 p-1.5 rounded inline-flex hover:bg-zinc-100 hover:text-black transition-colors" @onclick="() => ToggleRowActions(currentItem)">
+                                        <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current">
+                                            <path d="M12 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0-6a2 2 0 1 0 0 4 2 2 0 0 0 0-4zm0 12a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"/>
+                                        </svg>
+                                    </button>
+                                    @if (_activeActionsItem != null && _activeActionsItem.Equals(currentItem))
+                                    {
+                                        <div class="absolute right-0 @(openUpward ? "bottom-full mb-1" : "mt-1") w-[120px] bg-white border border-zinc-200 rounded-md shadow-lg p-1 z-[9999] flex flex-col animate-fade-in">
+                                            @if (RowActionsContent != null)
+                                            {
+                                                @RowActionsContent(currentItem)
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="10" class="text-center text-zinc-400 p-10 text-sm">
+                            No records found.
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination Footer -->
+    <div class="p-3.5 px-6 border-t border-zinc-200 bg-white flex justify-between items-center text-xs text-zinc-500 max-sm:flex-col max-sm:gap-3 max-sm:items-center">
+        <div class="font-medium">
+            @SelectedItems.Count of @TotalCount row(s) selected.
+        </div>
+        
+        <div class="flex items-center gap-6 max-sm:flex-col max-sm:gap-3">
+            <div class="flex items-center gap-2">
+                <span>Rows per page</span>
+                <select class="border border-zinc-200 rounded-md p-1 px-1.5 bg-white outline-none text-xs cursor-pointer hover:bg-zinc-50 transition-colors" @onchange="OnPageSizeChanged" value="@PageSize">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
+            
+            <div class="font-semibold text-zinc-700">
+                Page @CurrentPage of @TotalPages
+            </div>
+            
+            <div class="flex gap-1">
+                <button type="button" class="bg-white border border-zinc-200 text-zinc-500 rounded-md w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled="@(!CanGoPrev)" @onclick="GoToFirstPage" title="First Page">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M18.41 16.59L13.82 12l4.59-4.59L17 6l-6 6 6 6zM6 6h2v12H6z"/></svg>
+                </button>
+                <button type="button" class="bg-white border border-zinc-200 text-zinc-500 rounded-md w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled="@(!CanGoPrev)" @onclick="PrevPage" title="Previous Page">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M15.41 16.58L10.83 12l4.58-4.59L14 6l-6 6 6 6z"/></svg>
+                </button>
+                <button type="button" class="bg-white border border-zinc-200 text-zinc-500 rounded-md w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled="@(!CanGoNext)" @onclick="NextPage" title="Next Page">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M8.59 16.58L13.17 12 8.59 7.41 10 6l6 6-6 6z"/></svg>
+                </button>
+                <button type="button" class="bg-white border border-zinc-200 text-zinc-500 rounded-md w-8 h-8 flex items-center justify-center cursor-pointer hover:bg-zinc-50 hover:text-zinc-900 disabled:opacity-40 disabled:cursor-not-allowed transition-colors" disabled="@(!CanGoNext)" @onclick="GoToLastPage" title="Last Page">
+                    <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M5.59 7.41L10.18 12l-4.59 4.59L7 18l6-6-6-6zM16 6h2v12h-2z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
