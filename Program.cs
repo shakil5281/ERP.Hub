@@ -4,6 +4,9 @@ using ERPHub.Services;
 using ERPHub.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Components.Authorization;
+using OfficeOpenXml;
+
+ExcelPackage.License.SetNonCommercialOrganization("ERPHub");
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,21 +34,21 @@ builder.Services.AddScoped<IErpService, ErpService>();
 
 var app = builder.Build();
 
-// Ensure the database is created and seeded with test data on startup
+// Seed admin user on first run
 using (var scope = app.Services.CreateScope())
 {
-    var services = scope.ServiceProvider;
-    try
+    var context = scope.ServiceProvider.GetRequiredService<ErpDbContext>();
+    if (!await context.Users.AnyAsync())
     {
-        var context = services.GetRequiredService<ErpDbContext>();
-        // Ensure the database is created if it doesn't exist, but DO NOT delete it
-        await context.Database.EnsureCreatedAsync();
-        await DbInitializer.InitializeAsync(context);
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "An error occurred creating or seeding the SQL Server database.");
+        context.Users.Add(new ERPHub.Models.User
+        {
+            Username = "admin",
+            PasswordHash = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(
+                System.Text.Encoding.UTF8.GetBytes("admin123"))),
+            FullName = "System Administrator",
+            Role = "Admin"
+        });
+        await context.SaveChangesAsync();
     }
 }
 
@@ -61,9 +64,9 @@ app.UseStatusCodePagesWithRedirects("/notfound");
 
 app.UseHttpsRedirection();
 
-app.UseStaticFiles();
 app.UseAntiforgery();
 
+app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

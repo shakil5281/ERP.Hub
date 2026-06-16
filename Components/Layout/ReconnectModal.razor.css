@@ -1,0 +1,136 @@
+/* Hide all conditional sections by default */
+.components-reconnect-first-attempt-visible,
+.components-reconnect-repeated-attempt-visible,
+.components-reconnect-failed-visible,
+.components-pause-visible,
+.components-resume-failed-visible {
+    display: none;
+}
+
+/* Show relevant sections based on Blazor's CSS classes */
+#components-reconnect-modal.components-reconnect-show .components-reconnect-first-attempt-visible,
+#components-reconnect-modal.components-reconnect-show .components-rejoining-animation,
+#components-reconnect-modal.components-reconnect-retrying .components-reconnect-repeated-attempt-visible,
+#components-reconnect-modal.components-reconnect-retrying .components-rejoining-animation,
+#components-reconnect-modal.components-reconnect-failed .components-reconnect-failed-visible,
+#components-reconnect-modal.components-reconnect-paused .components-pause-visible,
+#components-reconnect-modal.components-reconnect-resume-failed .components-resume-failed-visible {
+    display: block;
+}
+
+/* Modal base */
+#components-reconnect-modal {
+    background: white;
+    width: 22rem;
+    max-width: 90vw;
+    padding: 2rem 2rem 1.75rem;
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), overlay 0.3s allow-discrete;
+}
+
+#components-reconnect-modal[open] {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+#components-reconnect-modal::backdrop {
+    background: rgba(0, 0, 0, 0.35);
+    opacity: 0;
+    transition: opacity 0.3s ease, overlay 0.3s allow-discrete;
+}
+
+#components-reconnect-modal[open]::backdrop {
+    opacity: 1;
+}
+
+@starting-style {
+    #components-reconnect-modal[open] {
+        opacity: 0;
+        transform: translateY(16px) scale(0.96);
+    }
+
+    #components-reconnect-modal[open]::backdrop {
+        opacity: 0;
+    }
+}
+
+/* Container */
+.components-reconnect-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.25rem;
+    text-align: center;
+}
+
+/* Text */
+#components-reconnect-modal p {
+    margin: 0;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.9rem;
+    color: #374151;
+    line-height: 1.5;
+}
+
+#components-reconnect-modal p strong {
+    font-weight: 700;
+    color: #111827;
+}
+
+/* Button */
+.components-reconnect-button {
+    border: none;
+    background: #111827;
+    color: white;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 2rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.components-reconnect-button:hover {
+    background: #1f2937;
+}
+
+.components-reconnect-button:active {
+    transform: scale(0.97);
+}
+
+/* Spinner */
+.components-rejoining-animation {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.components-spinner {
+    width: 100%;
+    height: 100%;
+    color: #111827;
+    animation: spin 1s linear infinite;
+}
+
+.components-spinner-path {
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+@keyframes dash {
+    0% { stroke-dashoffset: 60; }
+    50% { stroke-dashoffset: 8; }
+    100% { stroke-dashoffset: 60; }
+}

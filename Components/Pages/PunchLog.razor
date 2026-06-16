@@ -1,4 +1,7 @@
 @page "/datacollect/punch-log"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager NavManager
 
 <PageTitle>ERPHub - Collect Punch Log</PageTitle>
 
@@ -11,19 +14,71 @@
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Collect Punch Logs</h2>
                     <p class="text-zinc-500 text-xs mt-0.5 font-body">Ingest and review raw biometric punch-in and punch-out terminal records.</p>
                 </div>
+                <div class="flex gap-2">
+                    <button type="button" class="px-3 py-1.5 bg-black text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-1.5" @onclick="SyncFromDevice" disabled="@_isSyncing">
+                        @if (_isSyncing)
+                        {
+                            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
+                        }
+                        else
+                        {
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4v5h5M20 20v-5h-5M20.49 9A9 9 0 0 0 5.64 5.64L4 4m15.36 15.36A9 9 0 0 1 3.51 15" /></svg>
+                        }
+                        @_syncButtonText
+                    </button>
+                    <button type="button" class="px-3 py-1.5 bg-white border border-zinc-200 text-zinc-700 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors flex items-center gap-1.5" @onclick="ExportToExcel" disabled="@(_logs.Count == 0)">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+                        Export
+                    </button>
+                </div>
             </div>
+
+            <!-- Filter Bar -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 mb-4 flex flex-wrap gap-3 items-end">
+                <div>
+                    <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">From Date</label>
+                    <input type="date" class="border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors" @bind="_fromDate" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">To Date</label>
+                    <input type="date" class="border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors" @bind="_toDate" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Employee ID</label>
+                    <input type="text" placeholder="e.g. EMP-001" class="border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors w-36" @bind="_employeeIdFilter" />
+                </div>
+                <button type="button" class="px-3 py-1.5 bg-zinc-900 text-white text-xs font-semibold rounded-lg hover:bg-zinc-700 transition-colors" @onclick="LoadPunchRecords">
+                    Apply
+                </button>
+                <button type="button" class="px-3 py-1.5 bg-white border border-zinc-200 text-zinc-600 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors" @onclick="ClearFilters">
+                    Clear
+                </button>
+                @if (_isLoading)
+                {
+                    <span class="text-xs text-zinc-400 ml-2">Loading...</span>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(_syncError))
+            {
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4 text-xs text-red-700 font-mono break-all">
+                    @_syncError
+                </div>
+            }
 
             <!-- Punch Logs DataTable -->
             <DataTable TItem="PunchLogRecord" Items="_logs">
                 <HeaderTemplate>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee ID</th>
                     <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
                     <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Log Date</th>
                     <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Time Logged</th>
                     <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Log Type</th>
                     <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Device Terminal</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Verification Mode</th>
+                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Verification</th>
                 </HeaderTemplate>
                 <RowTemplate Context="log">
+                    <td class="p-2.5 px-4 text-zinc-500 text-xs font-mono">@log.EmployeeId</td>
                     <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@log.EmployeeName</td>
                     <td class="p-2.5 px-4 text-zinc-750 text-xs font-body">@log.LogDate</td>
                     <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@log.TimeLogged</td>
@@ -42,8 +97,159 @@
 </AuthorizeView>
 
 @code {
+    private List<PunchLogRecord> _logs = new();
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+    private string? _employeeIdFilter;
+    private bool _isLoading;
+    private bool _isSyncing;
+    private string _syncButtonText = "Sync Device";
+
+    protected override async Task OnInitializedAsync()
+    {
+        _fromDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        _toDate = DateTime.Today;
+        await LoadPunchRecords();
+    }
+
+    private async Task LoadPunchRecords()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var url = BuildApiUrl();
+            var records = await Http.GetFromJsonAsync<List<PunchRecordDto>>(url);
+
+            _logs = records?.Select(r => new PunchLogRecord
+            {
+                EmployeeId = r.EmployeeId,
+                EmployeeName = r.EmployeeName,
+                LogDate = r.LogDateTime.ToString("yyyy-MM-dd"),
+                TimeLogged = r.LogDateTime.ToString("hh:mm:ss tt"),
+                LogType = NormalizeLogType(r.LogType),
+                DeviceTerminal = r.DeviceTerminal ?? "-",
+                VerificationMode = r.VerificationMode ?? "-",
+                BadgeClass = GetBadgeClass(r.LogType)
+            }).ToList() ?? new List<PunchLogRecord>();
+        }
+        catch
+        {
+            _logs = new List<PunchLogRecord>();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private string BuildApiUrl()
+    {
+        var baseUrl = $"{NavManager.BaseUri}api/punchrecords";
+        var queryParams = new List<string>();
+
+        if (_fromDate.HasValue)
+            queryParams.Add($"fromDate={_fromDate.Value:yyyy-MM-dd}");
+
+        if (_toDate.HasValue)
+            queryParams.Add($"toDate={_toDate.Value:yyyy-MM-dd}T23:59:59");
+
+        if (!string.IsNullOrWhiteSpace(_employeeIdFilter))
+            queryParams.Add($"employeeId={Uri.EscapeDataString(_employeeIdFilter.Trim())}");
+
+        return queryParams.Count > 0 ? $"{baseUrl}?{string.Join("&", queryParams)}" : baseUrl;
+    }
+
+    private string? _syncError;
+
+    private async Task SyncFromDevice()
+    {
+        _isSyncing = true;
+        _syncButtonText = "Syncing...";
+        _syncError = null;
+        StateHasChanged();
+
+        try
+        {
+            var result = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/punchrecords/sync", new { });
+            var content = await result.Content.ReadAsStringAsync();
+            if (result.IsSuccessStatusCode)
+            {
+                await LoadPunchRecords();
+                _syncButtonText = "Synced!";
+                await Task.Delay(1500);
+                _syncButtonText = "Sync Device";
+            }
+            else
+            {
+                _syncError = content;
+                _syncButtonText = "Sync Failed";
+                await Task.Delay(3000);
+                _syncButtonText = "Sync Device";
+            }
+        }
+        catch (Exception ex)
+        {
+            _syncError = ex.Message;
+            _syncButtonText = "Sync Failed";
+            await Task.Delay(3000);
+            _syncButtonText = "Sync Device";
+        }
+        finally
+        {
+            _isSyncing = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearFilters()
+    {
+        _fromDate = null;
+        _toDate = null;
+        _employeeIdFilter = null;
+        _ = LoadPunchRecords();
+    }
+
+    private async Task ExportToExcel()
+    {
+        if (_logs.Count == 0) return;
+
+        var csv = "Employee ID,Employee Name,Log Date,Time Logged,Log Type,Device Terminal,Verification Mode\n";
+        foreach (var log in _logs)
+        {
+            csv += $"{log.EmployeeId},{log.EmployeeName},{log.LogDate},{log.TimeLogged},{log.LogType},{log.DeviceTerminal},{log.VerificationMode}\n";
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFile", $"PunchLog_{DateTime.Now:yyyyMMdd_HHmmss}.csv", "text/csv", base64);
+    }
+
+    private static string NormalizeLogType(string logType)
+    {
+        return logType?.ToUpperInvariant() switch
+        {
+            "I" => "PUNCH IN",
+            "O" => "PUNCH OUT",
+            "PUNCH IN" => "PUNCH IN",
+            "PUNCH OUT" => "PUNCH OUT",
+            _ => logType ?? "-"
+        };
+    }
+
+    private static string GetBadgeClass(string logType)
+    {
+        var normalized = logType?.ToUpperInvariant();
+        return normalized is "I" or "PUNCH IN"
+            ? "bg-green-50 text-green-700"
+            : "bg-red-50 text-red-700";
+    }
+
     public class PunchLogRecord
     {
+        public string EmployeeId { get; set; } = string.Empty;
         public string EmployeeName { get; set; } = string.Empty;
         public string LogDate { get; set; } = string.Empty;
         public string TimeLogged { get; set; } = string.Empty;
@@ -53,10 +259,17 @@
         public string BadgeClass { get; set; } = string.Empty;
     }
 
-    private List<PunchLogRecord> _logs = new()
+    public class PunchRecordDto
     {
-        new PunchLogRecord { EmployeeName = "Peter Parker", LogDate = "2026-06-12", TimeLogged = "08:56:12 AM", LogType = "PUNCH IN", DeviceTerminal = "Main Entrance Terminal 1", VerificationMode = "Fingerprint", BadgeClass = "bg-green-50 text-green-700" },
-        new PunchLogRecord { EmployeeName = "Peter Parker", LogDate = "2026-06-12", TimeLogged = "05:04:45 PM", LogType = "PUNCH OUT", DeviceTerminal = "Main Entrance Terminal 1", VerificationMode = "Fingerprint", BadgeClass = "bg-red-50 text-red-700" },
-        new PunchLogRecord { EmployeeName = "Bruce Wayne", LogDate = "2026-06-12", TimeLogged = "09:02:10 AM", LogType = "PUNCH IN", DeviceTerminal = "Secondary Gate Terminal 3", VerificationMode = "RFID Card", BadgeClass = "bg-green-50 text-green-700" }
-    };
+        public int Id { get; set; }
+        public string EmployeeId { get; set; } = string.Empty;
+        public string EmployeeName { get; set; } = string.Empty;
+        public DateTime LogDateTime { get; set; }
+        public string LogType { get; set; } = string.Empty;
+        public string DeviceTerminal { get; set; } = string.Empty;
+        public string VerificationMode { get; set; } = string.Empty;
+        public string DeviceId { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public bool IsProcessed { get; set; }
+    }
 }

@@ -83,5 +83,21 @@ namespace ERPHub.Controllers
             await _erpService.DeleteCompanyAsync(id);
             return Ok($"Company with ID {id} has been deleted.");
         }
+
+        // POST: api/companies/seed-demo
+        [HttpPost("seed-demo")]
+        public async Task<IActionResult> SeedDemoCompanies()
+        {
+            await _erpService.SeedDemoCompaniesAsync();
+            return Ok("Demo companies seeded successfully.");
+        }
+
+        // POST: api/companies/remove-demo
+        [HttpPost("remove-demo")]
+        public async Task<IActionResult> RemoveDemoCompanies()
+        {
+            await _erpService.RemoveDemoCompaniesAsync();
+            return Ok("Demo companies removed successfully.");
+        }
     }
 }

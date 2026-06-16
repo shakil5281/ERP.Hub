@@ -32,6 +32,8 @@ namespace ERPHub.Services
         Task AddCompanyAsync(Company company);
         Task UpdateCompanyAsync(Company company);
         Task DeleteCompanyAsync(int id);
+        Task SeedDemoCompaniesAsync();
+        Task RemoveDemoCompaniesAsync();
 
         // Dashboard/ERP Statistics
         Task<decimal> GetTotalRevenueAsync();
@@ -41,5 +43,32 @@ namespace ERPHub.Services
 
         // Organogram Tree
         Task<List<CompanyNodeDto>> GetOrganogramTreeAsync();
+
+        // Shifts
+        Task<List<Shift>> GetShiftsAsync();
+        Task<Shift?> GetShiftByIdAsync(int id);
+        Task AddShiftAsync(Shift shift);
+        Task UpdateShiftAsync(Shift shift);
+        Task DeleteShiftAsync(int id);
+
+        // Employees
+        Task<List<Employee>> GetEmployeesAsync();
+        Task<Employee?> GetEmployeeByIdAsync(int id);
+        Task AddEmployeeAsync(Employee employee);
+        Task UpdateEmployeeAsync(Employee employee);
+        Task DeleteEmployeeAsync(int id);
+
+        // Lookups
+        Task<List<Department>> GetDepartmentsAsync();
+        Task<List<Section>> GetSectionsAsync();
+        Task<List<Designation>> GetDesignationsAsync();
+        Task<List<Line>> GetLinesAsync();
+
+        // Punch Records (ZK Device)
+        Task<List<PunchRecord>> GetPunchRecordsAsync(DateTime? fromDate = null, DateTime? toDate = null, string? employeeId = null);
+        Task<PunchRecord?> GetPunchRecordByIdAsync(int id);
+        Task AddPunchRecordAsync(PunchRecord record);
+        Task<int> ImportPunchRecordsFromMdbAsync(string mdbFilePath, DateTime? syncDate = null);
+        Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? syncDate = null);
     }
 }

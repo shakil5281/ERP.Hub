@@ -8,8 +8,10 @@
             <!-- Header Block -->
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Employee Directory</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage staff profiles, contracts, departments, and active employment status.</p>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Employee Information</h2>
+                </div>
+                <div>
+                    <NavLink href="/hr/add-employee" type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">+ Add Employee</NavLink>
                 </div>
             </div>
 
@@ -48,10 +50,10 @@
                             <div class="relative">
                                 <select class="block w-full appearance-none pl-4 pr-10 py-3 border border-zinc-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl bg-zinc-50 hover:bg-white text-sm transition-colors outline-none text-zinc-700 font-medium cursor-pointer" @bind="_selectedDept">
                                     <option value="">All Departments</option>
-                                    <option value="Leadership">Leadership</option>
-                                    <option value="HR Admin">HR Admin</option>
-                                    <option value="Finance">Finance</option>
-                                    <option value="Operations">Operations</option>
+                                    @foreach (var dept in _departments)
+                                    {
+                                        <option value="@dept.NameEn">@dept.NameEn</option>
+                                    }
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -65,7 +67,7 @@
                                 <select class="block w-full appearance-none pl-4 pr-10 py-3 border border-zinc-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl bg-zinc-50 hover:bg-white text-sm transition-colors outline-none text-zinc-700 font-medium cursor-pointer" @bind="_selectedStatus">
                                     <option value="">All Statuses</option>
                                     <option value="Active">Active</option>
-                                    <option value="On Leave">On Leave</option>
+                                    <option value="Inactive">Inactive</option>
                                 </select>
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <svg class="w-4 h-4 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -95,32 +97,43 @@
             </div>
 
             <!-- Employee DataTable -->
-            <DataTable TItem="EmployeeModel" Items="FilteredEmployees">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-12">Avatar</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Full Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-body">Email</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Role</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Join Date</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
-                </HeaderTemplate>
-                <RowTemplate Context="emp">
-                    <td class="p-2.5 px-4">
-                        <div class="w-8 h-8 rounded-full bg-zinc-200 text-zinc-700 flex items-center justify-center text-xs font-bold font-heading">
-                            @emp.Initials
-                        </div>
-                    </td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-heading">@emp.Name</td>
-                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold font-body">@emp.Email</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@emp.Department</td>
-                    <td class="p-2.5 px-4 text-zinc-650 text-xs">@emp.Role</td>
-                    <td class="p-2.5 px-4 text-zinc-500 text-xs font-body">@emp.JoinDate</td>
-                    <td class="p-2.5 px-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @emp.BadgeClass">@emp.Status</span>
-                    </td>
-                </RowTemplate>
-            </DataTable>
+            @if (_isLoading)
+            {
+                <div class="text-center py-8 text-zinc-500 text-sm">Loading employees...</div>
+            }
+            else
+            {
+                <DataTable TItem="Employee" Items="FilteredEmployees">
+                    <HeaderTemplate>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-12">Avatar</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-body">Email</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Section</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Designation</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Line</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Join Date</th>
+                        <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                    </HeaderTemplate>
+                    <RowTemplate Context="emp">
+                        <td class="p-2.5 px-4">
+                            <div class="w-8 h-8 rounded-full bg-zinc-200 text-zinc-700 flex items-center justify-center text-xs font-bold font-heading">
+                                @GetInitials(emp.EmployeeName)
+                            </div>
+                        </td>
+                        <td class="p-2.5 px-4 text-zinc-900 font-bold font-heading">@emp.EmployeeName</td>
+                        <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold font-body">@emp.Email</td>
+                        <td class="p-2.5 px-4 text-zinc-700 text-xs">@emp.Department?.NameEn</td>
+                        <td class="p-2.5 px-4 text-zinc-700 text-xs">@emp.Section?.NameEn</td>
+                        <td class="p-2.5 px-4 text-zinc-650 text-xs">@emp.Designation?.NameEn</td>
+                        <td class="p-2.5 px-4 text-zinc-650 text-xs">@emp.Line?.NameEn</td>
+                        <td class="p-2.5 px-4 text-zinc-500 text-xs font-body">@emp.JoiningDate.ToString("yyyy-MM-dd")</td>
+                        <td class="p-2.5 px-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @GetStatusBadge(emp.IsActive)">@(emp.IsActive ? "Active" : "Inactive")</span>
+                        </td>
+                    </RowTemplate>
+                </DataTable>
+            }
         </div>
     </Authorized>
     <NotAuthorized>
@@ -129,23 +142,57 @@
 </AuthorizeView>
 
 @code {
-    public class EmployeeModel
-    {
-        public string Initials { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Department { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
-        public string JoinDate { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string BadgeClass { get; set; } = string.Empty;
-    }
+    [Inject]
+    private HttpClient Http { get; set; } = default!;
+
+    [Inject]
+    private NavigationManager NavManager { get; set; } = default!;
 
     private string _searchQuery = "";
     private string _selectedDept = "";
     private string _selectedStatus = "";
     private string _selectedYear = "";
     private bool _showAdvancedFilters = false;
+    private bool _isLoading = true;
+    private List<Employee> _employees = new();
+    private List<Department> _departments = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var baseUri = NavManager.BaseUri;
+        await Task.WhenAll(
+            LoadEmployeesAsync(baseUri),
+            LoadDepartmentsAsync(baseUri)
+        );
+    }
+
+    private async Task LoadEmployeesAsync(string baseUri)
+    {
+        try
+        {
+            _employees = await Http.GetFromJsonAsync<List<Employee>>($"{baseUri}api/employees") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employees: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private async Task LoadDepartmentsAsync(string baseUri)
+    {
+        try
+        {
+            _departments = await Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments") ?? new();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading departments: {ex.Message}");
+        }
+    }
 
     private void ToggleAdvancedFilters() => _showAdvancedFilters = !_showAdvancedFilters;
 
@@ -160,20 +207,25 @@
         _selectedYear = "";
     }
 
-    private IEnumerable<EmployeeModel> FilteredEmployees => _employees
+    private IEnumerable<Employee> FilteredEmployees => _employees
         .Where(e => string.IsNullOrEmpty(_searchQuery) || 
-                    e.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
+                    e.EmployeeName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
                     e.Email.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
-                    e.Role.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-        .Where(e => string.IsNullOrEmpty(_selectedDept) || e.Department == _selectedDept)
-        .Where(e => string.IsNullOrEmpty(_selectedStatus) || e.Status == _selectedStatus)
-        .Where(e => string.IsNullOrEmpty(_selectedYear) || e.JoinDate.StartsWith(_selectedYear));
+                    (e.Designation?.NameEn?.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ?? false))
+        .Where(e => string.IsNullOrEmpty(_selectedDept) || (e.Department?.NameEn == _selectedDept))
+        .Where(e => string.IsNullOrEmpty(_selectedStatus) || (e.IsActive && _selectedStatus == "Active") || (!e.IsActive && _selectedStatus == "Inactive"))
+        .Where(e => string.IsNullOrEmpty(_selectedYear) || e.JoiningDate.Year.ToString() == _selectedYear);
 
-    private List<EmployeeModel> _employees = new()
+    private static string GetInitials(string name)
     {
-        new EmployeeModel { Initials = "JD", Name = "Jane Doe", Email = "jane.doe@acme.com", Department = "Leadership", Role = "CEO", JoinDate = "2020-01-15", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
-        new EmployeeModel { Initials = "JS", Name = "John Smith", Email = "john.smith@acme.com", Department = "HR Admin", Role = "Director of HR", JoinDate = "2021-04-10", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
-        new EmployeeModel { Initials = "SC", Name = "Sarah Connor", Email = "sarah.connor@acme.com", Department = "Finance", Role = "CFO", JoinDate = "2022-09-01", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
-        new EmployeeModel { Initials = "MS", Name = "Michael Scott", Email = "michael.scott@acme.com", Department = "Operations", Role = "Operations Director", JoinDate = "2023-03-15", Status = "On Leave", BadgeClass = "bg-amber-50 text-amber-700" }
-    };
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpper();
+        return $"{parts[0][..1]}{parts[^1][..1]}".ToUpper();
+    }
+
+    private static string GetStatusBadge(bool isActive)
+    {
+        return isActive ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700";
+    }
 }

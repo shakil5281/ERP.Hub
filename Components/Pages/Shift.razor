@@ -8,55 +8,145 @@
             <!-- Header Block -->
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Shift Management</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage shift rosters, timing schedules, and Grace Period policies.</p>
+                    <h2 class="text-2xl font-semibold text-black tracking-tight font-heading">Shift Management</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage shift rosters, timing schedules, and off-day policies.</p>
+                </div>
+                <div>
+                    <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddModal">+ Add Shift</button>
                 </div>
             </div>
 
-            <!-- Shift Configurations DataTable -->
-            <DataTable TItem="ShiftConfig" Items="_shifts">
+            <!-- Dynamic DataTable component -->
+            <DataTable TItem="ERPHub.Models.Shift" Items="FilteredShifts">
                 <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Shift Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Start Time</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">End Time</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Grace Period</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Break Duration</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
+                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
+                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Shift Name</th>
+                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">In Time</th>
+                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Out Time</th>
+                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Late Time</th>
+                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Off Day</th>
                 </HeaderTemplate>
                 <RowTemplate Context="shift">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@shift.Name</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@shift.StartTime</td>
-                    <td class="p-2.5 px-4 text-zinc-750 text-xs">@shift.EndTime</td>
-                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-semibold">@shift.GracePeriod</td>
-                    <td class="p-2.5 px-4 text-zinc-650 text-xs">@shift.BreakTime</td>
-                    <td class="p-2.5 px-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @shift.BadgeClass">@shift.Status</span>
+                    <td class="p-2.5 px-4 text-zinc-800 font-semibold font-body">
+                        @(FilteredShifts.ToList().IndexOf(shift) + 1)
+                    </td>
+                    <td class="p-2.5 px-4 text-zinc-900 font-semibold font-body">@shift.ShiftName</td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold text-[11px]">@FormatTime(shift.InTime)</span>
+                    </td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold text-[11px]">@FormatTime(shift.OutTime)</span>
+                    </td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">
+                        @if (shift.LateTime == TimeSpan.Zero)
+                        {
+                            <span class="text-zinc-400 text-xs">—</span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold text-[11px]">@FormatTime(shift.LateTime)</span>
+                        }
+                    </td>
+                    <td class="p-2.5 px-4 text-zinc-700 font-body">
+                        @if (string.IsNullOrWhiteSpace(shift.OffDay))
+                        {
+                            <span class="text-zinc-400 text-xs">—</span>
+                        }
+                        else
+                        {
+                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 font-semibold text-[11px]">@shift.OffDay</span>
+                        }
                     </td>
                 </RowTemplate>
+                <RowActionsContent Context="shift">
+                    <button class="bg-transparent border-0 text-left py-1.5 px-3 cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditModal(shift)">Edit</button>
+                    <button class="bg-transparent border-0 text-left py-1.5 px-3 cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDelete(shift.Id)">Delete</button>
+                </RowActionsContent>
             </DataTable>
         </div>
+
+        <!-- Add / Edit Modal -->
+        @if (_showFormModal)
+        {
+            <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-[1000] p-4 animate-fade-in">
+                <div class="bg-white border border-zinc-200 rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col">
+                    <div class="p-4 px-5 border-b border-zinc-100 flex justify-between items-center bg-white">
+                        <h3 class="font-bold text-sm text-zinc-950">@(_isEditMode ? "Modify Shift Details" : "Add New Shift")</h3>
+                        <button type="button" class="bg-transparent border-0 text-zinc-400 text-xl cursor-pointer hover:text-black transition-colors" @onclick="CloseModal">&times;</button>
+                    </div>
+
+                    <EditForm Model="@_editingShift" OnValidSubmit="SaveShift">
+                        <DataAnnotationsValidator />
+
+                        <div class="p-5 overflow-y-auto max-h-[70vh] flex flex-col gap-4">
+
+                            <!-- Shift Name -->
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Shift Name</label>
+                                <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingShift.ShiftName" placeholder="e.g. General Shift" />
+                                <ValidationMessage For="@(() => _editingShift.ShiftName)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                            </div>
+
+                            <!-- Time Fields -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">In Time</label>
+                                    <input type="time" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           value="@FormatTimeForInput(_editingShift.InTime)"
+                                           @onchange="e => _editingShift.InTime = ParseTime(e.Value?.ToString())" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Out Time</label>
+                                    <input type="time" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           value="@FormatTimeForInput(_editingShift.OutTime)"
+                                           @onchange="e => _editingShift.OutTime = ParseTime(e.Value?.ToString())" />
+                                </div>
+                            </div>
+
+                            <!-- Late Time & Off Day -->
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Late Time <span class="normal-case text-zinc-300">(optional)</span></label>
+                                    <input type="time" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
+                                           value="@FormatTimeForInput(_editingShift.LateTime)"
+                                           @onchange="e => _editingShift.LateTime = ParseTime(e.Value?.ToString())" />
+                                </div>
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Off Day <span class="normal-case text-zinc-300">(optional)</span></label>
+                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingShift.OffDay" placeholder="e.g. Friday" />
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="p-4 px-5 border-t border-zinc-100 bg-zinc-50 flex justify-end gap-2.5">
+                            <button type="button" class="py-2 px-4 border border-zinc-200 rounded-lg bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="CloseModal">Cancel</button>
+                            <button type="submit" class="py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" disabled="@_isSaving">
+                                @if (_isSaving) { <span>Saving…</span> } else { <span>Save Shift</span> }
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
+
+        <!-- Success & Error Toasts -->
+        @if (_showToast)
+        {
+            <div class="fixed bottom-6 right-6 bg-emerald-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
+                <span>✓</span>
+                <span>@_toastMessage</span>
+            </div>
+        }
+        @if (_showErrorToast)
+        {
+            <div class="fixed bottom-6 right-6 bg-red-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
+                <span>✗</span>
+                <span>@_errorMessage</span>
+            </div>
+        }
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
     </NotAuthorized>
 </AuthorizeView>
-
-@code {
-    public class ShiftConfig
-    {
-        public string Name { get; set; } = string.Empty;
-        public string StartTime { get; set; } = string.Empty;
-        public string EndTime { get; set; } = string.Empty;
-        public string GracePeriod { get; set; } = string.Empty;
-        public string BreakTime { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string BadgeClass { get; set; } = string.Empty;
-    }
-
-    private List<ShiftConfig> _shifts = new()
-    {
-        new ShiftConfig { Name = "Shift A (General)", StartTime = "09:00 AM", EndTime = "05:00 PM", GracePeriod = "15 minutes", BreakTime = "1 hour (Lunch)", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
-        new ShiftConfig { Name = "Shift B (Afternoon)", StartTime = "03:00 PM", EndTime = "11:00 PM", GracePeriod = "15 minutes", BreakTime = "30 minutes (Dinner)", Status = "Active", BadgeClass = "bg-green-50 text-green-700" },
-        new ShiftConfig { Name = "Shift C (Nocturnal)", StartTime = "11:00 PM", EndTime = "07:00 AM", GracePeriod = "10 minutes", BreakTime = "30 minutes", Status = "Inactive", BadgeClass = "bg-zinc-100 text-zinc-600" }
-    };
-}

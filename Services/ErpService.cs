@@ -1,8 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
+using System.Data.SqlClient;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using ERPHub.Data;
 using ERPHub.Models;
 
@@ -11,10 +16,12 @@ namespace ERPHub.Services
     public class ErpService : IErpService
     {
         private readonly ErpDbContext _context;
+        private readonly IConfiguration _configuration;
 
-        public ErpService(ErpDbContext context)
+        public ErpService(ErpDbContext context, IConfiguration configuration)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
         // --- Products Operations ---
@@ -228,6 +235,95 @@ namespace ERPHub.Services
             }
         }
 
+        public async Task SeedDemoCompaniesAsync()
+        {
+            var demoCompanies = new List<Company>
+            {
+                new Company
+                {
+                    CompanyNameEn = "Acme Corporation",
+                    CompanyNameBn = "একমি কর্পোরেশন",
+                    AddressEn = "123 Industrial Area, Dhaka",
+                    AddressBn = "১২৩ শিল্প এলাকা, ঢাকা",
+                    Email = "contact@acme.com",
+                    PhoneNumber = "+880 1711-000001",
+                    Signature = "John Doe"
+                },
+                new Company
+                {
+                    CompanyNameEn = "TechNova Solutions",
+                    CompanyNameBn = "টেকনোভা সলিউশনস",
+                    AddressEn = "45 Tech Park, Chittagong",
+                    AddressBn = "৪৫ টেক পার্ক, চট্টগ্রাম",
+                    Email = "info@technova.io",
+                    PhoneNumber = "+880 1819-000002",
+                    Signature = "Jane Smith"
+                },
+                new Company
+                {
+                    CompanyNameEn = "GreenSprout Organics",
+                    CompanyNameBn = "গ্রীনস্প্রাউট অর্গানিকস",
+                    AddressEn = "78 Vertical Farm Road, Sylhet",
+                    AddressBn = "৭৮ ভার্টিকাল ফার্ম রোড, সিলেট",
+                    Email = "support@greensprout.com",
+                    PhoneNumber = "+880 1912-000003",
+                    Signature = "Abu Sayed"
+                },
+                new Company
+                {
+                    CompanyNameEn = "Apex Global Logistics",
+                    CompanyNameBn = "এপেক্স গ্লোবাল লজিস্টিকস",
+                    AddressEn = "12 Ocean Terminal, Mongla",
+                    AddressBn = "১২ ওশান টার্মিনাল, মংলা",
+                    Email = "logistics@apex.com",
+                    PhoneNumber = "+880 1613-000004",
+                    Signature = "Robert Chen"
+                },
+                new Company
+                {
+                    CompanyNameEn = "Skyline Real Estate",
+                    CompanyNameBn = "স্কাইলাইন রিয়েল এস্টেট",
+                    AddressEn = "56 Commercial Avenue, Gulshan, Dhaka",
+                    AddressBn = "৫৬ কমার্শিয়াল এভিনিউ, গুলশান, ঢাকা",
+                    Email = "sales@skylinere.com",
+                    PhoneNumber = "+880 1515-000005",
+                    Signature = "Sarah Khan"
+                }
+            };
+
+            foreach (var company in demoCompanies)
+            {
+                var exists = await _context.Companies.AnyAsync(c => c.Email == company.Email || c.CompanyNameEn == company.CompanyNameEn);
+                if (!exists)
+                {
+                    await _context.Companies.AddAsync(company);
+                }
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveDemoCompaniesAsync()
+        {
+            var demoEmails = new List<string>
+            {
+                "contact@acme.com",
+                "info@technova.io",
+                "support@greensprout.com",
+                "logistics@apex.com",
+                "sales@skylinere.com"
+            };
+
+            var toRemove = await _context.Companies
+                .Where(c => demoEmails.Contains(c.Email))
+                .ToListAsync();
+
+            if (toRemove.Any())
+            {
+                _context.Companies.RemoveRange(toRemove);
+                await _context.SaveChangesAsync();
+            }
+        }
+
         // --- Dashboard / Statistics ---
         public async Task<decimal> GetTotalRevenueAsync()
         {
@@ -303,6 +399,398 @@ namespace ERPHub.Services
             }
 
             return tree;
+        }
+
+        // --- Shifts Operations ---
+        public async Task<List<Shift>> GetShiftsAsync()
+        {
+            return await _context.Shifts.OrderBy(s => s.ShiftName).ToListAsync();
+        }
+
+        public async Task<Shift?> GetShiftByIdAsync(int id)
+        {
+            return await _context.Shifts.FindAsync(id);
+        }
+
+        public async Task AddShiftAsync(Shift shift)
+        {
+            shift.Id = 0;
+            await _context.Shifts.AddAsync(shift);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateShiftAsync(Shift shift)
+        {
+            var existing = await _context.Shifts.FindAsync(shift.Id);
+            if (existing != null)
+            {
+                existing.ShiftName = shift.ShiftName;
+                existing.InTime    = shift.InTime;
+                existing.OutTime   = shift.OutTime;
+                existing.LateTime  = shift.LateTime;
+                existing.OffDay    = shift.OffDay;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteShiftAsync(int id)
+        {
+            var existing = await _context.Shifts.FindAsync(id);
+            if (existing != null)
+            {
+                _context.Shifts.Remove(existing);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // --- Employees Operations ---
+        public async Task<List<Employee>> GetEmployeesAsync()
+        {
+            return await _context.Employees
+                .Include(e => e.Department)
+                .Include(e => e.Section)
+                .Include(e => e.Designation)
+                .Include(e => e.Line)
+                .Include(e => e.Shift)
+                .OrderByDescending(e => e.Id)
+                .ToListAsync();
+        }
+
+        public async Task<Employee?> GetEmployeeByIdAsync(int id)
+        {
+            return await _context.Employees
+                .Include(e => e.Department)
+                .Include(e => e.Section)
+                .Include(e => e.Designation)
+                .Include(e => e.Line)
+                .Include(e => e.Shift)
+                .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task AddEmployeeAsync(Employee employee)
+        {
+            employee.Id = 0;
+            await _context.Employees.AddAsync(employee);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateEmployeeAsync(Employee employee)
+        {
+            var existing = await _context.Employees.FindAsync(employee.Id);
+            if (existing != null)
+            {
+                existing.EmployeeId = employee.EmployeeId;
+                existing.EmployeeName = employee.EmployeeName;
+                existing.FatherName = employee.FatherName;
+                existing.MotherName = employee.MotherName;
+                existing.Address = employee.Address;
+                existing.NID = employee.NID;
+                existing.MobileNo = employee.MobileNo;
+                existing.Email = employee.Email;
+                existing.DepartmentId = employee.DepartmentId;
+                existing.SectionId = employee.SectionId;
+                existing.DesignationId = employee.DesignationId;
+                existing.LineId = employee.LineId;
+                existing.ShiftId = employee.ShiftId;
+                existing.JoiningDate = employee.JoiningDate;
+                existing.BasicSalary = employee.BasicSalary;
+                existing.IsActive = employee.IsActive;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteEmployeeAsync(int id)
+        {
+            var existing = await _context.Employees.FindAsync(id);
+            if (existing != null)
+            {
+                _context.Employees.Remove(existing);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        // --- Lookups Operations ---
+        public async Task<List<Department>> GetDepartmentsAsync()
+        {
+            return await _context.Departments.OrderBy(d => d.NameEn).ToListAsync();
+        }
+
+        public async Task<List<Section>> GetSectionsAsync()
+        {
+            return await _context.Sections.OrderBy(s => s.NameEn).ToListAsync();
+        }
+
+        public async Task<List<Designation>> GetDesignationsAsync()
+        {
+            return await _context.Designations.OrderBy(d => d.NameEn).ToListAsync();
+        }
+
+        public async Task<List<Line>> GetLinesAsync()
+        {
+            return await _context.Lines.OrderBy(l => l.NameEn).ToListAsync();
+        }
+
+        // --- Punch Records (ZK Device) ---
+        public async Task<List<PunchRecord>> GetPunchRecordsAsync(DateTime? fromDate = null, DateTime? toDate = null, string? employeeId = null)
+        {
+            var query = _context.PunchRecords.AsQueryable();
+
+            if (fromDate.HasValue)
+                query = query.Where(p => p.LogDateTime >= fromDate.Value);
+
+            if (toDate.HasValue)
+                query = query.Where(p => p.LogDateTime <= toDate.Value);
+
+            if (!string.IsNullOrEmpty(employeeId))
+                query = query.Where(p => p.EmployeeId == employeeId);
+
+            return await query.OrderByDescending(p => p.LogDateTime).ToListAsync();
+        }
+
+        public async Task<PunchRecord?> GetPunchRecordByIdAsync(int id)
+        {
+            return await _context.PunchRecords.FindAsync(id);
+        }
+
+        public async Task AddPunchRecordAsync(PunchRecord record)
+        {
+            record.Id = 0;
+            record.CreatedAt = DateTime.Now;
+            await _context.PunchRecords.AddAsync(record);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> ImportPunchRecordsFromMdbAsync(string mdbFilePath, DateTime? syncDate = null)
+        {
+            var connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={mdbFilePath};";
+            int importedCount = 0;
+
+            using (var connection = new OleDbConnection(connectionString))
+            {
+                await connection.OpenAsync();
+
+                var schema = connection.GetSchema("Tables");
+                var tableNames = new List<string>();
+                foreach (System.Data.DataRow row in schema.Rows)
+                {
+                    var name = row["TABLE_NAME"]?.ToString();
+                    if (!string.IsNullOrEmpty(name))
+                        tableNames.Add(name);
+                }
+
+                var tableName = tableNames.FirstOrDefault(t =>
+                    t.Equals("CHECKINOUT", StringComparison.OrdinalIgnoreCase));
+
+                if (tableName == null && tableNames.Count > 0)
+                    tableName = tableNames[0];
+
+                if (tableName == null)
+                    throw new Exception("No tables found in MDB file.");
+
+                var columns = new List<string>();
+                var colSchema = connection.GetSchema("Columns", new[] { null, null, tableName });
+                foreach (System.Data.DataRow row in colSchema.Rows)
+                {
+                    columns.Add(row["COLUMN_NAME"]?.ToString() ?? "");
+                }
+
+                var hasNameCol = columns.Any(c => c.Equals("Name", StringComparison.OrdinalIgnoreCase));
+                var hasSnCol = columns.Any(c => c.Equals("SN", StringComparison.OrdinalIgnoreCase));
+                var hasVerifyCol = columns.Any(c => c.Equals("VerifyMode", StringComparison.OrdinalIgnoreCase));
+                var hasSensorCol = columns.Any(c => c.Equals("SensorID", StringComparison.OrdinalIgnoreCase));
+                var hasUserIdCol = columns.Any(c => c.Equals("USERID", StringComparison.OrdinalIgnoreCase));
+                var hasCheckTimeCol = columns.Any(c => c.Equals("CHECKTIME", StringComparison.OrdinalIgnoreCase));
+                var hasCheckTypeCol = columns.Any(c => c.Equals("CHECKTYPE", StringComparison.OrdinalIgnoreCase));
+                var hasShortTimeCol = columns.Any(c => c.Equals("ShortCheckTime", StringComparison.OrdinalIgnoreCase));
+
+                var selectCols = "a.USERID, a.CHECKTIME, a.CHECKTYPE";
+                if (hasNameCol) selectCols += ", a.Name";
+                if (hasSnCol) selectCols += ", a.SN";
+                if (hasVerifyCol) selectCols += ", a.VerifyMode";
+                if (hasSensorCol) selectCols += ", a.SensorID";
+                if (hasShortTimeCol) selectCols += ", a.ShortCheckTime";
+
+                var query = $"SELECT {selectCols} FROM [{tableName}] a";
+
+                var command = new OleDbCommand(query, connection);
+                using (var reader = await command.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        var userId = reader["USERID"]?.ToString()?.Trim() ?? string.Empty;
+                        var rawName = hasNameCol ? reader["Name"]?.ToString()?.Trim() : null;
+                        var logTime = Convert.ToDateTime(reader["CHECKTIME"]);
+                        var logType = reader["CHECKTYPE"]?.ToString()?.Trim() ?? "I";
+                        var sn = hasSnCol ? reader["SN"]?.ToString()?.Trim() : null;
+                        var verifyMode = hasVerifyCol ? reader["VerifyMode"]?.ToString()?.Trim() : null;
+                        var sensorId = hasSensorCol ? reader["SensorID"]?.ToString()?.Trim() : null;
+
+                        if (syncDate.HasValue && logTime.Date != syncDate.Value.Date)
+                            continue;
+
+                        string? empName = rawName;
+                        if (string.IsNullOrEmpty(empName))
+                        {
+                            empName = await GetEmployeeNameFromDbAsync(userId, connection);
+                        }
+                        if (string.IsNullOrEmpty(empName))
+                            empName = $"Employee {userId}";
+
+                        var record = new PunchRecord
+                        {
+                            EmployeeId = userId,
+                            EmployeeName = empName,
+                            LogDateTime = logTime,
+                            LogType = logType,
+                            DeviceTerminal = sn ?? string.Empty,
+                            VerificationMode = verifyMode ?? string.Empty,
+                            DeviceId = sensorId ?? string.Empty,
+                            CreatedAt = DateTime.Now,
+                            IsProcessed = false
+                        };
+
+                        var exists = await _context.PunchRecords
+                            .AnyAsync(p => p.EmployeeId == record.EmployeeId && p.LogDateTime == record.LogDateTime);
+
+                        if (!exists)
+                        {
+                            await _context.PunchRecords.AddAsync(record);
+                            importedCount++;
+                        }
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return importedCount;
+        }
+
+        private async Task<string?> GetEmployeeNameFromDbAsync(string userId, OleDbConnection connection)
+        {
+            try
+            {
+                var tables = connection.GetSchema("Tables");
+                var hasUserinfo = false;
+                foreach (System.Data.DataRow row in tables.Rows)
+                {
+                    var name = row["TABLE_NAME"]?.ToString();
+                    if (name != null && name.Equals("USERINFO", StringComparison.OrdinalIgnoreCase))
+                    {
+                        hasUserinfo = true;
+                        break;
+                    }
+                }
+
+                if (!hasUserinfo) return null;
+
+                var cmd = new OleDbCommand("SELECT [Name] FROM [USERINFO] WHERE [USERID] = ?", connection);
+                cmd.Parameters.AddWithValue("?", userId);
+                var result = await cmd.ExecuteScalarAsync();
+                return result?.ToString()?.Trim();
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        public async Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? syncDate = null)
+        {
+            var useSqlServer = _configuration.GetValue<bool>("ZKDevice:UseSqlServer");
+            
+            if (useSqlServer)
+            {
+                var sqlConnStr = _configuration["ZKDevice:SqlConnection"];
+                if (string.IsNullOrEmpty(sqlConnStr))
+                    return 0;
+                
+                return await ImportPunchRecordsFromSqlServerAsync(sqlConnStr, syncDate);
+            }
+            
+            var mdbPath = _configuration["ZKDevice:MdbFilePath"];
+            if (string.IsNullOrEmpty(mdbPath) || !File.Exists(mdbPath))
+            {
+                return 0;
+            }
+
+            return await ImportPunchRecordsFromMdbAsync(mdbPath, syncDate);
+        }
+
+        public async Task<int> ImportPunchRecordsFromSqlServerAsync(string connectionString, DateTime? syncDate = null)
+        {
+            int importedCount = 0;
+
+            using (var connection = new SqlConnection(connectionString))
+            {
+                await connection.OpenAsync();
+
+                var query = @"
+                    SELECT USERID, CHECKTIME, CHECKTYPE, SN, VerifyMode, SensorID
+                    FROM CHECKINOUT
+                    WHERE 1=1";
+
+                if (syncDate.HasValue)
+                {
+                    query += " AND CAST(CHECKTIME AS DATE) = @syncDate";
+                }
+
+                query += " ORDER BY CHECKTIME";
+
+                using (var command = new SqlCommand(query, connection))
+                {
+                    if (syncDate.HasValue)
+                    {
+                        command.Parameters.AddWithValue("@syncDate", syncDate.Value.Date);
+                    }
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+                        while (await reader.ReadAsync())
+                        {
+                            var userId = reader["USERID"]?.ToString()?.Trim() ?? string.Empty;
+                            var logTime = Convert.ToDateTime(reader["CHECKTIME"]);
+                            var logType = reader["CHECKTYPE"]?.ToString()?.Trim() ?? "I";
+                            var sn = reader["SN"]?.ToString()?.Trim() ?? string.Empty;
+                            var verifyMode = reader["VerifyMode"]?.ToString()?.Trim() ?? string.Empty;
+                            var sensorId = reader["SensorID"]?.ToString()?.Trim() ?? string.Empty;
+
+                            string empName = $"Employee {userId}";
+                            try
+                            {
+                                var emp = await _context.Employees.FirstOrDefaultAsync(e => e.EmployeeId == userId);
+                                if (emp != null)
+                                    empName = emp.EmployeeName;
+                            }
+                            catch { }
+
+                            var record = new PunchRecord
+                            {
+                                EmployeeId = userId,
+                                EmployeeName = empName,
+                                LogDateTime = logTime,
+                                LogType = logType,
+                                DeviceTerminal = sn,
+                                VerificationMode = verifyMode,
+                                DeviceId = sensorId,
+                                CreatedAt = DateTime.Now,
+                                IsProcessed = false
+                            };
+
+                            var exists = await _context.PunchRecords
+                                .AnyAsync(p => p.EmployeeId == record.EmployeeId && p.LogDateTime == record.LogDateTime);
+
+                            if (!exists)
+                            {
+                                await _context.PunchRecords.AddAsync(record);
+                                importedCount++;
+                            }
+                        }
+                    }
+                }
+                await _context.SaveChangesAsync();
+            }
+
+            return importedCount;
         }
     }
 }

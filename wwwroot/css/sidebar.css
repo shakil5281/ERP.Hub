@@ -6,6 +6,11 @@
          url("https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.ttf") format("truetype");
 }
 
+html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
 /* --- ERPHub Custom Modern Sidebar Stylesheet --- */
 
 /* Sidebar Layout Panel */
@@ -115,6 +120,12 @@
     flex-direction: column;
     gap: 8px;
     padding: 0;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none;  /* IE and Edge */
+}
+
+.sidebar-nav-container::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
 }
 
 /* Flat Link list */
@@ -434,11 +445,30 @@
 }
 
 
-/* Custom font class for SutonnyMJ (overridden to use normal font and sm size) */
+/* Custom font class for SutonnyMJ - Bangla font */
 .font-sutonnymj {
-    font-family: inherit !important;
-    font-size: 0.875rem !important;
+    font-family: 'SutonnyMJ', sans-serif !important;
+    font-size: 0.975rem !important;
     font-weight: normal !important;
+}
+
+/* Override data-table-base font-size for SutonnyMJ (Bangla) elements */
+.data-table-base .font-sutonnymj,
+.data-table-base th.font-sutonnymj,
+.data-table-base td.font-sutonnymj,
+.data-table-base span.font-sutonnymj,
+.data-table-base div.font-sutonnymj,
+.data-table-base p.font-sutonnymj,
+.data-table-base code.font-sutonnymj,
+.data-table-base a.font-sutonnymj {
+    font-size: 0.975rem !important;
+}
+
+/* Placeholder text smaller than input text */
+.font-sutonnymj::placeholder,
+input.font-sutonnymj::placeholder,
+textarea.font-sutonnymj::placeholder {
+    font-size: 0.775rem !important;
 }
 
 /* Mail & Notifications Popover Dropdown */

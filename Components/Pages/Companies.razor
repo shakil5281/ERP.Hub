@@ -1,6 +1,6 @@
 @page "/companies"
 
-<PageTitle>ERPHub - Company Directory</PageTitle>
+<PageTitle>ERPHub - Company Information</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
@@ -8,31 +8,15 @@
     <!-- Header Block -->
     <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
         <div>
-            <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Company Directory</h2>
-            <p class="text-zinc-500 mt-0.5 font-body">Manage enterprise organizations, contact details, localized addresses, and authorized signatures.</p>
+            <h2 class="text-2xl font-semibold text-black tracking-tight font-heading">Company Information</h2>
         </div>
-    </div>
-
-    <!-- Filters Bar -->
-    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
-        <div class="flex-1 max-w-[320px] max-sm:max-w-none">
-            <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body outline-none focus:border-black transition-colors" placeholder="Search by name, address, email..." 
-                   @bind="_searchQuery" @bind:event="oninput" />
+        <div>
+    <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddModal">+ Add Company</button>
         </div>
     </div>
 
     <!-- Dynamic DataTable component -->
     <DataTable TItem="Company" Items="FilteredCompanies">
-        <TabsContent>
-            <button type="button" class="py-1.5 px-3 rounded-full font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">Directory View</button>
-        </TabsContent>
-        <ActionsContent>
-            <button type="button" class="inline-flex items-center gap-1 py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer" style="gap: 4px;">
-                <span>Columns</span>
-                <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-current"><path d="M16.293 9.293 12 13.586 7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z"/></svg>
-            </button>
-            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddModal">+ Add Company</button>
-        </ActionsContent>
         <HeaderTemplate>
             <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
             <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Company Name (EN)</th>
@@ -90,7 +74,7 @@
                         
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Company Name (BN)</label>
-                            <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingCompany.CompanyNameBn" placeholder="যেমন: একমি কর্পোরেশন" />
+                            <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingCompany.CompanyNameBn" placeholder="একমি কর্পোরেশন" />
                             <ValidationMessage For="@(() => _editingCompany.CompanyNameBn)" class="text-[11px] font-semibold text-red-500 mt-1" />
                         </div>
                     </div>
@@ -138,6 +122,22 @@
         </div>
     </div>
 }
+
+    <!-- Success & Error Toasts -->
+    @if (_showToast)
+    {
+        <div class="fixed bottom-6 right-6 bg-emerald-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
+            <span>✓</span>
+            <span>@_toastMessage</span>
+        </div>
+    }
+    @if (_showErrorToast)
+    {
+        <div class="fixed bottom-6 right-6 bg-red-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
+            <span>✗</span>
+            <span>@_errorMessage</span>
+        </div>
+    }
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />

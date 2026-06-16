@@ -20,6 +20,13 @@ textarea.font-sutonnymj {
   font-family: "SutonnyMJ", sans-serif !important;
 }
 
+/* Placeholder text smaller (0.775rem) for .font-sutonnymj inputs */
+.font-sutonnymj::placeholder,
+input.font-sutonnymj::placeholder,
+textarea.font-sutonnymj::placeholder {
+  font-size: 0.775rem !important;
+}
+
 .data-table-sutonny th, 
 .data-table-sutonny td, 
 .data-table-sutonny span, 

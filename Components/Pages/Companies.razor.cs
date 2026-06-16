@@ -118,4 +118,83 @@ public partial class Companies
 
         await LoadCompanies();
     }
+
+    private bool _showToast = false;
+    private string _toastMessage = string.Empty;
+    private bool _showErrorToast = false;
+    private string _errorMessage = string.Empty;
+
+    private async Task InsertDemoData()
+    {
+        try
+        {
+            var baseUri = NavManager.BaseUri;
+            var response = await Http.PostAsync($"{baseUri}api/companies/seed-demo", null);
+            if (response.IsSuccessStatusCode)
+            {
+                ShowToast("Demo companies inserted successfully.");
+                await LoadCompanies();
+            }
+            else
+            {
+                ShowErrorToast("Failed to insert demo companies.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error seeding companies: {ex.Message}");
+            ShowErrorToast($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task RemoveDemoData()
+    {
+        try
+        {
+            var baseUri = NavManager.BaseUri;
+            var response = await Http.PostAsync($"{baseUri}api/companies/remove-demo", null);
+            if (response.IsSuccessStatusCode)
+            {
+                ShowToast("Demo companies removed successfully.");
+                await LoadCompanies();
+            }
+            else
+            {
+                ShowErrorToast("Failed to remove demo companies.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error removing companies: {ex.Message}");
+            ShowErrorToast($"Error: {ex.Message}");
+        }
+    }
+
+    private void ShowToast(string message)
+    {
+        _toastMessage = message;
+        _showToast = true;
+        _showErrorToast = false;
+        StateHasChanged();
+        
+        Task.Delay(3000).ContinueWith(_ =>
+        {
+            _showToast = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
+
+    private void ShowErrorToast(string message)
+    {
+        _errorMessage = message;
+        _showErrorToast = true;
+        _showToast = false;
+        StateHasChanged();
+        
+        Task.Delay(3000).ContinueWith(_ =>
+        {
+            _showErrorToast = false;
+            InvokeAsync(StateHasChanged);
+        });
+    }
 }

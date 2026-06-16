@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ERPHub.Components.Common;
 
-public partial class DataTable<TItem>
+public partial class DataTable<TItem> : ComponentBase
 {
     [Parameter] public IEnumerable<TItem> Items { get; set; } = Array.Empty<TItem>();
     [Parameter] public RenderFragment? TabsContent { get; set; }

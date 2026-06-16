@@ -146,7 +146,7 @@
 
             // Redirect back to returnUrl or homepage
             var target = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
-            NavigationManager.NavigateTo(target, forceLoad: true);
+            NavigationManager.NavigateTo(target);
         }
         catch (Exception ex)
         {

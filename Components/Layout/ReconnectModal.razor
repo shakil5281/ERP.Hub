@@ -1,0 +1,39 @@
+<script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
+
+<dialog id="components-reconnect-modal" data-nosnippet>
+    <div class="components-reconnect-container">
+        <!-- Spinner animation -->
+        <div class="components-rejoining-animation">
+            <svg class="components-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <circle cx="12" cy="12" r="10" opacity="0.25" />
+                <path d="M12 2a10 10 0 0 1 10 10" class="components-spinner-path" />
+            </svg>
+        </div>
+
+        <!-- First attempt -->
+        <p class="components-reconnect-first-attempt-visible">Rejoining the server...</p>
+
+        <!-- Repeated attempts -->
+        <p class="components-reconnect-repeated-attempt-visible">
+            Rejoin failed&hellip; trying again in <strong id="components-seconds-to-next-attempt"></strong>s
+        </p>
+
+        <!-- Paused by server -->
+        <div class="components-pause-visible">
+            <p>The session has been paused by the server.</p>
+            <button id="components-resume-button" class="components-reconnect-button components-pause-visible">Resume</button>
+        </div>
+
+        <!-- Resume failed -->
+        <div class="components-resume-failed-visible">
+            <p>Failed to resume the session.<br />Please retry or reload.</p>
+            <button id="components-resume-button" class="components-reconnect-button">Retry</button>
+        </div>
+
+        <!-- Reconnect failed -->
+        <div class="components-reconnect-failed-visible">
+            <p>Failed to rejoin.<br />Please retry or reload the page.</p>
+            <button id="components-reconnect-button" class="components-reconnect-button">Retry</button>
+        </div>
+    </div>
+</dialog>

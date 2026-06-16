@@ -14,11 +14,14 @@ namespace ERPHub.Data
         public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
         public DbSet<Invoice> Invoices => Set<Invoice>();
         public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
+        public DbSet<Employee> Employees => Set<Employee>();
         public DbSet<User> Users => Set<User>();
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Section> Sections => Set<Section>();
         public DbSet<Designation> Designations => Set<Designation>();
         public DbSet<Line> Lines => Set<Line>();
+        public DbSet<Shift> Shifts => Set<Shift>();
+        public DbSet<PunchRecord> PunchRecords => Set<PunchRecord>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -69,6 +72,49 @@ namespace ERPHub.Data
                 .WithMany()
                 .HasForeignKey(l => l.SectionId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure Employee relationships and precision
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.BasicSalary)
+                .HasColumnType("decimal(18, 2)");
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Department)
+                .WithMany()
+                .HasForeignKey(e => e.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Section)
+                .WithMany()
+                .HasForeignKey(e => e.SectionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Designation)
+                .WithMany()
+                .HasForeignKey(e => e.DesignationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Line)
+                .WithMany()
+                .HasForeignKey(e => e.LineId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Shift)
+                .WithMany()
+                .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PunchRecord>()
+                .HasIndex(p => new { p.EmployeeId, p.LogDateTime })
+                .IsUnique()
+                .HasFilter("[IsProcessed] = 0");
+
+            modelBuilder.Entity<PunchRecord>()
+                .HasIndex(p => p.LogDateTime);
         }
     }
 }
