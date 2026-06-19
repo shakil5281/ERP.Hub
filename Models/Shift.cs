@@ -19,6 +19,16 @@ namespace ERPHub.Models
 
         public TimeSpan LateTime { get; set; }
 
+        public int GraceInMinutes { get; set; } = 0;
+
+        public int BreakMinutes { get; set; } = 30;
+
+        public int HalfDayThresholdMinutes { get; set; } = 240;
+
+        public int MinimumOvertimeMinutes { get; set; } = 30;
+
+        public int DuplicateIntervalMinutes { get; set; } = 1;
+
         [StringLength(50)]
         public string OffDay { get; set; } = string.Empty;
     }

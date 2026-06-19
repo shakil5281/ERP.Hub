@@ -11,12 +11,13 @@ namespace ERPHub.Components.Pages;
 public partial class Profile
 {
     [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
-    [Inject] private ErpDbContext DbContext { get; set; } = default!;
+    [Inject] private IDbContextFactory<ErpDbContext> DbFactory { get; set; } = default!;
     [Inject] private IErpService ErpService { get; set; } = default!;
+    [Inject] private CustomAuthenticationStateProvider CustomAuthProvider { get; set; } = default!;
 
     private User? _profileUser;
     private string _editFullName = string.Empty;
-    private string _editEmail = string.Empty;
+    private string _editEmail = string.Empty; // Reserved for future use
 
     private string _currentPassword = string.Empty;
     private string _newPassword = string.Empty;
@@ -50,11 +51,13 @@ public partial class Profile
         if (user.Identity?.IsAuthenticated == true)
         {
             var username = user.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
-            _profileUser = await DbContext.Users.FirstOrDefaultAsync(u => u.Username == username);
+            await using var db = await DbFactory.CreateDbContextAsync();
+            _profileUser = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
 
             if (_profileUser != null)
             {
                 _editFullName = _profileUser.FullName;
+                _editEmail = string.Empty;
             }
         }
     }
@@ -81,11 +84,11 @@ public partial class Profile
         if (_profileUser == null) return;
 
         _profileUser.FullName = _editFullName;
-        DbContext.Users.Update(_profileUser);
-        await DbContext.SaveChangesAsync();
+        await using var db = await DbFactory.CreateDbContextAsync();
+        db.Users.Update(_profileUser);
+        await db.SaveChangesAsync();
 
-        var customProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
-        await customProvider.UpdateAuthenticationState(new UserSession
+        await CustomAuthProvider.UpdateAuthenticationState(new UserSession
         {
             Username = _profileUser.Username,
             FullName = _profileUser.FullName,
@@ -128,8 +131,10 @@ public partial class Profile
         }
 
         _profileUser.PasswordHash = HashPassword(_newPassword);
-        DbContext.Users.Update(_profileUser);
-        await DbContext.SaveChangesAsync();
+
+        await using var db = await DbFactory.CreateDbContextAsync();
+        db.Users.Update(_profileUser);
+        await db.SaveChangesAsync();
 
         _passwordMessage = "Password changed successfully.";
         _passwordSuccess = true;
@@ -145,8 +150,8 @@ public partial class Profile
         if (_profileUser != null)
         {
             _editFullName = _profileUser.FullName;
+            _editEmail = string.Empty;
         }
-        _editEmail = string.Empty;
     }
 
     private void ShowToast(string message)
@@ -158,10 +163,8 @@ public partial class Profile
     private static string GetInitials(string fullName)
     {
         if (string.IsNullOrWhiteSpace(fullName)) return "?";
-
         var parts = fullName.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 1) return parts[0][..1].ToUpper();
-
         return $"{parts[0][..1]}{parts[^1][..1]}".ToUpper();
     }
 

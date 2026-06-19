@@ -2,14 +2,16 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.OleDb;
-using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using ERPHub.Data;
 using ERPHub.Models;
+
+#pragma warning disable CA1416 // OleDb is Windows-only; this app targets Windows
 
 namespace ERPHub.Services
 {
@@ -533,7 +535,7 @@ namespace ERPHub.Services
         // --- Punch Records (ZK Device) ---
         public async Task<List<PunchRecord>> GetPunchRecordsAsync(DateTime? fromDate = null, DateTime? toDate = null, string? employeeId = null)
         {
-            var query = _context.PunchRecords.AsQueryable();
+            var query = _context.PunchRecords.AsNoTracking().AsQueryable();
 
             if (fromDate.HasValue)
                 query = query.Where(p => p.LogDateTime >= fromDate.Value);
@@ -552,245 +554,212 @@ namespace ERPHub.Services
             return await _context.PunchRecords.FindAsync(id);
         }
 
-        public async Task AddPunchRecordAsync(PunchRecord record)
-        {
-            record.Id = 0;
-            record.CreatedAt = DateTime.Now;
-            await _context.PunchRecords.AddAsync(record);
-            await _context.SaveChangesAsync();
-        }
-
         public async Task<int> ImportPunchRecordsFromMdbAsync(string mdbFilePath, DateTime? syncDate = null)
         {
+            return await ImportPunchRecordsFromMdbAsync(mdbFilePath, syncDate, syncDate);
+        }
+
+        public async Task<int> ImportPunchRecordsFromMdbAsync(string mdbFilePath, DateTime? fromDate, DateTime? toDate)
+        {
             var connectionString = $"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={mdbFilePath};";
+            const int batchSize = 500;
+
+            using var connection = new OleDbConnection(connectionString);
+            await connection.OpenAsync();
+
+            var schema = connection.GetSchema("Tables");
+            var tableNames = new List<string>();
+            foreach (System.Data.DataRow row in schema.Rows)
+            {
+                var name = row["TABLE_NAME"]?.ToString();
+                if (!string.IsNullOrEmpty(name))
+                    tableNames.Add(name);
+            }
+
+            var tableName = tableNames.FirstOrDefault(t =>
+                t.Equals("CHECKINOUT", StringComparison.OrdinalIgnoreCase));
+
+            if (tableName == null && tableNames.Count > 0)
+                tableName = tableNames[0];
+
+            if (tableName == null)
+                throw new Exception("No tables found in MDB file.");
+
+            var columns = new List<string>();
+            var colSchema = connection.GetSchema("Columns", new[] { null, null, tableName });
+            foreach (System.Data.DataRow row in colSchema.Rows)
+                columns.Add(row["COLUMN_NAME"]?.ToString() ?? "");
+
+            var hasSensorCol = columns.Any(c => c.Equals("SensorID", StringComparison.OrdinalIgnoreCase));
+
+            var selectCols = "a.USERID, a.CHECKTIME";
+            if (hasSensorCol) selectCols += ", a.SensorID";
+
+            var query = $"SELECT {selectCols} FROM [{tableName}] a";
+
+            var existingKeys = new HashSet<string>(
+                await _context.PunchRecords
+                    .Select(p => p.EmployeeId + "|" + p.LogDateTime.Ticks)
+                    .ToListAsync(),
+                StringComparer.Ordinal);
+
+            var batch = new List<PunchRecord>(batchSize);
             int importedCount = 0;
 
-            using (var connection = new OleDbConnection(connectionString))
+            using var command = new OleDbCommand(query, connection);
+            using (var reader = await command.ExecuteReaderAsync())
             {
-                await connection.OpenAsync();
-
-                var schema = connection.GetSchema("Tables");
-                var tableNames = new List<string>();
-                foreach (System.Data.DataRow row in schema.Rows)
+                while (await reader.ReadAsync())
                 {
-                    var name = row["TABLE_NAME"]?.ToString();
-                    if (!string.IsNullOrEmpty(name))
-                        tableNames.Add(name);
-                }
+                    var userId = reader["USERID"]?.ToString()?.Trim() ?? string.Empty;
+                    var logTime = Convert.ToDateTime(reader["CHECKTIME"]);
+                    var sensorId = hasSensorCol ? reader["SensorID"]?.ToString()?.Trim() ?? string.Empty : string.Empty;
 
-                var tableName = tableNames.FirstOrDefault(t =>
-                    t.Equals("CHECKINOUT", StringComparison.OrdinalIgnoreCase));
+                    if (fromDate.HasValue && logTime.Date < fromDate.Value.Date)
+                        continue;
+                    if (toDate.HasValue && logTime.Date > toDate.Value.Date)
+                        continue;
 
-                if (tableName == null && tableNames.Count > 0)
-                    tableName = tableNames[0];
+                    var dedupKey = userId + "|" + logTime.Ticks;
+                    if (!existingKeys.Add(dedupKey))
+                        continue;
 
-                if (tableName == null)
-                    throw new Exception("No tables found in MDB file.");
-
-                var columns = new List<string>();
-                var colSchema = connection.GetSchema("Columns", new[] { null, null, tableName });
-                foreach (System.Data.DataRow row in colSchema.Rows)
-                {
-                    columns.Add(row["COLUMN_NAME"]?.ToString() ?? "");
-                }
-
-                var hasNameCol = columns.Any(c => c.Equals("Name", StringComparison.OrdinalIgnoreCase));
-                var hasSnCol = columns.Any(c => c.Equals("SN", StringComparison.OrdinalIgnoreCase));
-                var hasVerifyCol = columns.Any(c => c.Equals("VerifyMode", StringComparison.OrdinalIgnoreCase));
-                var hasSensorCol = columns.Any(c => c.Equals("SensorID", StringComparison.OrdinalIgnoreCase));
-                var hasUserIdCol = columns.Any(c => c.Equals("USERID", StringComparison.OrdinalIgnoreCase));
-                var hasCheckTimeCol = columns.Any(c => c.Equals("CHECKTIME", StringComparison.OrdinalIgnoreCase));
-                var hasCheckTypeCol = columns.Any(c => c.Equals("CHECKTYPE", StringComparison.OrdinalIgnoreCase));
-                var hasShortTimeCol = columns.Any(c => c.Equals("ShortCheckTime", StringComparison.OrdinalIgnoreCase));
-
-                var selectCols = "a.USERID, a.CHECKTIME, a.CHECKTYPE";
-                if (hasNameCol) selectCols += ", a.Name";
-                if (hasSnCol) selectCols += ", a.SN";
-                if (hasVerifyCol) selectCols += ", a.VerifyMode";
-                if (hasSensorCol) selectCols += ", a.SensorID";
-                if (hasShortTimeCol) selectCols += ", a.ShortCheckTime";
-
-                var query = $"SELECT {selectCols} FROM [{tableName}] a";
-
-                var command = new OleDbCommand(query, connection);
-                using (var reader = await command.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
+                    batch.Add(new PunchRecord
                     {
-                        var userId = reader["USERID"]?.ToString()?.Trim() ?? string.Empty;
-                        var rawName = hasNameCol ? reader["Name"]?.ToString()?.Trim() : null;
-                        var logTime = Convert.ToDateTime(reader["CHECKTIME"]);
-                        var logType = reader["CHECKTYPE"]?.ToString()?.Trim() ?? "I";
-                        var sn = hasSnCol ? reader["SN"]?.ToString()?.Trim() : null;
-                        var verifyMode = hasVerifyCol ? reader["VerifyMode"]?.ToString()?.Trim() : null;
-                        var sensorId = hasSensorCol ? reader["SensorID"]?.ToString()?.Trim() : null;
+                        EmployeeId = userId,
+                        LogDateTime = logTime,
+                        DeviceId = sensorId
+                    });
 
-                        if (syncDate.HasValue && logTime.Date != syncDate.Value.Date)
-                            continue;
-
-                        string? empName = rawName;
-                        if (string.IsNullOrEmpty(empName))
-                        {
-                            empName = await GetEmployeeNameFromDbAsync(userId, connection);
-                        }
-                        if (string.IsNullOrEmpty(empName))
-                            empName = $"Employee {userId}";
-
-                        var record = new PunchRecord
-                        {
-                            EmployeeId = userId,
-                            EmployeeName = empName,
-                            LogDateTime = logTime,
-                            LogType = logType,
-                            DeviceTerminal = sn ?? string.Empty,
-                            VerificationMode = verifyMode ?? string.Empty,
-                            DeviceId = sensorId ?? string.Empty,
-                            CreatedAt = DateTime.Now,
-                            IsProcessed = false
-                        };
-
-                        var exists = await _context.PunchRecords
-                            .AnyAsync(p => p.EmployeeId == record.EmployeeId && p.LogDateTime == record.LogDateTime);
-
-                        if (!exists)
-                        {
-                            await _context.PunchRecords.AddAsync(record);
-                            importedCount++;
-                        }
+                    if (batch.Count >= batchSize)
+                    {
+                        _context.ChangeTracker.AutoDetectChangesEnabled = false;
+                        await _context.PunchRecords.AddRangeAsync(batch);
+                        await _context.SaveChangesAsync();
+                        _context.ChangeTracker.AutoDetectChangesEnabled = true;
+                        _context.ChangeTracker.Clear();
+                        importedCount += batch.Count;
+                        batch.Clear();
                     }
                 }
+            }
+
+            if (batch.Count > 0)
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = false;
+                await _context.PunchRecords.AddRangeAsync(batch);
                 await _context.SaveChangesAsync();
+                _context.ChangeTracker.AutoDetectChangesEnabled = true;
+                _context.ChangeTracker.Clear();
+                importedCount += batch.Count;
             }
 
             return importedCount;
         }
 
-        private async Task<string?> GetEmployeeNameFromDbAsync(string userId, OleDbConnection connection)
-        {
-            try
-            {
-                var tables = connection.GetSchema("Tables");
-                var hasUserinfo = false;
-                foreach (System.Data.DataRow row in tables.Rows)
-                {
-                    var name = row["TABLE_NAME"]?.ToString();
-                    if (name != null && name.Equals("USERINFO", StringComparison.OrdinalIgnoreCase))
-                    {
-                        hasUserinfo = true;
-                        break;
-                    }
-                }
-
-                if (!hasUserinfo) return null;
-
-                var cmd = new OleDbCommand("SELECT [Name] FROM [USERINFO] WHERE [USERID] = ?", connection);
-                cmd.Parameters.AddWithValue("?", userId);
-                var result = await cmd.ExecuteScalarAsync();
-                return result?.ToString()?.Trim();
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
         public async Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? syncDate = null)
         {
+            return await SyncPunchRecordsFromZKDeviceAsync(null, syncDate);
+        }
+
+        public async Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? fromDate, DateTime? toDate)
+        {
             var useSqlServer = _configuration.GetValue<bool>("ZKDevice:UseSqlServer");
-            
+
             if (useSqlServer)
             {
                 var sqlConnStr = _configuration["ZKDevice:SqlConnection"];
                 if (string.IsNullOrEmpty(sqlConnStr))
                     return 0;
-                
-                return await ImportPunchRecordsFromSqlServerAsync(sqlConnStr, syncDate);
-            }
-            
-            var mdbPath = _configuration["ZKDevice:MdbFilePath"];
-            if (string.IsNullOrEmpty(mdbPath) || !File.Exists(mdbPath))
-            {
-                return 0;
+
+                return await ImportPunchRecordsFromSqlServerAsync(sqlConnStr, fromDate, toDate);
             }
 
-            return await ImportPunchRecordsFromMdbAsync(mdbPath, syncDate);
+            var mdbPath = _configuration["ZKDevice:MdbFilePath"];
+            if (string.IsNullOrEmpty(mdbPath) || !File.Exists(mdbPath))
+                return 0;
+
+            return await ImportPunchRecordsFromMdbAsync(mdbPath, fromDate, toDate);
         }
 
         public async Task<int> ImportPunchRecordsFromSqlServerAsync(string connectionString, DateTime? syncDate = null)
         {
+            return await ImportPunchRecordsFromSqlServerAsync(connectionString, syncDate, syncDate);
+        }
+
+        public async Task<int> ImportPunchRecordsFromSqlServerAsync(string connectionString, DateTime? fromDate, DateTime? toDate)
+        {
+            const int batchSize = 500;
+
+            using var connection = new SqlConnection(connectionString);
+            await connection.OpenAsync();
+
+            var query = "SELECT USERID, CHECKTIME, SensorID FROM CHECKINOUT WHERE 1=1";
+
+            if (fromDate.HasValue)
+                query += " AND CAST(CHECKTIME AS DATE) >= @fromDate";
+            if (toDate.HasValue)
+                query += " AND CAST(CHECKTIME AS DATE) <= @toDate";
+
+            query += " ORDER BY CHECKTIME";
+
+            var existingKeys = new HashSet<string>(
+                await _context.PunchRecords
+                    .Select(p => p.EmployeeId + "|" + p.LogDateTime.Ticks)
+                    .ToListAsync(),
+                StringComparer.Ordinal);
+
+            var batch = new List<PunchRecord>(batchSize);
             int importedCount = 0;
 
-            using (var connection = new SqlConnection(connectionString))
+            using (var command = new SqlCommand(query, connection))
             {
-                await connection.OpenAsync();
+                if (fromDate.HasValue)
+                    command.Parameters.AddWithValue("@fromDate", fromDate.Value.Date);
+                if (toDate.HasValue)
+                    command.Parameters.AddWithValue("@toDate", toDate.Value.Date);
 
-                var query = @"
-                    SELECT USERID, CHECKTIME, CHECKTYPE, SN, VerifyMode, SensorID
-                    FROM CHECKINOUT
-                    WHERE 1=1";
-
-                if (syncDate.HasValue)
+                using (var reader = await command.ExecuteReaderAsync())
                 {
-                    query += " AND CAST(CHECKTIME AS DATE) = @syncDate";
-                }
-
-                query += " ORDER BY CHECKTIME";
-
-                using (var command = new SqlCommand(query, connection))
-                {
-                    if (syncDate.HasValue)
+                    while (await reader.ReadAsync())
                     {
-                        command.Parameters.AddWithValue("@syncDate", syncDate.Value.Date);
-                    }
+                        var userId = reader["USERID"]?.ToString()?.Trim() ?? string.Empty;
+                        var logTime = Convert.ToDateTime(reader["CHECKTIME"]);
+                        var sensorId = reader["SensorID"]?.ToString()?.Trim() ?? string.Empty;
 
-                    using (var reader = await command.ExecuteReaderAsync())
-                    {
-                        while (await reader.ReadAsync())
+                        var dedupKey = userId + "|" + logTime.Ticks;
+                        if (!existingKeys.Add(dedupKey))
+                            continue;
+
+                        batch.Add(new PunchRecord
                         {
-                            var userId = reader["USERID"]?.ToString()?.Trim() ?? string.Empty;
-                            var logTime = Convert.ToDateTime(reader["CHECKTIME"]);
-                            var logType = reader["CHECKTYPE"]?.ToString()?.Trim() ?? "I";
-                            var sn = reader["SN"]?.ToString()?.Trim() ?? string.Empty;
-                            var verifyMode = reader["VerifyMode"]?.ToString()?.Trim() ?? string.Empty;
-                            var sensorId = reader["SensorID"]?.ToString()?.Trim() ?? string.Empty;
-
-                            string empName = $"Employee {userId}";
-                            try
-                            {
-                                var emp = await _context.Employees.FirstOrDefaultAsync(e => e.EmployeeId == userId);
-                                if (emp != null)
-                                    empName = emp.EmployeeName;
-                            }
-                            catch { }
-
-                            var record = new PunchRecord
-                            {
-                                EmployeeId = userId,
-                                EmployeeName = empName,
-                                LogDateTime = logTime,
-                                LogType = logType,
-                                DeviceTerminal = sn,
-                                VerificationMode = verifyMode,
-                                DeviceId = sensorId,
-                                CreatedAt = DateTime.Now,
-                                IsProcessed = false
-                            };
-
-                            var exists = await _context.PunchRecords
-                                .AnyAsync(p => p.EmployeeId == record.EmployeeId && p.LogDateTime == record.LogDateTime);
-
-                            if (!exists)
-                            {
-                                await _context.PunchRecords.AddAsync(record);
-                                importedCount++;
-                            }
-                        }
+                            EmployeeId = userId,
+                            LogDateTime = logTime,
+                            DeviceId = sensorId
+                        });
                     }
                 }
-                await _context.SaveChangesAsync();
+            }
+
+            if (batch.Count > 0)
+            {
+                _context.ChangeTracker.AutoDetectChangesEnabled = false;
+
+                for (int i = 0; i < batch.Count; i += batchSize)
+                {
+                    var chunk = batch.Skip(i).Take(batchSize).ToList();
+                    await _context.PunchRecords.AddRangeAsync(chunk);
+                    await _context.SaveChangesAsync();
+                    _context.ChangeTracker.Clear();
+                    importedCount += chunk.Count;
+                }
+
+                _context.ChangeTracker.AutoDetectChangesEnabled = true;
             }
 
             return importedCount;
         }
     }
 }
+
+#pragma warning restore CA1416

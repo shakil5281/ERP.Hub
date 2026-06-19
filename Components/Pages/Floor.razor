@@ -13,21 +13,28 @@
                 </div>
             </div>
 
-            <!-- Floor Mapping DataTable -->
-            <DataTable TItem="FloorMap" Items="_floors">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Floor Level</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Assigned Wing</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Description</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Desks capacity</th>
-                </HeaderTemplate>
-                <RowTemplate Context="fl">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@fl.Level</td>
-                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold">@fl.Wing</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@fl.Description</td>
-                    <td class="p-2.5 px-4 text-zinc-850 text-xs font-semibold">@fl.Capacity</td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_floors" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<FloorMap, object>(x=>x.Level)">Floor Level</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<FloorMap, object>(x=>x.Wing)">Assigned Wing</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<FloorMap, object>(x=>x.Description)">Description</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<FloorMap, object>(x=>x.Capacity)">Desks capacity</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Floor Level">@context.Level</MudTd>
+                        <MudTd DataLabel="Assigned Wing">@context.Wing</MudTd>
+                        <MudTd DataLabel="Description">@context.Description</MudTd>
+                        <MudTd DataLabel="Desks capacity">@context.Capacity</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

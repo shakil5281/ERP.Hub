@@ -11,15 +11,23 @@ public partial class Organogram
     [Inject] private ERPHub.Services.IErpService ErpService { get; set; } = default!;
 
     private string _activeTab = "department";
+    private int _activeTabIndex = 1; // department is default
 
-    private readonly Dictionary<string, string> _tabs = new()
+    private readonly Dictionary<int, string> _tabMap = new()
     {
-        { "tree", "Tree View" },
-        { "department", "Department" },
-        { "section", "Section" },
-        { "designation", "Designation" },
-        { "line", "Line" }
+        { 0, "tree" },
+        { 1, "department" },
+        { 2, "section" },
+        { 3, "designation" },
+        { 4, "line" }
     };
+
+    private void OnTabChanged(int index)
+    {
+        _activeTabIndex = index;
+        _activeTab = _tabMap.TryGetValue(index, out var tab) ? tab : "department";
+        StateHasChanged();
+    }
 
     // Tree Data
     private List<CompanyNodeDto> _organogramTree = new();
@@ -63,13 +71,6 @@ public partial class Organogram
         await LoadLines();
         
         _organogramTree = await ErpService.GetOrganogramTreeAsync();
-    }
-
-    // --- Tab ---
-
-    private void SwitchTab(string tab)
-    {
-        _activeTab = tab;
     }
 
     // --- Department ---

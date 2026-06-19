@@ -16,53 +16,55 @@
                 </div>
             </div>
 
-            <!-- Dynamic DataTable component -->
-            <DataTable TItem="ERPHub.Models.Shift" Items="FilteredShifts">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
-                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Shift Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">In Time</th>
-                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Out Time</th>
-                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Late Time</th>
-                    <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Off Day</th>
-                </HeaderTemplate>
-                <RowTemplate Context="shift">
-                    <td class="p-2.5 px-4 text-zinc-800 font-semibold font-body">
-                        @(FilteredShifts.ToList().IndexOf(shift) + 1)
-                    </td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-semibold font-body">@shift.ShiftName</td>
-                    <td class="p-2.5 px-4 text-zinc-700 font-body">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold text-[11px]">@FormatTime(shift.InTime)</span>
-                    </td>
-                    <td class="p-2.5 px-4 text-zinc-700 font-body">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold text-[11px]">@FormatTime(shift.OutTime)</span>
-                    </td>
-                    <td class="p-2.5 px-4 text-zinc-700 font-body">
-                        @if (shift.LateTime == TimeSpan.Zero)
-                        {
-                            <span class="text-zinc-400 text-xs">—</span>
-                        }
-                        else
-                        {
-                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold text-[11px]">@FormatTime(shift.LateTime)</span>
-                        }
-                    </td>
-                    <td class="p-2.5 px-4 text-zinc-700 font-body">
-                        @if (string.IsNullOrWhiteSpace(shift.OffDay))
-                        {
-                            <span class="text-zinc-400 text-xs">—</span>
-                        }
-                        else
-                        {
-                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 font-semibold text-[11px]">@shift.OffDay</span>
-                        }
-                    </td>
-                </RowTemplate>
-                <RowActionsContent Context="shift">
-                    <button class="bg-transparent border-0 text-left py-1.5 px-3 cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditModal(shift)">Edit</button>
-                    <button class="bg-transparent border-0 text-left py-1.5 px-3 cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDelete(shift.Id)">Delete</button>
-                </RowActionsContent>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@FilteredShifts" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Sl</MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ERPHub.Models.Shift, object>(x=>x.ShiftName)">Shift Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ERPHub.Models.Shift, object>(x=>x.InTime)">In Time</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ERPHub.Models.Shift, object>(x=>x.OutTime)">Out Time</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ERPHub.Models.Shift, object>(x=>x.LateTime)">Late Time</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ERPHub.Models.Shift, object>(x=>x.OffDay)">Off Day</MudTableSortLabel></MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Sl">@(FilteredShifts.ToList().IndexOf(context) + 1)</MudTd>
+                        <MudTd DataLabel="Shift Name">@context.ShiftName</MudTd>
+                        <MudTd DataLabel="In Time"><span class="inline-flex items-center px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-semibold text-[11px]">@FormatTime(context.InTime)</span></MudTd>
+                        <MudTd DataLabel="Out Time"><span class="inline-flex items-center px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold text-[11px]">@FormatTime(context.OutTime)</span></MudTd>
+                        <MudTd DataLabel="Late Time">
+                            @if (context.LateTime == TimeSpan.Zero)
+                            {
+                                <span class="text-zinc-400 text-xs">—</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-2 py-0.5 rounded bg-amber-50 text-amber-700 font-semibold text-[11px]">@FormatTime(context.LateTime)</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Off Day">
+                            @if (string.IsNullOrWhiteSpace(context.OffDay))
+                            {
+                                <span class="text-zinc-400 text-xs">—</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 font-semibold text-[11px]">@context.OffDay</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditModal(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)" />
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
 
         <!-- Add / Edit Modal -->
@@ -83,8 +85,7 @@
                             <!-- Shift Name -->
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Shift Name</label>
-                                <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingShift.ShiftName" placeholder="e.g. General Shift" />
-                                <ValidationMessage For="@(() => _editingShift.ShiftName)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                                <MudTextField @bind-Value="_editingShift.ShiftName" For="@(() => _editingShift.ShiftName)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="e.g. General Shift" />
                             </div>
 
                             <!-- Time Fields -->
@@ -113,7 +114,7 @@
                                 </div>
                                 <div class="flex flex-col gap-1.5">
                                     <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Off Day <span class="normal-case text-zinc-300">(optional)</span></label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingShift.OffDay" placeholder="e.g. Friday" />
+                                    <MudTextField @bind-Value="_editingShift.OffDay" For="@(() => _editingShift.OffDay)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="e.g. Friday" />
                                 </div>
                             </div>
 

@@ -67,8 +67,8 @@ namespace ERPHub.Services
         // Punch Records (ZK Device)
         Task<List<PunchRecord>> GetPunchRecordsAsync(DateTime? fromDate = null, DateTime? toDate = null, string? employeeId = null);
         Task<PunchRecord?> GetPunchRecordByIdAsync(int id);
-        Task AddPunchRecordAsync(PunchRecord record);
         Task<int> ImportPunchRecordsFromMdbAsync(string mdbFilePath, DateTime? syncDate = null);
         Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? syncDate = null);
+        Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? fromDate, DateTime? toDate);
     }
 }

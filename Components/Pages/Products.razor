@@ -32,64 +32,55 @@
         </div>
     </div>
 
-    <!-- Dynamic DataTable component matching screenshot -->
-    <DataTable TItem="Product" Items="FilteredProducts">
-        <TabsContent>
-            <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">Outline</button>
-            <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-500 bg-zinc-100 border-0 cursor-pointer inline-flex items-center gap-1.5 hover:bg-zinc-200 transition-colors">
-                Past Performance <span class="bg-zinc-200 rounded-full w-[18px] h-[18px] inline-flex items-center justify-center text-[10.5px] text-zinc-500 font-bold">3</span>
-            </button>
-            <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-500 bg-zinc-100 border-0 cursor-pointer inline-flex items-center gap-1.5 hover:bg-zinc-200 transition-colors">
-                Key Personnel <span class="bg-zinc-200 rounded-full w-[18px] h-[18px] inline-flex items-center justify-center text-[10.5px] text-zinc-500 font-bold">2</span>
-            </button>
-            <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-500 bg-zinc-100 border-0 cursor-pointer inline-flex items-center gap-1.5 hover:bg-zinc-200 transition-colors">Focus Documents</button>
-        </TabsContent>
-        <ActionsContent>
-            <button type="button" class="inline-flex items-center gap-1 py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-50 transition-colors cursor-pointer" style="gap: 4px;">
-                <span>Customize Columns</span>
-                <svg viewBox="0 0 24 24" class="w-3.5 h-3.5 fill-current"><path d="M16.293 9.293 12 13.586 7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z"/></svg>
-            </button>
-            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddModal">+ Add Section</button>
-        </ActionsContent>
-        <HeaderTemplate>
-            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[250px]">Header</th>
-            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">SKU</th>
-            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Category</th>
-            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Unit Price</th>
-            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
-            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Last Updated</th>
-        </HeaderTemplate>
-        <RowTemplate Context="prod">
-            <td class="p-2.5 px-4 text-zinc-900 font-medium">
-                <div>@prod.Name</div>
-                <div class="text-[11px] font-normal text-zinc-400 mt-0.5">@prod.Description</div>
-            </td>
-            <td class="p-2.5 px-4"><code class="text-indigo-600 font-bold text-xs bg-indigo-50/50 px-2 py-1 rounded">@prod.Sku</code></td>
-            <td class="p-2.5 px-4 text-zinc-700 text-xs">@prod.Category</td>
-            <td class="p-2.5 px-4 text-zinc-900 font-bold">@prod.Price.ToString("C")</td>
-            <td class="p-2.5 px-4">
-                @if (prod.Stock < 10)
-                {
-                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-zinc-600 border-zinc-200">
-                        <span class="w-1.5 h-1.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></span>
-                        In Process
-                    </span>
-                }
-                else
-                {
-                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-green-700 border-green-200">
-                        <span class="text-green-600 font-bold text-[10px] mr-0.5">✓</span>
-                        Done
-                    </span>
-                }
-            </td>
-            <td class="p-2.5 px-4 text-zinc-500 text-xs">@prod.LastUpdated.ToString("yyyy-MM-dd")</td>
-        </RowTemplate>
-        <RowActionsContent Context="prod">
-            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditModal(prod)">Edit</button>
-            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDelete(prod.Id)">Delete</button>
-        </RowActionsContent>
-    </DataTable>
+    <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+        <MudTable Items="@FilteredProducts" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+            <HeaderContent>
+                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Name)">Header</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Sku)">SKU</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Category)">Category</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Price)">Unit Price</MudTableSortLabel></MudTh>
+                <MudTh>Status</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.LastUpdated)">Last Updated</MudTableSortLabel></MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Header">
+                    <div>@context.Name</div>
+                    <div class="text-[11px] font-normal text-zinc-400 mt-0.5">@context.Description</div>
+                </MudTd>
+                <MudTd DataLabel="SKU"><code class="text-indigo-600 font-bold text-xs bg-indigo-50/50 px-2 py-1 rounded">@context.Sku</code></MudTd>
+                <MudTd DataLabel="Category">@context.Category</MudTd>
+                <MudTd DataLabel="Unit Price">@context.Price.ToString("C")</MudTd>
+                <MudTd DataLabel="Status">
+                    @if (context.Stock < 10)
+                    {
+                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-zinc-600 border-zinc-200">
+                            <span class="w-1.5 h-1.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></span>
+                            In Process
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-green-700 border-green-200">
+                            <span class="text-green-600 font-bold text-[10px] mr-0.5">✓</span>
+                            Done
+                        </span>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Last Updated">@context.LastUpdated.ToString("yyyy-MM-dd")</MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditModal(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+            </PagerContent>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+        </NoRecordsContent>
+        </MudTable>
+    </div>
 </div>
 
 <!-- Add / Edit Modal -->

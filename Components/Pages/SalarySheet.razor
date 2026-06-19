@@ -13,29 +13,36 @@
                 </div>
             </div>
 
-            <!-- Salary Register DataTable -->
-            <DataTable TItem="SalaryRegister" Items="_sheets">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Pay Period</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Staff Count</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Gross Payroll</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Deductions</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Net Paid</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Payment Date</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
-                </HeaderTemplate>
-                <RowTemplate Context="sheet">
-                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@sheet.PayPeriod</td>
-                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold">@sheet.StaffCount</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@sheet.GrossPayroll</td>
-                    <td class="p-2.5 px-4 text-red-600 font-medium font-body">@sheet.Deductions</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@sheet.NetPaid</td>
-                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@sheet.PaymentDate</td>
-                    <td class="p-2.5 px-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@sheet.Status</span>
-                    </td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_sheets" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.PayPeriod)">Pay Period</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.StaffCount)">Staff Count</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.GrossPayroll)">Gross Payroll</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.Deductions)">Deductions</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.NetPaid)">Net Paid</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.PaymentDate)">Payment Date</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Pay Period">@context.PayPeriod</MudTd>
+                        <MudTd DataLabel="Staff Count">@context.StaffCount</MudTd>
+                        <MudTd DataLabel="Gross Payroll">@context.GrossPayroll</MudTd>
+                        <MudTd DataLabel="Deductions">@context.Deductions</MudTd>
+                        <MudTd DataLabel="Net Paid">@context.NetPaid</MudTd>
+                        <MudTd DataLabel="Payment Date">@context.PaymentDate</MudTd>
+                        <MudTd DataLabel="Status">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@context.Status</span>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

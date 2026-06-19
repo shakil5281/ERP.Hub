@@ -22,6 +22,9 @@ namespace ERPHub.Data
         public DbSet<Line> Lines => Set<Line>();
         public DbSet<Shift> Shifts => Set<Shift>();
         public DbSet<PunchRecord> PunchRecords => Set<PunchRecord>();
+        public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
+        public DbSet<Holiday> Holidays => Set<Holiday>();
+        public DbSet<LeaveApplication> LeaveApplications => Set<LeaveApplication>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -108,13 +111,30 @@ namespace ERPHub.Data
                 .HasForeignKey(e => e.ShiftId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.PunchNumber)
+                .IsUnique();
+
             modelBuilder.Entity<PunchRecord>()
                 .HasIndex(p => new { p.EmployeeId, p.LogDateTime })
-                .IsUnique()
-                .HasFilter("[IsProcessed] = 0");
+                .IsUnique();
 
             modelBuilder.Entity<PunchRecord>()
                 .HasIndex(p => p.LogDateTime);
+
+            modelBuilder.Entity<PunchRecord>()
+                .HasIndex(p => p.DeviceId);
+
+            modelBuilder.Entity<AttendanceRecord>()
+                .HasIndex(a => new { a.EmployeeId, a.AttendanceDate })
+                .IsUnique();
+
+            modelBuilder.Entity<AttendanceRecord>()
+                .HasIndex(a => a.AttendanceDate);
+
+            modelBuilder.Entity<Holiday>()
+                .HasIndex(h => h.HolidayDate)
+                .IsUnique();
         }
     }
 }

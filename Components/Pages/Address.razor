@@ -13,21 +13,28 @@
                 </div>
             </div>
 
-            <!-- Address Locations DataTable -->
-            <DataTable TItem="BranchLocation" Items="_locations">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Branch Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Type</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Street Address</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Country</th>
-                </HeaderTemplate>
-                <RowTemplate Context="loc">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@loc.BranchName</td>
-                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-semibold">@loc.Type</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@loc.StreetAddress</td>
-                    <td class="p-2.5 px-4 text-zinc-650 text-xs">@loc.Country</td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden mb-6">
+                <MudTable Items="@_locations" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.BranchName)">Branch Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.Type)">Type</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.StreetAddress)">Street Address</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.Country)">Country</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Branch Name">@context.BranchName</MudTd>
+                        <MudTd DataLabel="Type">@context.Type</MudTd>
+                        <MudTd DataLabel="Street Address">@context.StreetAddress</MudTd>
+                        <MudTd DataLabel="Country">@context.Country</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

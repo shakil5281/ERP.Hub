@@ -41,5 +41,12 @@ public partial class Home
         };
     }
 
+    private MudBlazor.Color GetStatusColor(InvoiceStatus status) => status switch
+    {
+        InvoiceStatus.Paid => MudBlazor.Color.Success,
+        InvoiceStatus.Sent => MudBlazor.Color.Warning,
+        _ => MudBlazor.Color.Default
+    };
+
     private record ActivityItem(string Title, string TimeDescription, string Color);
 }

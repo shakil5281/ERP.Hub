@@ -7,21 +7,19 @@ namespace ERPHub.Services
 {
     public class CustomAuthenticationStateProvider : AuthenticationStateProvider
     {
-        private readonly ProtectedSessionStorage _sessionStorage;
+        private readonly ProtectedLocalStorage _localStorage;
         private readonly ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 
-        public CustomAuthenticationStateProvider(ProtectedSessionStorage sessionStorage)
+        public CustomAuthenticationStateProvider(ProtectedLocalStorage localStorage)
         {
-            _sessionStorage = sessionStorage;
+            _localStorage = localStorage;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
             try
             {
-                // ProtectedSessionStorage will fail during pre-rendering as JS Interop is not available yet.
-                // Catching the exception is the standard way to return an anonymous state during pre-rendering.
-                var userSessionResult = await _sessionStorage.GetAsync<UserSession>("UserSession");
+                var userSessionResult = await _localStorage.GetAsync<UserSession>("UserSession");
                 var userSession = userSessionResult.Success ? userSessionResult.Value : null;
 
                 if (userSession == null)
@@ -50,7 +48,7 @@ namespace ERPHub.Services
 
             if (userSession != null)
             {
-                await _sessionStorage.SetAsync("UserSession", userSession);
+                await _localStorage.SetAsync("UserSession", userSession);
                 claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.Name, userSession.Username),
@@ -60,7 +58,7 @@ namespace ERPHub.Services
             }
             else
             {
-                await _sessionStorage.DeleteAsync("UserSession");
+                await _localStorage.DeleteAsync("UserSession");
                 claimsPrincipal = _anonymous;
             }
 

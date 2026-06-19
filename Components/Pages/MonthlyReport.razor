@@ -58,25 +58,32 @@
                 </form>
             </div>
 
-            <!-- Recent Generated Reports DataTable -->
-            <DataTable TItem="ReportLog" Items="_reports">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Report ID</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Period Month</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Report Type</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Created By</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Format</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Action</th>
-                </HeaderTemplate>
-                <RowTemplate Context="rep">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@rep.ReportId</td>
-                    <td class="p-2.5 px-4 text-zinc-800 font-semibold font-body">@rep.PeriodMonth</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@rep.ReportType</td>
-                    <td class="p-2.5 px-4 text-zinc-650 text-xs font-heading">@rep.CreatedBy</td>
-                    <td class="p-2.5 px-4 text-zinc-800 text-xs font-body">@rep.Format</td>
-                    <td class="p-2.5 px-4 text-indigo-600 text-xs font-bold cursor-pointer hover:underline">Download</td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_reports" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.ReportId)">Report ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.PeriodMonth)">Period Month</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.ReportType)">Report Type</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.CreatedBy)">Created By</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.Format)">Format</MudTableSortLabel></MudTh>
+                        <MudTh>Action</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Report ID">@context.ReportId</MudTd>
+                        <MudTd DataLabel="Period Month">@context.PeriodMonth</MudTd>
+                        <MudTd DataLabel="Report Type">@context.ReportType</MudTd>
+                        <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
+                        <MudTd DataLabel="Format">@context.Format</MudTd>
+                        <MudTd DataLabel="Action"><span class="text-indigo-600 text-xs font-bold cursor-pointer hover:underline">Download</span></MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

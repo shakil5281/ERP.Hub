@@ -1,42 +1,65 @@
 @page "/datacollect/daily-attendance-process"
+@inject HttpClient Http
+@inject NavigationManager NavManager
 
 <PageTitle>ERPHub - Daily Attendance Process</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header Block -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+            <div class="mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Daily Attendance Process</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Calculate daily shifts, trace exception flags, and publish finalized rosters.</p>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Select a date range and process attendance from punch records.</p>
                 </div>
             </div>
 
-            <!-- Daily Attendance Process Tasks DataTable -->
-            <DataTable TItem="ReconcileTask" Items="_tasks">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Task Description</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Last Run Timestamp</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
-                </HeaderTemplate>
-                <RowTemplate Context="task">
-                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@task.Description</td>
-                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@task.LastRun</td>
-                    <td class="p-2.5 px-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @task.BadgeClass">@task.Status</span>
-                    </td>
-                </RowTemplate>
-            </DataTable>
-
-            <div class="flex gap-3 justify-end mt-6">
-                <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer">
-                    Reset State
-                </button>
-                <button type="button" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
-                    Run Reconcile
-                </button>
+            <div class="bg-white border border-zinc-200 rounded-lg p-6 mb-4 flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Start Date</label>
+                    <input type="date" class="border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors" @bind="_fromDate" />
+                </div>
+                <div>
+                    <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">End Date</label>
+                    <input type="date" class="border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors" @bind="_toDate" />
+                </div>
+                <div>
+                    <button type="button" class="px-5 py-2 bg-black text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2" @onclick="ProcessAttendance" disabled="@_isProcessing">
+                        @if (_isProcessing)
+                        {
+                            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
+                        }
+                        else
+                        {
+                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                        }
+                        @_processButtonText
+                    </button>
+                </div>
             </div>
+
+            @if (_isProcessing)
+            {
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center gap-3">
+                    <svg class="w-5 h-5 text-blue-500 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
+                    <span class="text-xs text-blue-700 font-medium">Processing attendance...</span>
+                </div>
+            }
+
+            @if (!string.IsNullOrEmpty(_processMessage))
+            {
+                <div class="@(_processError ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700") border rounded-lg p-4 mb-4 flex items-center gap-3">
+                    @if (_processError)
+                    {
+                        <svg class="w-5 h-5 text-red-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                    }
+                    else
+                    {
+                        <svg class="w-5 h-5 text-green-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    }
+                    <span class="text-xs font-medium">@_processMessage</span>
+                </div>
+            }
         </div>
     </Authorized>
     <NotAuthorized>
@@ -45,18 +68,70 @@
 </AuthorizeView>
 
 @code {
-    public class ReconcileTask
+    private DateTime? _fromDate;
+    private DateTime? _toDate;
+    private bool _isProcessing;
+    private string _processButtonText = "Process";
+    private string? _processMessage;
+    private bool _processError;
+
+    protected override Task OnInitializedAsync()
     {
-        public string Description { get; set; } = string.Empty;
-        public string LastRun { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string BadgeClass { get; set; } = string.Empty;
+        _fromDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        _toDate = DateTime.Today;
+        return Task.CompletedTask;
     }
 
-    private List<ReconcileTask> _tasks = new()
+    private async Task ProcessAttendance()
     {
-        new ReconcileTask { Description = "Pull and ingest raw terminal biometric logs", LastRun = "2026-06-12 05:10 PM", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
-        new ReconcileTask { Description = "Calculate shift hours and grace period deductions", LastRun = "2026-06-12 05:12 PM", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
-        new ReconcileTask { Description = "Flag anomalies (unexcused absences, half-days, early outs)", LastRun = "Pending", Status = "Ready", BadgeClass = "bg-amber-50 text-amber-700" }
-    };
+        if (!_fromDate.HasValue || !_toDate.HasValue)
+        {
+            _processError = true;
+            _processMessage = "Please select both start and end dates.";
+            return;
+        }
+
+        _isProcessing = true;
+        _processButtonText = "Processing...";
+        _processMessage = null;
+        _processError = false;
+        StateHasChanged();
+
+        try
+        {
+            var url = $"{NavManager.BaseUri}api/attendance/calculate?fromDate={_fromDate.Value:yyyy-MM-dd}&toDate={_toDate.Value:yyyy-MM-dd}";
+            var result = await Http.PostAsync(url, null);
+            var content = await result.Content.ReadAsStringAsync();
+
+            if (result.IsSuccessStatusCode)
+            {
+                _processError = false;
+                _processMessage = content;
+                _processButtonText = "Processed!";
+                await Task.Delay(2000);
+                _processButtonText = "Process";
+            }
+            else
+            {
+                _processError = true;
+                _processMessage = content;
+                _processButtonText = "Failed";
+                await Task.Delay(3000);
+                _processButtonText = "Process";
+            }
+        }
+        catch (Exception ex)
+        {
+            _processError = true;
+            _processMessage = ex.Message;
+            _processButtonText = "Failed";
+            await Task.Delay(3000);
+            _processButtonText = "Process";
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
 }

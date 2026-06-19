@@ -1,136 +1,265 @@
 @page "/attendance/daily"
 @using ERPHub.Models
-@using ERPHub.Components.Common
+@inject HttpClient Http
+@inject NavigationManager NavManager
 
 <PageTitle>ERPHub - Daily Attendance</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        <div class="animate-fade-in">
-            <!-- Header Block -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
-                <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight">Daily Attendance Sheet</h2>
-                    <p class="text-zinc-500 text-sm mt-0.5">Track employee check-in times, late registers, and daily status logs.</p>
-                </div>
-                <div class="flex gap-2">
-                    <button class="inline-flex items-center py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer">
-                        Export CSV
-                    </button>
-                    <button class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
-                        Download Report
-                    </button>
-                </div>
+        <div class="d-flex justify-content-between align-items-center mb-6" style="flex-wrap:wrap;">
+            <div>
+                <MudText Typo="Typo.h5" Class="fw-extrabold">Daily Attendance Sheet</MudText>
+                <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Track employee check-in/out, late registers, overtime, and daily status.</MudText>
             </div>
-
-            <!-- Metrics grid -->
-            <div class="grid grid-cols-5 gap-4 mb-6 max-xl:grid-cols-3 max-sm:grid-cols-2">
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Total Strength</div>
-                    <div class="text-sm font-semibold text-zinc-950 mt-1">120 Employees</div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-emerald-600">Present</div>
-                    <div class="text-sm font-semibold text-emerald-600 mt-1">102 (85%)</div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-amber-500">Late</div>
-                    <div class="text-sm font-semibold text-amber-500 mt-1">8 (6.6%)</div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-red-500">Absent</div>
-                    <div class="text-sm font-semibold text-red-500 mt-1">6 (5%)</div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-indigo-500">On Leave</div>
-                    <div class="text-sm font-semibold text-indigo-500 mt-1">4 (3.3%)</div>
-                </div>
-            </div>
-
-            <!-- Filters Bar -->
-            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
-                <div class="flex gap-3 flex-1 max-w-[500px] max-sm:flex-col">
-                    <input type="text" 
-                           class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" 
-                           placeholder="Search by Employee ID or Name..." 
-                           @bind="_searchQuery" @bind:event="oninput" />
-                    
-                    <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-sm w-[180px] max-sm:w-full cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_deptFilter">
-                        <option value="">All Departments</option>
-                        <option value="IT">IT & Dev</option>
-                        <option value="HR">Human Resources</option>
-                        <option value="Finance">Finance & Accounts</option>
-                        <option value="Production">Production</option>
-                        <option value="Marketing">Marketing</option>
-                    </select>
-                </div>
-                <div class="flex gap-2 items-center">
-                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
-                    <input type="date" class="border border-zinc-200 rounded-lg p-1.5 px-3 bg-white outline-none text-sm cursor-pointer hover:bg-zinc-50 transition-colors" value="@_attendanceDate.ToString("yyyy-MM-dd")" @onchange="OnDateChanged" />
-                </div>
-            </div>
-
-            <!-- DataTable Listing -->
-            <DataTable TItem="AttendanceRecord" Items="FilteredRecords">
-                <TabsContent>
-                    <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">Today's Logs</button>
-                </TabsContent>
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Emp ID</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Employee Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Shift</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">In Time</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Out Time</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Late Min</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
-                </HeaderTemplate>
-                <RowTemplate Context="log">
-                    <td class="p-2.5 px-4 text-zinc-650 font-mono text-xs">@log.EmpId</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@log.Name</td>
-                    <td class="p-2.5 px-4 text-zinc-700">@log.Department</td>
-                    <td class="p-2.5 px-4 text-zinc-700">@log.Shift</td>
-                    <td class="p-2.5 px-4 text-zinc-800 font-mono">@(log.InTime.HasValue ? DateTime.Today.Add(log.InTime.Value).ToString("hh:mm tt") : "--:--")</td>
-                    <td class="p-2.5 px-4 text-zinc-800 font-mono">@(log.OutTime.HasValue ? DateTime.Today.Add(log.OutTime.Value).ToString("hh:mm tt") : "--:--")</td>
-                    <td class="p-2.5 px-4 text-zinc-700">
-                        @if (log.LateMinutes > 0)
-                        {
-                            <span class="text-red-500 font-bold">@log.LateMinutes m</span>
-                        }
-                        else
-                        {
-                            <span class="text-zinc-400">-</span>
-                        }
-                    </td>
-                    <td class="p-2.5 px-4">
-                        @if (log.Status == "Present")
-                        {
-                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                Present
-                            </span>
-                        }
-                        else if (log.Status == "Late")
-                        {
-                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                Late
-                            </span>
-                        }
-                        else if (log.Status == "Absent")
-                        {
-                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                                Absent
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                Leave
-                            </span>
-                        }
-                    </td>
-                </RowTemplate>
-            </DataTable>
         </div>
+
+        @if (!string.IsNullOrEmpty(_message))
+        {
+            <MudAlert Severity="Severity.Info" Class="mb-4" dense="true">
+                <MudText Typo="Typo.caption" Class="fw-semibold">@_message</MudText>
+            </MudAlert>
+        }
+
+        @* Filters *@
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4" Style="border-radius:8px;">
+            <MudGrid Spacing="3" class="align-items-end">
+                <MudItem xs="12" sm="4" md="3">
+                    <MudDatePicker Label="Date"
+                                   Date="@_selectedDate"
+                                   DateChanged="@(d => { if (d.HasValue) _selectedDate = d.Value; })"
+                                   MinDate="@_minDate"
+                                   MaxDate="@_maxDate"
+                                   DateFormat="yyyy-MM-dd"
+                                   dense="true"
+                                   Margin="Margin.Dense"
+                                   Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudTextField Label="Employee ID"
+                                  @bind-Value="_employeeIdFilter"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="e.g. 1001"
+                                  dense="true"
+                                  Margin="Margin.Dense"
+                                  Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Employee Status"
+                               @bind-Value="_employeeStatus"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="0">All</MudSelectItem>
+                        <MudSelectItem Value="1">Active</MudSelectItem>
+                        <MudSelectItem Value="2">Inactive</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Company"
+                               @bind-Value="_companyIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="0">All Companies</MudSelectItem>
+                        @foreach (var c in _companies)
+                        {
+                            <MudSelectItem Value="@c.Id">@c.CompanyNameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Department"
+                               @bind-Value="_departmentIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="0">All Departments</MudSelectItem>
+                        @foreach (var d in _departments)
+                        {
+                            <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Section"
+                               @bind-Value="_sectionIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="0">All Sections</MudSelectItem>
+                        @foreach (var s in _sections)
+                        {
+                            <MudSelectItem Value="@s.Id">@s.NameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Designation"
+                               @bind-Value="_designationIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="0">All Designations</MudSelectItem>
+                        @foreach (var dg in _designations)
+                        {
+                            <MudSelectItem Value="@dg.Id">@dg.NameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Line"
+                               @bind-Value="_lineIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="0">All Lines</MudSelectItem>
+                        @foreach (var l in _lines)
+                        {
+                            <MudSelectItem Value="@l.Id">@l.NameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Group"
+                               @bind-Value="_groupFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="@("All")">All Groups</MudSelectItem>
+                        <MudSelectItem Value="@("A")">Group A</MudSelectItem>
+                        <MudSelectItem Value="@("B")">Group B</MudSelectItem>
+                        <MudSelectItem Value="@("C")">Group C</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Shift"
+                               @bind-Value="_shiftIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="0">All Shifts</MudSelectItem>
+                        @foreach (var sh in _shifts)
+                        {
+                            <MudSelectItem Value="@sh.Id">@sh.ShiftName</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="3" Style="gap:8px; margin-top: 10px;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               Disabled="@_isLoading" @onclick="LoadRecords" Class="flex-grow-1">
+                        Apply
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                               @onclick="ClearFilters" Class="flex-grow-1">
+                        Clear
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+
+        @* Metrics *@
+        @if (_records.Count > 0)
+        {
+            var present = _records.Count(r => r.AttendanceStatus == "Present" || r.AttendanceStatus == "Present + Overtime");
+            var late = _records.Count(r => r.AttendanceStatus == "Late" || r.AttendanceStatus == "Early Exit");
+            var absent = _records.Count(r => r.AttendanceStatus == "Absent");
+            var leave = _records.Count(r => r.AttendanceStatus == "Leave" || r.AttendanceStatus == "Holiday" || r.AttendanceStatus == "Weekly Off");
+            var total = _records.Count;
+
+            <MudGrid Spacing="3" Class="mb-4">
+                <MudItem xs="6" sm="3" md="2">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px;">
+                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase" Style="letter-spacing:0.05em;">Total</MudText>
+                        <MudText Typo="Typo.body1" Class="fw-bold mt-1">@total</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="3" md="2">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px;">
+                        <MudText Typo="Typo.caption" Class="text-success fw-bold text-uppercase" Style="letter-spacing:0.05em;">Present</MudText>
+                        <MudText Typo="Typo.body1" Class="text-success fw-bold mt-1">@present</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="3" md="2">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px;">
+                        <MudText Typo="Typo.caption" Class="text-warning fw-bold text-uppercase" Style="letter-spacing:0.05em;">Late/Early</MudText>
+                        <MudText Typo="Typo.body1" Class="text-warning fw-bold mt-1">@late</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="3" md="2">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px;">
+                        <MudText Typo="Typo.caption" Class="text-error fw-bold text-uppercase" Style="letter-spacing:0.05em;">Absent</MudText>
+                        <MudText Typo="Typo.body1" Class="text-error fw-bold mt-1">@absent</MudText>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="6" sm="3" md="2">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px;">
+                        <MudText Typo="Typo.caption" Class="text-info fw-bold text-uppercase" Style="letter-spacing:0.05em;">Leave/Off</MudText>
+                        <MudText Typo="Typo.body1" Class="text-info fw-bold mt-1">@leave</MudText>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+
+        @* Attendance Records Table *@
+        @if (_isLoading)
+        {
+            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Loading records...</MudText>
+        }
+        else
+        {
+            <MudPaper Elevation="0" Outlined="true" Style="border-radius:8px; overflow:auto;">
+                <MudTable Items="@_records" Hover="true" SortLabel="Sort By" Dense="true" Elevation="0" Outlined="false" Striped="false">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.AttendanceDate)">Date</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.EmployeeId)">Employee ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Actual In</MudText></MudTh>
+                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Actual Out</MudText></MudTh>
+                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Sched In</MudText></MudTh>
+                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Sched Out</MudText></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.LateMinutes)">Late</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.EarlyExitMinutes)">Early</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.WorkedMinutes)">Worked</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.OvertimeMinutes)">OT</MudTableSortLabel></MudTh>
+                        <MudTh>Status</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Date"><MudText Typo="Typo.body2" Class="font-mono">@context.AttendanceDate.ToString("yyyy-MM-dd")</MudText></MudTd>
+                        <MudTd DataLabel="Employee ID"><MudText Typo="Typo.body2" Class="fw-bold font-mono">@context.EmployeeId</MudText></MudTd>
+                        <MudTd DataLabel="Actual In"><MudText Typo="Typo.body2" Class="font-mono">@FormatTime(context.ActualInPunch)</MudText></MudTd>
+                        <MudTd DataLabel="Actual Out"><MudText Typo="Typo.body2" Class="font-mono">@FormatTime(context.ActualOutPunch)</MudText></MudTd>
+                        <MudTd DataLabel="Sched In"><MudText Typo="Typo.body2" Class="mud-secondary-text-color font-mono">@FormatTimeSpan(context.AttendanceInTime)</MudText></MudTd>
+                        <MudTd DataLabel="Sched Out"><MudText Typo="Typo.body2" Class="mud-secondary-text-color font-mono">@FormatTimeSpan(context.AttendanceOutTime)</MudText></MudTd>
+                        <MudTd DataLabel="Late">
+                            <MudText Typo="Typo.body2" Class="@(context.LateMinutes > 0 ? "text-error fw-bold" : "mud-secondary-text-color")">
+                                @(context.LateMinutes > 0 ? $"{context.LateMinutes}m" : "-")
+                            </MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Early">
+                            <MudText Typo="Typo.body2" Class="@(context.EarlyExitMinutes > 0 ? "text-warning fw-bold" : "mud-secondary-text-color")">
+                                @(context.EarlyExitMinutes > 0 ? $"{context.EarlyExitMinutes}m" : "-")
+                            </MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Worked"><MudText Typo="Typo.body2">@(context.WorkedMinutes > 0 ? $"{context.WorkedMinutes / 60}h {context.WorkedMinutes % 60}m" : "-")</MudText></MudTd>
+                        <MudTd DataLabel="OT">
+                            <MudText Typo="Typo.body2" Class="@(context.OvertimeMinutes > 0 ? "text-info fw-bold" : "mud-secondary-text-color")">
+                                @(context.OvertimeMinutes > 0 ? $"{context.OvertimeMinutes}m" : "-")
+                            </MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Status">@StatusBadge(context.AttendanceStatus)</MudTd>
+                    </RowTemplate>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+        }
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -138,39 +267,173 @@
 </AuthorizeView>
 
 @code {
-    private string _searchQuery = string.Empty;
-    private string _deptFilter = string.Empty;
-    private DateTime _attendanceDate = DateTime.Today;
+    private DateTime _selectedDate = DateTime.Today;
+    private readonly DateTime _minDate = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private readonly DateTime _maxDate = new(DateTime.Today.Year, DateTime.Today.Month, DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month));
+    private string? _employeeIdFilter;
+    private int _employeeStatus; // 0=All, 1=Active, 2=Inactive
+    private int _companyIdFilter;
+    private int _departmentIdFilter;
+    private int _sectionIdFilter;
+    private int _designationIdFilter;
+    private int _lineIdFilter;
+    private string _groupFilter = "All";
+    private int _shiftIdFilter;
+    private bool _isLoading;
+    private string? _message;
+    private List<AttendanceRecord> _records = new();
+    private List<AttendanceRecord> _allRecords = new();
 
-    private void OnDateChanged(ChangeEventArgs e)
+    private List<Company> _companies = new();
+    private List<Department> _departments = new();
+    private List<Section> _sections = new();
+    private List<Designation> _designations = new();
+    private List<Line> _lines = new();
+    private List<ERPHub.Models.Shift> _shifts = new();
+    private List<Employee> _employees = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate))
+        await LoadLookupData();
+        await LoadRecords();
+    }
+
+    private async Task LoadLookupData()
+    {
+        try
         {
-            _attendanceDate = parsedDate;
+            var baseUri = NavManager.BaseUri;
+            var companiesTask = Http.GetFromJsonAsync<List<Company>>($"{baseUri}api/companies");
+            var departmentsTask = Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments");
+            var sectionsTask = Http.GetFromJsonAsync<List<Section>>($"{baseUri}api/sections");
+            var designationsTask = Http.GetFromJsonAsync<List<Designation>>($"{baseUri}api/designations");
+            var linesTask = Http.GetFromJsonAsync<List<Line>>($"{baseUri}api/lines");
+            var shiftsTask = Http.GetFromJsonAsync<List<ERPHub.Models.Shift>>($"{baseUri}api/shifts");
+            var employeesTask = Http.GetFromJsonAsync<List<Employee>>($"{baseUri}api/employees");
+
+            await Task.WhenAll(companiesTask, departmentsTask, sectionsTask, designationsTask, linesTask, shiftsTask, employeesTask);
+
+            _companies = await companiesTask ?? new();
+            _departments = await departmentsTask ?? new();
+            _sections = await sectionsTask ?? new();
+            _designations = await designationsTask ?? new();
+            _lines = await linesTask ?? new();
+            _shifts = await shiftsTask ?? new();
+            _employees = await employeesTask ?? new();
+        }
+        catch
+        {
+            // Lookup data failed to load — filters will be empty
         }
     }
 
-    private List<AttendanceRecord> _records = new()
+    private async Task LoadRecords()
     {
-        new("EMP-001", "Bruce Wayne", "IT", "Day Shift", new TimeSpan(8, 45, 0), new TimeSpan(17, 30, 0), 0, "Present"),
-        new("EMP-002", "Tony Stark", "IT", "Day Shift", new TimeSpan(9, 15, 0), new TimeSpan(18, 0, 0), 15, "Late"),
-        new("EMP-003", "Clark Kent", "HR", "Day Shift", new TimeSpan(8, 55, 0), new TimeSpan(17, 0, 0), 0, "Present"),
-        new("EMP-004", "Peter Parker", "Production", "Night Shift", new TimeSpan(20, 0, 0), new TimeSpan(5, 0, 0), 0, "Present"),
-        new("EMP-005", "Selina Kyle", "Finance", "Day Shift", null, null, 0, "Absent"),
-        new("EMP-006", "Steve Rogers", "Production", "Day Shift", new TimeSpan(8, 40, 0), new TimeSpan(17, 30, 0), 0, "Present"),
-        new("EMP-007", "Natasha Romanoff", "HR", "Day Shift", new TimeSpan(9, 25, 0), new TimeSpan(17, 0, 0), 25, "Late"),
-        new("EMP-008", "Bruce Banner", "IT", "Night Shift", null, null, 0, "Leave"),
-        new("EMP-009", "Wanda Maximoff", "Finance", "Day Shift", new TimeSpan(8, 50, 0), new TimeSpan(17, 15, 0), 0, "Present"),
-        new("EMP-010", "Barry Allen", "Marketing", "Day Shift", new TimeSpan(9, 0, 0), new TimeSpan(17, 0, 0), 0, "Present")
+        _isLoading = true;
+        _message = null;
+        StateHasChanged();
+
+        try
+        {
+            var url = $"{NavManager.BaseUri}api/attendance/records?fromDate={_selectedDate:yyyy-MM-dd}&toDate={_selectedDate:yyyy-MM-dd}";
+            if (!string.IsNullOrWhiteSpace(_employeeIdFilter))
+                url += $"&employeeId={Uri.EscapeDataString(_employeeIdFilter.Trim())}";
+            if (_employeeStatus == 1)
+                url += "&activeEmployees=true";
+            else if (_employeeStatus == 2)
+                url += "&activeEmployees=false";
+
+            _allRecords = await Http.GetFromJsonAsync<List<AttendanceRecord>>(url) ?? new();
+            ApplyClientFilters();
+        }
+        catch
+        {
+            _allRecords = new();
+            _records = new();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyClientFilters()
+    {
+        var hasOrgFilter = _departmentIdFilter > 0 || _sectionIdFilter > 0 ||
+                           _designationIdFilter > 0 || _lineIdFilter > 0 ||
+                           _shiftIdFilter > 0 || _companyIdFilter > 0 ||
+                           (_groupFilter != "All" && !string.IsNullOrEmpty(_groupFilter));
+
+        if (!hasOrgFilter)
+        {
+            _records = _allRecords;
+            return;
+        }
+
+        var matchingEmployeeIds = _employees
+            .Where(e =>
+                (_departmentIdFilter == 0 || e.DepartmentId == _departmentIdFilter) &&
+                (_sectionIdFilter == 0 || e.SectionId == _sectionIdFilter) &&
+                (_designationIdFilter == 0 || e.DesignationId == _designationIdFilter) &&
+                (_lineIdFilter == 0 || e.LineId == _lineIdFilter) &&
+                (_shiftIdFilter == 0 || e.ShiftId == _shiftIdFilter))
+            .Select(e => e.EmployeeId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        _records = _allRecords
+            .Where(r => matchingEmployeeIds.Contains(r.EmployeeId))
+            .ToList();
+    }
+
+    private async Task ClearFilters()
+    {
+        _selectedDate = DateTime.Today;
+        _employeeIdFilter = null;
+        _employeeStatus = 0;
+        _companyIdFilter = 0;
+        _departmentIdFilter = 0;
+        _sectionIdFilter = 0;
+        _designationIdFilter = 0;
+        _lineIdFilter = 0;
+        _groupFilter = "All";
+        _shiftIdFilter = 0;
+        await LoadRecords();
+    }
+
+    private static string FormatTime(DateTime? dt)
+    {
+        return dt?.ToString("hh:mm:ss tt") ?? "--:--:--";
+    }
+
+    private static string FormatTimeSpan(TimeSpan? ts)
+    {
+        return ts.HasValue ? DateTime.Today.Add(ts.Value).ToString("hh:mm tt") : "--:--";
+    }
+
+    private static RenderFragment StatusBadge(string status) => builder =>
+    {
+        var (bg, text, border, label) = status switch
+        {
+            "Present" => ("bg-emerald-50", "text-emerald-700", "border-emerald-200", "Present"),
+            "Present + Overtime" => ("bg-emerald-50", "text-emerald-700", "border-emerald-200", "Present + OT"),
+            "Late" => ("bg-amber-50", "text-amber-700", "border-amber-200", "Late"),
+            "Early Exit" => ("bg-orange-50", "text-orange-700", "border-orange-200", "Early Exit"),
+            "Absent" => ("bg-red-50", "text-red-700", "border-red-200", "Absent"),
+            "Leave" => ("bg-indigo-50", "text-indigo-700", "border-indigo-200", "Leave"),
+            "Half Day" => ("bg-yellow-50", "text-yellow-700", "border-yellow-200", "Half Day"),
+            "Holiday" => ("bg-purple-50", "text-purple-700", "border-purple-200", "Holiday"),
+            "Holiday Worked" => ("bg-purple-50", "text-purple-700", "border-purple-200", "Holiday Worked"),
+            "Weekly Off" => ("bg-sky-50", "text-sky-700", "border-sky-200", "Weekly Off"),
+            "Weekly Off Worked" => ("bg-sky-50", "text-sky-700", "border-sky-200", "WO Worked"),
+            "Missing In Punch" => ("bg-rose-50", "text-rose-700", "border-rose-200", "Missing In"),
+            "Missing Out Punch" => ("bg-rose-50", "text-rose-700", "border-rose-200", "Missing Out"),
+            _ => ("bg-zinc-50", "text-zinc-600", "border-zinc-200", status)
+        };
+
+        builder.OpenElement(0, "span");
+        builder.AddAttribute(1, "class", $"d-inline-flex align-items-center gap-1 py-0 px-2 rounded-pill text-caption fw-bold {bg} {text} border {border}");
+        builder.AddContent(2, label);
+        builder.CloseElement();
     };
-
-    private IEnumerable<AttendanceRecord> FilteredRecords =>
-        _records.Where(r => 
-            (string.IsNullOrEmpty(_deptFilter) || r.Department == _deptFilter) &&
-            (string.IsNullOrEmpty(_searchQuery) || 
-             r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
-             r.EmpId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-        );
-
-    public record AttendanceRecord(string EmpId, string Name, string Department, string Shift, TimeSpan? InTime, TimeSpan? OutTime, int LateMinutes, string Status);
 }

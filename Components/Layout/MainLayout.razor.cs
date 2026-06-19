@@ -1,127 +1,130 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.JSInterop;
+using MudBlazor;
 using ERPHub.Services;
+using ERPHub.Components.Common;
 
 namespace ERPHub.Components.Layout;
 
-public partial class MainLayout
+public partial class MainLayout : IDisposable
 {
-    [Inject]
-    private IJSRuntime JS { get; set; } = default!;
+    [Inject] private CustomAuthenticationStateProvider AuthProvider { get; set; } = default!;
+    [Inject] private NavigationManager Nav { get; set; } = default!;
+    [Inject] private IDialogService DialogService { get; set; } = default!;
+    [Inject] private NotificationService NotificationService { get; set; } = default!;
 
-    [Inject]
-    private AuthenticationStateProvider AuthStateProvider { get; set; } = default!;
+    private bool _drawerOpen = true;
+    private bool _showNotifications;
+    private bool _showProfileMenu;
+    private IReadOnlyList<NotificationItem> _notifications = Array.Empty<NotificationItem>();
+    private int _unreadCount;
 
-    [Inject]
-    private NavigationManager NavigationManager { get; set; } = default!;
-
-    private string _globalSearchQuery = string.Empty;
-    private bool _showProfileDropdown = false;
-
-    private void ToggleProfileDropdown()
+    protected override void OnInitialized()
     {
-        _showProfileDropdown = !_showProfileDropdown;
+        NotificationService.OnNotificationsChanged += OnNotificationsChanged;
+        NotificationService.SeedDemoNotifications();
+        RefreshNotifications();
     }
 
-    private void CloseProfileDropdown()
+    private void OnNotificationsChanged()
     {
-        _showProfileDropdown = false;
+        RefreshNotifications();
+        InvokeAsync(StateHasChanged);
     }
 
-    private async Task ToggleSidebar()
+    private void RefreshNotifications()
     {
-        await JS.InvokeVoidAsync("sidebarFunctions.toggle");
+        _notifications = NotificationService.Notifications;
+        _unreadCount = NotificationService.UnreadCount;
+    }
+
+    private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
+
+    private async Task OpenSearchDialog()
+    {
+        CloseAllPanels();
+        var options = new DialogOptions
+        {
+            CloseButton = true,
+            FullWidth = true,
+            MaxWidth = MaxWidth.Medium,
+            Position = DialogPosition.TopCenter,
+            BackdropClick = true,
+            CloseOnEscapeKey = true
+        };
+        await DialogService.ShowAsync<GlobalSearchDialog>("", options);
+    }
+
+    private void ToggleNotifications()
+    {
+        _showProfileMenu = false;
+        _showNotifications = !_showNotifications;
+    }
+
+    private void CloseNotifications() => _showNotifications = false;
+
+    private void ToggleProfileMenu()
+    {
+        _showNotifications = false;
+        _showProfileMenu = !_showProfileMenu;
+    }
+
+    private void CloseProfileMenu() => _showProfileMenu = false;
+
+    private void CloseAllPanels()
+    {
+        _showNotifications = false;
+        _showProfileMenu = false;
+    }
+
+    private void MarkAllRead()
+    {
+        NotificationService.MarkAllAsRead();
+    }
+
+    private void HandleNotificationClick(NotificationItem note)
+    {
+        NotificationService.MarkAsRead(note.Id);
+        _showNotifications = false;
+        if (!string.IsNullOrEmpty(note.LinkUrl))
+        {
+            Nav.NavigateTo(note.LinkUrl);
+        }
     }
 
     private async Task HandleLogout()
     {
-        CloseProfileDropdown();
-        var customProvider = (CustomAuthenticationStateProvider)AuthStateProvider;
-        await customProvider.UpdateAuthenticationState(null);
-        NavigationManager.NavigateTo("/login", forceLoad: true);
+        CloseAllPanels();
+        await AuthProvider.UpdateAuthenticationState(null);
+        Nav.NavigateTo("/login", forceLoad: true);
     }
 
-    private bool _showNotificationsPopover = false;
-
-    private List<NotificationItem> _notifications = new()
+    private static string GetInitials(string? name)
     {
-        new()
-        {
-            Title = "OT Approval Needed",
-            Message = "3 Overtime applications are pending review.",
-            Timestamp = DateTime.Now.AddMinutes(-5),
-            IsRead = false,
-            Icon = "💰",
-            LinkUrl = "ot/daily-sheet"
-        },
-        new()
-        {
-            Title = "Production Budget Alert",
-            Message = "Overtime costs have reached 92% of the budget threshold.",
-            Timestamp = DateTime.Now.AddHours(-2),
-            IsRead = false,
-            Icon = "🚨",
-            LinkUrl = "ot/daily-summary"
-        },
-        new()
-        {
-            Title = "Punctuality Alert",
-            Message = "Steve Rogers checked in Late today by 25 minutes.",
-            Timestamp = DateTime.Now.AddHours(-4),
-            IsRead = false,
-            Icon = "📅",
-            LinkUrl = "attendance/daily"
-        }
-    };
-
-    private int UnreadCount => _notifications.Count(n => !n.IsRead);
-
-    private void ToggleNotificationsPopover()
-    {
-        _showNotificationsPopover = !_showNotificationsPopover;
-        if (_showNotificationsPopover)
-        {
-            CloseProfileDropdown();
-        }
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..1].ToUpper();
+        return $"{parts[0][..1]}{parts[^1][..1]}".ToUpper();
     }
 
-    private void MarkAllAsRead()
+    private static string GetUserRole(ClaimsPrincipal user)
     {
-        foreach (var note in _notifications)
-        {
-            note.IsRead = true;
-        }
+        return user.FindFirst(ClaimTypes.Role)?.Value ?? "User";
     }
 
-    private void NavigateToLink(NotificationItem note)
-    {
-        note.IsRead = true;
-        _showNotificationsPopover = false;
-        if (!string.IsNullOrEmpty(note.LinkUrl))
-        {
-            NavigationManager.NavigateTo(note.LinkUrl);
-        }
-    }
-
-    private string FormatTimeAgo(DateTime timestamp)
+    private static string FormatTimeAgo(DateTime timestamp)
     {
         var diff = DateTime.Now - timestamp;
         if (diff.TotalMinutes < 1) return "Just now";
         if (diff.TotalMinutes < 60) return $"{(int)diff.TotalMinutes}m ago";
         if (diff.TotalHours < 24) return $"{(int)diff.TotalHours}h ago";
-        return timestamp.ToString("MMM dd, hh:mm tt");
+        if (diff.TotalDays < 7) return $"{(int)diff.TotalDays}d ago";
+        return timestamp.ToString("MMM dd, yyyy");
+    }
+
+    public void Dispose()
+    {
+        NotificationService.OnNotificationsChanged -= OnNotificationsChanged;
     }
 }
-
-public class NotificationItem
-{
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string Title { get; set; } = string.Empty;
-    public string Message { get; set; } = string.Empty;
-    public DateTime Timestamp { get; set; }
-    public bool IsRead { get; set; }
-    public string Icon { get; set; } = "🔔";
-    public string LinkUrl { get; set; } = string.Empty;
-}
-

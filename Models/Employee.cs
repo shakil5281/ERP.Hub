@@ -9,6 +9,8 @@ namespace ERPHub.Models
         [Required]
         public string EmployeeId { get; set; } = string.Empty;
 
+        public int PunchNumber { get; set; }
+
         [Required]
         public string EmployeeName { get; set; } = string.Empty;
 

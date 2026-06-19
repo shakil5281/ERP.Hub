@@ -37,16 +37,6 @@ namespace ERPHub.Controllers
             return Ok(record);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<PunchRecord>> PostPunchRecord([FromBody] PunchRecord record)
-        {
-            if (record == null)
-                return BadRequest("Invalid punch record data.");
-
-            await _erpService.AddPunchRecordAsync(record);
-            return CreatedAtAction(nameof(GetPunchRecord), new { id = record.Id }, record);
-        }
-
         [HttpPost("import")]
         public async Task<ActionResult<object>> ImportFromMdb([FromQuery] string mdbFilePath)
         {
@@ -63,6 +53,20 @@ namespace ERPHub.Controllers
             try
             {
                 var count = await _erpService.SyncPunchRecordsFromZKDeviceAsync(syncDate);
+                return Ok(new { SyncedCount = count, Message = $"{count} records synced from ZK device." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Error = ex.Message, Details = ex.InnerException?.Message });
+            }
+        }
+
+        [HttpPost("sync-range")]
+        public async Task<ActionResult<object>> SyncFromDeviceRange([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+        {
+            try
+            {
+                var count = await _erpService.SyncPunchRecordsFromZKDeviceAsync(fromDate, toDate);
                 return Ok(new { SyncedCount = count, Message = $"{count} records synced from ZK device." });
             }
             catch (Exception ex)

@@ -36,27 +36,34 @@
                 </button>
             </div>
 
-            <!-- Generated Payslips DataTable -->
-            <DataTable TItem="PayslipRecord" Items="_payslips">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Emp ID</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Gross Earnings</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Deductions</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Net Payout</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Print Status</th>
-                </HeaderTemplate>
-                <RowTemplate Context="pay">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@pay.EmpId</td>
-                    <td class="p-2.5 px-4 text-zinc-800 font-semibold font-heading">@pay.Name</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@pay.GrossEarnings</td>
-                    <td class="p-2.5 px-4 text-red-600 font-medium font-body">@pay.Deductions</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@pay.NetPayout</td>
-                    <td class="p-2.5 px-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">@pay.Status</span>
-                    </td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_payslips" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.EmpId)">Emp ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.GrossEarnings)">Gross Earnings</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.Deductions)">Deductions</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.NetPayout)">Net Payout</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.Status)">Print Status</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Emp ID">@context.EmpId</MudTd>
+                        <MudTd DataLabel="Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Gross Earnings">@context.GrossEarnings</MudTd>
+                        <MudTd DataLabel="Deductions">@context.Deductions</MudTd>
+                        <MudTd DataLabel="Net Payout">@context.NetPayout</MudTd>
+                        <MudTd DataLabel="Print Status">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">@context.Status</span>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

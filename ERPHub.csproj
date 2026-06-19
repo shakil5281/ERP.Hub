@@ -14,13 +14,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="MudBlazor" Version="9.5.0" />
     <PackageReference Include="System.Data.OleDb" Version="9.0.0" />
-    <PackageReference Include="System.Data.SqlClient" Version="4.9.1" />
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="6.1.1" />
   </ItemGroup>
-
-  <Target Name="Tailwind" BeforeTargets="Build" Condition="'$(SkipTailwind)' != 'true' and Exists('package.json')">
-    <Exec Command="npm install" Condition="!Exists('node_modules')" />
-    <Exec Command="npm run build:css" />
-  </Target>
 
 </Project>

@@ -1,41 +1,8 @@
-@inject IJSRuntime JS
-@implements IDisposable
-
-<li class="sidebar-link-item">
-    <NavLink href="@Href" Match="@Match" ActiveClass="active" @onclick="HandleClick">
-        @if (Icon != null)
-        {
-            @Icon
-        }
-        <span>@ChildContent</span>
-    </NavLink>
-</li>
+<MudNavLink Href="@Href" Match="@Match" Icon="@Icon">@ChildContent</MudNavLink>
 
 @code {
     [Parameter] [EditorRequired] public string Href { get; set; } = string.Empty;
     [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
-    [Parameter] public RenderFragment? Icon { get; set; }
+    [Parameter] public string? Icon { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
-    [Parameter] public EventCallback OnClick { get; set; }
-
-    [CascadingParameter] public NavGroup? ParentGroup { get; set; }
-
-    protected override void OnInitialized()
-    {
-        ParentGroup?.RegisterChild(this);
-    }
-
-    private async Task HandleClick()
-    {
-        await JS.InvokeVoidAsync("sidebarFunctions.close");
-        if (OnClick.HasDelegate)
-        {
-            await OnClick.InvokeAsync();
-        }
-    }
-
-    public void Dispose()
-    {
-        ParentGroup?.UnregisterChild(this);
-    }
 }

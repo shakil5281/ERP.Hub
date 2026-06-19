@@ -5,16 +5,19 @@
 @using ERPHub.Data
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Components.Authorization
-@inject ErpDbContext DbContext
+@inject IDbContextFactory<ErpDbContext> DbFactory
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager NavigationManager
 
 <PageTitle>ERPHub - Sign In</PageTitle>
 
 <div class="min-h-screen flex items-center justify-center bg-zinc-950 font-body p-4 relative overflow-hidden select-none">
-    <!-- Background subtle lights/blobs -->
-    <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px]"></div>
-    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px]"></div>
+    <!-- Animated gradient background -->
+    <div class="absolute inset-0 overflow-hidden">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-[120px] animate-pulse-slow"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[120px] animate-pulse-slow" style="animation-delay: 1.5s;"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-violet-500/5 rounded-full blur-[150px] animate-pulse-slow" style="animation-delay: 3s;"></div>
+    </div>
 
     <div class="w-full max-w-[400px] bg-zinc-900/70 border border-zinc-800 backdrop-blur-md rounded-2xl p-8 shadow-2xl relative z-10 animate-fade-in flex flex-col gap-6">
         <!-- Logo Header -->
@@ -39,38 +42,73 @@
         <form @onsubmit="HandleLogin" class="flex flex-col gap-4">
             <!-- Username Input -->
             <div class="flex flex-col gap-1.5">
-                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Username</label>
+                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider" for="login-username">Username</label>
                 <div class="relative flex items-center">
                     <svg class="absolute left-3.5 w-4 h-4 text-zinc-500 fill-current" viewBox="0 0 24 24">
                         <path d="M7.5 6.5C7.5 8.981 9.519 11 12 11s4.5-2.019 4.5-4.5S14.481 2 12 2 7.5 4.019 7.5 6.5zM20 21h1v-1c0-3.859-3.141-7-7-7h-4c-3.86 0-7 3.141-7 7v1h17z"/>
                     </svg>
-                    <input type="text" 
+                    <input id="login-username" type="text" 
                            class="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 pl-11 text-zinc-100 font-body text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-zinc-600" 
                            placeholder="Enter username" 
                            @bind="_username" 
+                           @onkeydown="HandleKeyDown"
+                           autocomplete="username"
                            required />
                 </div>
             </div>
 
             <!-- Password Input -->
             <div class="flex flex-col gap-1.5">
-                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">Password</label>
+                <label class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider" for="login-password">Password</label>
                 <div class="relative flex items-center">
                     <svg class="absolute left-3.5 w-4 h-4 text-zinc-500 fill-current" viewBox="0 0 24 24">
                         <path d="M12 2C9.24 2 7 4.24 7 7v3H6c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-1V7c0-2.76-2.24-5-5-5zm-3 5c0-1.66 1.34-3 3-3s3 1.34 3 3v3H9V7zm3 9c-.83 0-1.5-.67-1.5-1.5S11.17 13 12 13s1.5.67 1.5 1.5S12.83 16 12 16z"/>
                     </svg>
-                    <input type="password" 
-                           class="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 pl-11 text-zinc-100 font-body text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-zinc-600" 
+                    <input id="login-password" type="@(_showPassword ? "text" : "password")" 
+                           class="w-full bg-zinc-950/50 border border-zinc-800 rounded-xl p-3 pl-11 pr-11 text-zinc-100 font-body text-sm outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 transition-all placeholder-zinc-600" 
                            placeholder="Enter password" 
                            @bind="_password" 
+                           @onkeydown="HandleKeyDown"
+                           autocomplete="current-password"
                            required />
+                    <button type="button" 
+                            class="absolute right-3.5 w-4 h-4 text-zinc-500 hover:text-zinc-300 cursor-pointer bg-transparent border-0 p-0 flex items-center justify-center transition-colors" 
+                            @onclick="TogglePasswordVisibility"
+                            tabindex="-1"
+                            aria-label="@(_showPassword ? "Hide password" : "Show password")">
+                        @if (_showPassword)
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                                <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                                <line x1="1" y1="1" x2="23" y2="23"/>
+                            </svg>
+                        }
+                        else
+                        {
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-full h-full">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        }
+                    </button>
                 </div>
+            </div>
+
+            <!-- Remember me -->
+            <div class="flex items-center gap-2 -mt-1">
+                <input id="login-remember" type="checkbox" 
+                       class="w-3.5 h-3.5 rounded border-zinc-700 bg-zinc-800 text-indigo-500 focus:ring-indigo-500/30 cursor-pointer" 
+                       @bind="_rememberMe" />
+                <label for="login-remember" class="text-[11px] text-zinc-400 cursor-pointer select-none hover:text-zinc-300 transition-colors">Remember me</label>
+                <div class="flex-1"></div>
+                <span class="text-[10px] text-zinc-600">Press <kbd class="px-1.5 py-0.5 bg-zinc-800 rounded text-zinc-400 font-mono text-[9px] border border-zinc-700">Enter</kbd> to submit</span>
             </div>
 
             <!-- Sign In Button -->
             <button type="submit" 
                     disabled="@_loading"
-                    class="w-full bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-600 hover:to-emerald-600 text-white font-bold text-sm py-3 rounded-xl cursor-pointer transition-all border-0 shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2 mt-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                    class="w-full bg-gradient-to-r from-indigo-500 to-emerald-500 hover:from-indigo-600 hover:to-emerald-600 text-white font-bold text-sm py-3 rounded-xl cursor-pointer transition-all border-0 shadow-lg shadow-indigo-500/10 flex items-center justify-center gap-2 mt-1 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]">
                 @if (_loading)
                 {
                     <span class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -87,15 +125,15 @@
         <div class="border-t border-zinc-800/80 pt-4 flex flex-col gap-2.5">
             <p class="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">Demo Credentials</p>
             <div class="grid grid-cols-2 gap-2 text-[11px] text-zinc-400">
-                <div class="bg-zinc-950/40 p-2 rounded-lg border border-zinc-800/50 cursor-pointer hover:bg-zinc-800/20 transition-all" @onclick='() => SetDemoCredentials("admin", "admin123")'>
+                <div class="bg-zinc-950/40 p-2 rounded-lg border border-zinc-800/50 cursor-pointer hover:bg-zinc-800/30 hover:border-indigo-500/30 transition-all" @onclick='() => SetDemoCredentials("admin", "admin123")'>
                     <div class="font-bold text-indigo-400">Administrator</div>
-                    <div class="mt-0.5">Username: <span class="font-mono">admin</span></div>
-                    <div>Password: <span class="font-mono">admin123</span></div>
+                    <div class="mt-0.5">Username: <span class="font-mono text-indigo-300">admin</span></div>
+                    <div>Password: <span class="font-mono text-indigo-300">admin123</span></div>
                 </div>
-                <div class="bg-zinc-950/40 p-2 rounded-lg border border-zinc-800/50 cursor-pointer hover:bg-zinc-800/20 transition-all" @onclick='() => SetDemoCredentials("user", "user123")'>
+                <div class="bg-zinc-950/40 p-2 rounded-lg border border-zinc-800/50 cursor-pointer hover:bg-zinc-800/30 hover:border-emerald-500/30 transition-all" @onclick='() => SetDemoCredentials("user", "user123")'>
                     <div class="font-bold text-emerald-400">Staff User</div>
-                    <div class="mt-0.5">Username: <span class="font-mono">user</span></div>
-                    <div>Password: <span class="font-mono">user123</span></div>
+                    <div class="mt-0.5">Username: <span class="font-mono text-emerald-300">user</span></div>
+                    <div>Password: <span class="font-mono text-emerald-300">user123</span></div>
                 </div>
             </div>
         </div>
@@ -107,6 +145,8 @@
     private string _password = string.Empty;
     private string _errorMessage = string.Empty;
     private bool _loading = false;
+    private bool _showPassword = false;
+    private bool _rememberMe = false;
 
     [Parameter]
     [SupplyParameterFromQuery]
@@ -119,6 +159,19 @@
         _errorMessage = string.Empty;
     }
 
+    private void TogglePasswordVisibility()
+    {
+        _showPassword = !_showPassword;
+    }
+
+    private void HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            // Form submission is handled by @onsubmit on the form element
+        }
+    }
+
     private async Task HandleLogin()
     {
         _errorMessage = string.Empty;
@@ -126,8 +179,9 @@
 
         try
         {
+            await using var dbContext = await DbFactory.CreateDbContextAsync();
             var hashed = HashPassword(_password);
-            var user = await DbContext.Users.FirstOrDefaultAsync(u => u.Username == _username && u.PasswordHash == hashed);
+            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == _username && u.PasswordHash == hashed);
 
             if (user == null)
             {
@@ -144,7 +198,6 @@
                 Role = user.Role
             });
 
-            // Redirect back to returnUrl or homepage
             var target = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;
             NavigationManager.NavigateTo(target);
         }

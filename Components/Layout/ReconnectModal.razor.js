@@ -5,6 +5,7 @@ if (modal) {
 
 document.getElementById("components-reconnect-button")?.addEventListener("click", retryReconnect);
 document.getElementById("components-resume-button")?.addEventListener("click", resumeCircuit);
+document.getElementById("components-retry-resume-button")?.addEventListener("click", retryResume);
 
 function onStateChanged(event) {
     const state = event.detail?.state;
@@ -48,6 +49,20 @@ async function resumeCircuit() {
         const ok = await Blazor.resumeCircuit();
         if (!ok) location.reload();
     } catch {
-        modal?.classList.replace("components-reconnect-paused", "components-reconnect-resume-failed");
+        const modal = document.getElementById("components-reconnect-modal");
+        if (modal) {
+            modal.classList.remove("components-reconnect-paused");
+            modal.classList.add("components-reconnect-resume-failed");
+        }
+    }
+}
+
+async function retryResume() {
+    try {
+        const ok = await Blazor.resumeCircuit();
+        if (!ok) location.reload();
+        else modal?.close();
+    } catch {
+        location.reload();
     }
 }

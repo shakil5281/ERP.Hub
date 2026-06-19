@@ -13,23 +13,30 @@
                 </div>
             </div>
 
-            <!-- Lifecycle DataTable -->
-            <DataTable TItem="SystemEvent" Items="_events">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Event Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Details</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Timestamp</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Severity</th>
-                </HeaderTemplate>
-                <RowTemplate Context="ev">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ev.EventName</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@ev.Details</td>
-                    <td class="p-2.5 px-4 text-zinc-500 text-xs">@ev.Timestamp</td>
-                    <td class="p-2.5 px-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @ev.BadgeClass">@ev.Severity</span>
-                    </td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_events" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SystemEvent, object>(x=>x.EventName)">Event Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SystemEvent, object>(x=>x.Details)">Details</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<SystemEvent, object>(x=>x.Timestamp)">Timestamp</MudTableSortLabel></MudTh>
+                        <MudTh>Severity</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Event Name">@context.EventName</MudTd>
+                        <MudTd DataLabel="Details">@context.Details</MudTd>
+                        <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
+                        <MudTd DataLabel="Severity">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @context.BadgeClass">@context.Severity</span>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

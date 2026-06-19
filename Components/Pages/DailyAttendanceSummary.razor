@@ -1,122 +1,158 @@
 @page "/attendance/daily-summary"
-@using ERPHub.Components.Common
+@inject HttpClient Http
+@inject NavigationManager NavManager
 
 <PageTitle>ERPHub - Daily Attendance Summary</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        <div class="animate-fade-in">
-            <!-- Header Block -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
-                <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight">Daily Attendance Summary</h2>
-                    <p class="text-zinc-500 text-sm mt-0.5">Overview of department attendance metrics, average hours, and punctuality indexes.</p>
-                </div>
-                <div class="flex gap-2">
-                    <button class="inline-flex items-center py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer">
-                        Filter Month
-                    </button>
-                    <button class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">
-                        Export Report
-                    </button>
-                </div>
+        <div class="d-flex justify-content-between align-items-center mb-6" style="flex-wrap:wrap;">
+            <div>
+                <MudText Typo="Typo.h5" Class="fw-extrabold">Daily Attendance Summary</MudText>
+                <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Overview of department attendance metrics, average hours, and punctuality indexes.</MudText>
             </div>
-
-            <!-- Stats Highlight Cards -->
-            <div class="grid grid-cols-4 gap-6 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
-                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Average Present Rate</span>
-                        <span class="text-sm font-semibold text-zinc-955">92.4%</span>
-                    </div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Average Working Hours</span>
-                        <span class="text-sm font-semibold text-zinc-955">8.2 Hrs</span>
-                    </div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Total Punctual</span>
-                        <span class="text-sm font-semibold text-emerald-600">94 / 102</span>
-                    </div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm flex items-center justify-between">
-                    <div class="flex flex-col">
-                        <span class="text-[11.5px] text-zinc-500 font-bold uppercase tracking-wider mb-1">Leaves Registered</span>
-                        <span class="text-sm font-semibold text-indigo-500">4 Approved</span>
-                    </div>
-                </div>
+            <div class="d-flex" style="gap:8px;">
+                <MudDatePicker Label="Date"
+                               Date="@_selectedDate"
+                               DateChanged="@(d => { if (d.HasValue) _selectedDate = d.Value; })"
+                               DateFormat="yyyy-MM-dd"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Variant="Variant.Outlined" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small"
+                           Disabled="@_isLoading" @onclick="LoadSummary">Load</MudButton>
             </div>
-
-            <!-- Department breakdown visual grid -->
-            <div class="grid grid-cols-3 gap-6 mb-6 max-xl:grid-cols-1">
-                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm col-span-2 max-xl:col-span-1">
-                    <h3 class="text-sm font-bold text-zinc-950 mb-5">Department Present Rates</h3>
-                    <div class="flex flex-col gap-4">
-                        @foreach (var dept in _departments)
-                        {
-                            <div>
-                                <div class="flex justify-between text-xs font-semibold text-zinc-700 mb-1">
-                                    <span>@dept.Name (@dept.Headcount Staff)</span>
-                                    <span>@dept.PresentRate%</span>
-                                </div>
-                                <div class="w-full bg-zinc-150 h-2.5 rounded-full overflow-hidden">
-                                    <div class="bg-emerald-500 h-full rounded-full transition-all duration-500" style="width: @(dept.PresentRate)%;"></div>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                </div>
-                
-                <!-- Summary statistics cards -->
-                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm col-span-1">
-                    <h3 class="text-sm font-bold text-zinc-950 mb-4">Quick Statistics</h3>
-                    <div class="flex flex-col gap-3 text-sm">
-                        <div class="flex justify-between pb-2.5 border-b border-zinc-100">
-                            <span class="text-zinc-500 font-medium">Most Punctual Department</span>
-                            <span class="font-bold text-emerald-600">Finance (100%)</span>
-                        </div>
-                        <div class="flex justify-between pb-2.5 border-b border-zinc-100">
-                            <span class="text-zinc-500 font-medium">Lowest Present Rate</span>
-                            <span class="font-bold text-red-500">Production (82%)</span>
-                        </div>
-                        <div class="flex justify-between pb-2.5 border-b border-zinc-100">
-                            <span class="text-zinc-500 font-medium">Total Late Minutes</span>
-                            <span class="font-bold text-amber-500">180 Mins</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-zinc-500 font-medium">Auto-Mail Notifications</span>
-                            <span class="font-bold text-zinc-700">8 Sent</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detailed table list -->
-            <DataTable TItem="DepartmentSummary" Items="_departments">
-                <TabsContent>
-                    <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">Summary Directory</button>
-                </TabsContent>
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total Headcount</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Present Count</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Absent Count</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Late Count</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Present Rate (%)</th>
-                </HeaderTemplate>
-                <RowTemplate Context="dept">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@dept.Name</td>
-                    <td class="p-2.5 px-4 text-zinc-800 font-semibold">@dept.Headcount</td>
-                    <td class="p-2.5 px-4 text-emerald-600 font-bold">@dept.Present</td>
-                    <td class="p-2.5 px-4 text-red-500 font-bold">@dept.Absent</td>
-                    <td class="p-2.5 px-4 text-amber-500 font-bold">@dept.Late</td>
-                    <td class="p-2.5 px-4 text-zinc-800 font-bold">@dept.PresentRate%</td>
-                </RowTemplate>
-            </DataTable>
         </div>
+
+        @if (_isLoading)
+        {
+            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Loading summary...</MudText>
+        }
+        else if (_departments.Count > 0)
+        {
+            @* Stats Highlight Cards *@
+            var overallPresentRate = _departments.Average(d => d.PresentRate);
+            var overallAvgHours = _departments.Average(d => d.AvgHours);
+            var totalPunctual = _departments.Sum(d => d.Present);
+            var totalHeadcount = _departments.Sum(d => d.Headcount);
+            var totalLeaves = _departments.Sum(d => d.Leave);
+            var bestDept = _departments.OrderByDescending(d => d.PresentRate).First();
+            var worstDept = _departments.OrderBy(d => d.PresentRate).First();
+            var totalLateMins = _departments.Sum(d => d.Late) * 15; // estimate
+
+            <MudGrid Spacing="6" Class="mb-6">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-6" Style="border-radius:8px;">
+                        <div class="d-flex flex-column">
+                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase" Style="letter-spacing:0.05em;">Average Present Rate</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-semibold mt-1">@overallPresentRate.ToString("F1")%</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-6" Style="border-radius:8px;">
+                        <div class="d-flex flex-column">
+                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase" Style="letter-spacing:0.05em;">Average Working Hours</MudText>
+                            <MudText Typo="Typo.h6" Class="fw-semibold mt-1">@overallAvgHours.ToString("F1") Hrs</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-6" Style="border-radius:8px;">
+                        <div class="d-flex flex-column">
+                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase" Style="letter-spacing:0.05em;">Total Punctual</MudText>
+                            <MudText Typo="Typo.h6" Class="text-success fw-semibold mt-1">@totalPunctual / @totalHeadcount</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-6" Style="border-radius:8px;">
+                        <div class="d-flex flex-column">
+                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase" Style="letter-spacing:0.05em;">Leaves Registered</MudText>
+                            <MudText Typo="Typo.h6" Class="text-info fw-semibold mt-1">@totalLeaves</MudText>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+            @* Department Breakdown *@
+            <MudGrid Spacing="6" Class="mb-6">
+                <MudItem xs="12" lg="8">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-6" Style="border-radius:8px;">
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-4">Department Present Rates</MudText>
+                        <div class="d-flex flex-column" style="gap:16px;">
+                            @foreach (var dept in _departments)
+                            {
+                                <div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <MudText Typo="Typo.body2" Class="fw-semibold">@dept.Name (@dept.Headcount Staff)</MudText>
+                                        <MudText Typo="Typo.body2" Class="fw-semibold">@dept.PresentRate%</MudText>
+                                    </div>
+                                    <MudProgressLinear Value="@dept.PresentRate" Color="Color.Success" Size="Size.Small" Style="border-radius:9999px;" />
+                                </div>
+                            }
+                        </div>
+                    </MudPaper>
+                </MudItem>
+
+                @* Quick Statistics *@
+                <MudItem xs="12" lg="4">
+                    <MudPaper Elevation="0" Outlined="true" Class="pa-6" Style="border-radius:8px;">
+                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-4">Quick Statistics</MudText>
+                        <div class="d-flex flex-column" style="gap:12px;">
+                            <div class="d-flex justify-content-between pb-2" style="border-bottom:1px solid var(--mud-palette-table-lines);">
+                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color">Most Punctual Department</MudText>
+                                <MudText Typo="Typo.body2" Class="text-success fw-bold">@bestDept.Name (@bestDept.PresentRate%)</MudText>
+                            </div>
+                            <div class="d-flex justify-content-between pb-2" style="border-bottom:1px solid var(--mud-palette-table-lines);">
+                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color">Lowest Present Rate</MudText>
+                                <MudText Typo="Typo.body2" Class="text-error fw-bold">@worstDept.Name (@worstDept.PresentRate%)</MudText>
+                            </div>
+                            <div class="d-flex justify-content-between pb-2" style="border-bottom:1px solid var(--mud-palette-table-lines);">
+                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color">Total Late (est. mins)</MudText>
+                                <MudText Typo="Typo.body2" Class="text-warning fw-bold">@totalLateMins Mins</MudText>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color">Date</MudText>
+                                <MudText Typo="Typo.body2" Class="fw-bold">@_selectedDate.ToString("yyyy-MM-dd")</MudText>
+                            </div>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+            @* Department Table *@
+            <MudPaper Elevation="0" Outlined="true" Style="border-radius:8px; overflow:hidden;">
+                <MudTable Items="@_departments" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Elevation="0" Outlined="false">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Name)">Department</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Headcount)">Total Headcount</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Present)">Present Count</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Absent)">Absent Count</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Late)">Late Count</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Leave)">Leave Count</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.PresentRate)">Present Rate (%)</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.AvgHours)">Avg Hours</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Department">@context.Name</MudTd>
+                        <MudTd DataLabel="Total Headcount">@context.Headcount</MudTd>
+                        <MudTd DataLabel="Present Count">@context.Present</MudTd>
+                        <MudTd DataLabel="Absent Count">@context.Absent</MudTd>
+                        <MudTd DataLabel="Late Count">@context.Late</MudTd>
+                        <MudTd DataLabel="Leave Count">@context.Leave</MudTd>
+                        <MudTd DataLabel="Present Rate (%)">@context.PresentRate%</MudTd>
+                        <MudTd DataLabel="Avg Hours">@context.AvgHours Hrs</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </MudPaper>
+        }
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -124,14 +160,35 @@
 </AuthorizeView>
 
 @code {
-    private List<DepartmentSummary> _departments = new()
-    {
-        new("IT & Development", 25, 23, 1, 1, 92),
-        new("Human Resources", 8, 7, 0, 1, 87.5),
-        new("Finance & Accounts", 12, 12, 0, 0, 100),
-        new("Production", 60, 49, 5, 6, 81.6),
-        new("Marketing & Sales", 15, 11, 0, 0, 73.3)
-    };
+    private DateTime _selectedDate = DateTime.Today;
+    private bool _isLoading;
+    private List<DepartmentSummary> _departments = new();
 
-    public record DepartmentSummary(string Name, int Headcount, int Present, int Absent, int Late, double PresentRate);
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSummary();
+    }
+
+    private async Task LoadSummary()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var url = $"{NavManager.BaseUri}api/attendance/summary?date={_selectedDate:yyyy-MM-dd}";
+            _departments = await Http.GetFromJsonAsync<List<DepartmentSummary>>(url) ?? new();
+        }
+        catch
+        {
+            _departments = new();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    public record DepartmentSummary(string Name, int Headcount, int Present, int Absent, int Late, int Leave, double PresentRate, double AvgHours);
 }

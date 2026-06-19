@@ -13,29 +13,36 @@
                 </div>
             </div>
 
-            <!-- Holiday Bills DataTable -->
-            <DataTable TItem="HolidayWorkClaim" Items="_claims">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Employee Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Holiday Date</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Holiday Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Hours Logged</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Payout Rate</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Total Bill</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
-                </HeaderTemplate>
-                <RowTemplate Context="claim">
-                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@claim.EmployeeName</td>
-                    <td class="p-2.5 px-4 text-zinc-600 text-xs font-body">@claim.HolidayDate</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-xs">@claim.HolidayName</td>
-                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold font-body">@claim.HoursLogged</td>
-                    <td class="p-2.5 px-4 text-zinc-700 font-body">@claim.PayoutRate</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@claim.TotalBill</td>
-                    <td class="p-2.5 px-4">
-                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@claim.Status</span>
-                    </td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_claims" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<HolidayWorkClaim, object>(x=>x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<HolidayWorkClaim, object>(x=>x.HolidayDate)">Holiday Date</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<HolidayWorkClaim, object>(x=>x.HolidayName)">Holiday Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<HolidayWorkClaim, object>(x=>x.HoursLogged)">Hours Logged</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<HolidayWorkClaim, object>(x=>x.PayoutRate)">Payout Rate</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<HolidayWorkClaim, object>(x=>x.TotalBill)">Total Bill</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<HolidayWorkClaim, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Employee Name">@context.EmployeeName</MudTd>
+                        <MudTd DataLabel="Holiday Date">@context.HolidayDate</MudTd>
+                        <MudTd DataLabel="Holiday Name">@context.HolidayName</MudTd>
+                        <MudTd DataLabel="Hours Logged">@context.HoursLogged</MudTd>
+                        <MudTd DataLabel="Payout Rate">@context.PayoutRate</MudTd>
+                        <MudTd DataLabel="Total Bill">@context.TotalBill</MudTd>
+                        <MudTd DataLabel="Status">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@context.Status</span>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

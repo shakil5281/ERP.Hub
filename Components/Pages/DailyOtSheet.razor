@@ -1,5 +1,4 @@
 @page "/ot/daily-sheet"
-@using ERPHub.Components.Common
 
 <PageTitle>ERPHub - Daily Overtime Sheet</PageTitle>
 
@@ -50,12 +49,12 @@
                            placeholder="Search by ID or Name..." 
                            @bind="_searchQuery" @bind:event="oninput" />
                     
-                    <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-sm w-[180px] max-sm:w-full cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_deptFilter">
-                        <option value="">All Departments</option>
-                        <option value="Production">Production</option>
-                        <option value="IT">IT & Dev</option>
-                        <option value="Finance">Finance</option>
-                    </select>
+                    <MudSelect T="string" @bind-Value="_deptFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                        <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
+                        <MudSelectItem Value="@("Production")">Production</MudSelectItem>
+                        <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
+                        <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
+                    </MudSelect>
                 </div>
                 <div class="flex gap-2 items-center">
                     <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
@@ -63,57 +62,56 @@
                 </div>
             </div>
 
-            <!-- DataTable OT Listing -->
-            <DataTable TItem="OtRecord" Items="FilteredRecords">
-                <TabsContent>
-                    <button type="button" class="py-1.5 px-3 rounded-full text-xs font-semibold text-zinc-950 bg-white border border-zinc-200 shadow-sm cursor-pointer inline-flex items-center gap-1.5 transition-colors">OT Logs</button>
-                </TabsContent>
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Emp ID</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Employee Name</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Regular Hrs</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">OT Hrs</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">OT Rate</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">OT Amount</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Approver</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Status</th>
-                </HeaderTemplate>
-                <RowTemplate Context="ot">
-                    <td class="p-2.5 px-4 text-zinc-600 font-mono text-xs">@ot.EmpId</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ot.Name</td>
-                    <td class="p-2.5 px-4 text-zinc-700">@ot.Department</td>
-                    <td class="p-2.5 px-4 text-zinc-750">@ot.RegularHours hrs</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ot.OtHours hrs</td>
-                    <td class="p-2.5 px-4 text-zinc-700">@ot.OtRate.ToString("F1")x</td>
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold">@ot.OtAmount.ToString("C")</td>
-                    <td class="p-2.5 px-4 text-zinc-600">@ot.Approver</td>
-                    <td class="p-2.5 px-4">
-                        @if (ot.Status == "Approved")
-                        {
-                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                Approved
-                            </span>
-                        }
-                        else if (ot.Status == "Pending")
-                        {
-                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
-                                Pending
-                            </span>
-                        }
-                        else
-                        {
-                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">
-                                Rejected
-                            </span>
-                        }
-                    </td>
-                </RowTemplate>
-                <RowActionsContent Context="ot">
-                    <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-emerald-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ApproveOt(ot)">Approve</button>
-                    <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => RejectOt(ot)">Reject</button>
-                </RowActionsContent>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@FilteredRecords" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.EmpId)">Emp ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Name)">Employee Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Department)">Department</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.RegularHours)">Regular Hrs</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.OtHours)">OT Hrs</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.OtRate)">OT Rate</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.OtAmount)">OT Amount</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Approver)">Approver</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+                        <MudTh>Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Emp ID">@context.EmpId</MudTd>
+                        <MudTd DataLabel="Employee Name">@context.Name</MudTd>
+                        <MudTd DataLabel="Department">@context.Department</MudTd>
+                        <MudTd DataLabel="Regular Hrs">@context.RegularHours hrs</MudTd>
+                        <MudTd DataLabel="OT Hrs">@context.OtHours hrs</MudTd>
+                        <MudTd DataLabel="OT Rate">@context.OtRate.ToString("F1")x</MudTd>
+                        <MudTd DataLabel="OT Amount">@context.OtAmount.ToString("C")</MudTd>
+                        <MudTd DataLabel="Approver">@context.Approver</MudTd>
+                        <MudTd DataLabel="Status">
+                            @if (context.Status == "Approved")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                            }
+                            else if (context.Status == "Pending")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">Rejected</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Actions">
+                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="@Size.Small" Color="Color.Primary" OnClick="() => ApproveOt(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" Size="@Size.Small" Color="Color.Error" OnClick="() => RejectOt(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

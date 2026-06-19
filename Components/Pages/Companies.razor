@@ -15,39 +15,41 @@
         </div>
     </div>
 
-    <!-- Dynamic DataTable component -->
-    <DataTable TItem="Company" Items="FilteredCompanies">
-        <HeaderTemplate>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Company Name (EN)</th>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Company Name (BN)</th>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Address (EN)</th>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Address (BN)</th>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Email</th>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Phone Number</th>
-            <th class="bg-zinc-50 text-zinc-500 font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Signature</th>
-        </HeaderTemplate>
-        <RowTemplate Context="comp">
-            <td class="p-2.5 px-4 text-zinc-800 font-semibold font-body">
-                @(FilteredCompanies.ToList().IndexOf(comp) + 1)
-            </td>
-            <td class="p-2.5 px-4 text-zinc-900 font-semibold font-body">@comp.CompanyNameEn</td>
-            <td class="p-2.5 px-4 text-zinc-900 font-sutonnymj">@comp.CompanyNameBn</td>
-            <td class="p-2.5 px-4 text-zinc-700 font-body">@comp.AddressEn</td>
-            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@comp.AddressBn</td>
-            <td class="p-2.5 px-4 text-zinc-700 font-body">
-                <code class="text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded">@comp.Email</code>
-            </td>
-            <td class="p-2.5 px-4 text-zinc-700 font-body">@comp.PhoneNumber</td>
-            <td class="p-2.5 px-4 text-zinc-800 font-semibold font-body">
-                <span class="font-serif italic border-b border-zinc-300 pb-0.5 text-zinc-600">@comp.Signature</span>
-            </td>
-        </RowTemplate>
-        <RowActionsContent Context="comp">
-            <button class="bg-transparent border-0 text-left py-1.5 px-3 cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditModal(comp)">Edit</button>
-            <button class="bg-transparent border-0 text-left py-1.5 px-3 cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDelete(comp.Id)">Delete</button>
-        </RowActionsContent>
-    </DataTable>
+    <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+        <MudTable Items="@FilteredCompanies" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+            <HeaderContent>
+                <MudTh>Sl</MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.CompanyNameEn)">Company Name (EN)</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.CompanyNameBn)">Company Name (BN)</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.AddressEn)">Address (EN)</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.AddressBn)">Address (BN)</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.Email)">Email</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.PhoneNumber)">Phone Number</MudTableSortLabel></MudTh>
+                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.Signature)">Signature</MudTableSortLabel></MudTh>
+                <MudTh>Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Sl">@(FilteredCompanies.ToList().IndexOf(context) + 1)</MudTd>
+                <MudTd DataLabel="Company Name (EN)">@context.CompanyNameEn</MudTd>
+                <MudTd DataLabel="Company Name (BN)">@context.CompanyNameBn</MudTd>
+                <MudTd DataLabel="Address (EN)">@context.AddressEn</MudTd>
+                <MudTd DataLabel="Address (BN)">@context.AddressBn</MudTd>
+                <MudTd DataLabel="Email"><code class="text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded">@context.Email</code></MudTd>
+                <MudTd DataLabel="Phone Number">@context.PhoneNumber</MudTd>
+                <MudTd DataLabel="Signature"><span class="font-serif italic border-b border-zinc-300 pb-0.5 text-zinc-600">@context.Signature</span></MudTd>
+                <MudTd DataLabel="Actions">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditModal(context)" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+            </PagerContent>
+        <NoRecordsContent>
+            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+        </NoRecordsContent>
+        </MudTable>
+    </div>
 </div>
 
 <!-- Add / Edit Modal -->
@@ -68,49 +70,42 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Company Name (EN)</label>
-                            <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingCompany.CompanyNameEn" placeholder="e.g. Acme Corporation" />
-                            <ValidationMessage For="@(() => _editingCompany.CompanyNameEn)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                            <MudTextField @bind-Value="_editingCompany.CompanyNameEn" For="@(() => _editingCompany.CompanyNameEn)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="e.g. Acme Corporation" />
                         </div>
                         
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Company Name (BN)</label>
-                            <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingCompany.CompanyNameBn" placeholder="একমি কর্পোরেশন" />
-                            <ValidationMessage For="@(() => _editingCompany.CompanyNameBn)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                            <MudTextField @bind-Value="_editingCompany.CompanyNameBn" For="@(() => _editingCompany.CompanyNameBn)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="একমি কর্পোরেশন" />
                         </div>
                     </div>
 
                     <!-- Address Fields -->
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Address (EN)</label>
-                        <InputTextArea class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors min-h-[60px] resize-y" @bind-Value="_editingCompany.AddressEn" placeholder="e.g. 123 Industrial Area, Dhaka" />
-                        <ValidationMessage For="@(() => _editingCompany.AddressEn)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                        <MudTextField @bind-Value="_editingCompany.AddressEn" For="@(() => _editingCompany.AddressEn)" Variant="Variant.Outlined" dense="true" Lines="3" Margin="Margin.Dense" placeholder="e.g. 123 Industrial Area, Dhaka" />
                     </div>
 
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Address (BN)</label>
-                        <InputTextArea class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-sutonnymj text-[13.5px] outline-none focus:border-black transition-colors min-h-[60px] resize-y" @bind-Value="_editingCompany.AddressBn" placeholder="যেমন: ১২৩ শিল্প এলাকা, ঢাকা" />
-                        <ValidationMessage For="@(() => _editingCompany.AddressBn)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                        <MudTextField @bind-Value="_editingCompany.AddressBn" For="@(() => _editingCompany.AddressBn)" Variant="Variant.Outlined" dense="true" Lines="3" Margin="Margin.Dense" placeholder="যেমন: ১২৩ শিল্প এলাকা, ঢাকা" />
                     </div>
 
                     <!-- Contact Fields -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Contact Email</label>
-                            <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingCompany.Email" placeholder="info@company.com" />
-                            <ValidationMessage For="@(() => _editingCompany.Email)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                            <MudTextField @bind-Value="_editingCompany.Email" For="@(() => _editingCompany.Email)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="info@company.com" />
                         </div>
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Phone Number</label>
-                            <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingCompany.PhoneNumber" placeholder="+880 1711-000000" />
-                            <ValidationMessage For="@(() => _editingCompany.PhoneNumber)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                            <MudTextField @bind-Value="_editingCompany.PhoneNumber" For="@(() => _editingCompany.PhoneNumber)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="+880 1711-000000" />
                         </div>
                     </div>
 
                     <!-- Signature Field -->
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Authorized Signature Name</label>
-                        <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors font-serif italic" @bind-Value="_editingCompany.Signature" placeholder="e.g. John Doe" />
-                        <ValidationMessage For="@(() => _editingCompany.Signature)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                        <MudTextField @bind-Value="_editingCompany.Signature" For="@(() => _editingCompany.Signature)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="e.g. John Doe" />
                     </div>
                 </div>
 

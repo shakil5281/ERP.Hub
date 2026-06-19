@@ -13,23 +13,30 @@
                 </div>
             </div>
 
-            <!-- Leave Details DataTable -->
-            <DataTable TItem="LeaveLedger" Items="_ledgers">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Leave Category</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Allocated Days</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Consumed Days</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Balance Remaining</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Accrual Rate</th>
-                </HeaderTemplate>
-                <RowTemplate Context="led">
-                    <td class="p-2.5 px-4 font-bold text-zinc-900 font-heading">@led.Category</td>
-                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold font-body">@led.Allocated</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-center font-semibold font-body">@led.Consumed</td>
-                    <td class="p-2.5 px-4 text-indigo-600 text-center font-bold font-body">@led.Balance</td>
-                    <td class="p-2.5 px-4 text-zinc-650 text-xs">@led.AccrualRate</td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_ledgers" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Category)">Leave Category</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Allocated)">Allocated Days</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Consumed)">Consumed Days</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Balance)">Balance Remaining</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.AccrualRate)">Accrual Rate</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Leave Category">@context.Category</MudTd>
+                        <MudTd DataLabel="Allocated Days">@context.Allocated</MudTd>
+                        <MudTd DataLabel="Consumed Days">@context.Consumed</MudTd>
+                        <MudTd DataLabel="Balance Remaining">@context.Balance</MudTd>
+                        <MudTd DataLabel="Accrual Rate">@context.AccrualRate</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

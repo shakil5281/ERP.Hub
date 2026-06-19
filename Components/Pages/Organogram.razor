@@ -14,16 +14,19 @@
             </div>
 
             <!-- Tabs -->
-            <div class="flex gap-1 mb-6 bg-white border border-zinc-200 rounded-lg p-1 shadow-sm max-sm:overflow-x-auto">
-                @foreach (var tab in _tabs)
-                {
-                    <button type="button"
-                            class="py-2 px-5 rounded-md text-xs font-bold transition-all cursor-pointer border-0 whitespace-nowrap @(_activeTab == tab.Key ? "bg-black text-white shadow-sm" : "bg-transparent text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100")"
-                            @onclick="() => SwitchTab(tab.Key)">
-                        @tab.Value
-                    </button>
-                }
-            </div>
+            <MudTabs ActivePanelIndex="_activeTabIndex"
+                     ActivePanelIndexChanged="OnTabChanged"
+                     Color="Color.Default"
+                     Rounded="true"
+                     Class="organogram-tabs mb-4"
+                     Style="background-color: white; color: black;"
+                     KeepPanelsAlive="true">
+                <MudTabPanel Text="Tree View" Icon="@Icons.Material.Filled.AccountTree" />
+                <MudTabPanel Text="Department" Icon="@Icons.Material.Filled.Business" />
+                <MudTabPanel Text="Section" Icon="@Icons.Material.Filled.Dns" />
+                <MudTabPanel Text="Designation" Icon="@Icons.Material.Filled.Work" />
+                <MudTabPanel Text="Line" Icon="@Icons.Material.Filled.LinearScale" />
+            </MudTabs>
 
             <!-- ==================== TREE TAB ==================== -->
             @if (_activeTab == "tree")
@@ -138,25 +141,31 @@
                         </div>
                     </div>
 
-                    <DataTable TItem="Department" Items="FilteredDepartments">
-                        <ActionsContent>
-                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddDept">+ Add Department</button>
-                        </ActionsContent>
-                        <HeaderTemplate>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
-                        </HeaderTemplate>
-                        <RowTemplate Context="item">
-                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredDepartments.ToList().IndexOf(item) + 1)</td>
-                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
-                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
-                        </RowTemplate>
-                        <RowActionsContent Context="item">
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditDept(item)">Edit</button>
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteDept(item.Id)">Delete</button>
-                        </RowActionsContent>
-                    </DataTable>
+                    <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                        <MudTable Items="@FilteredDepartments" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Sl</MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Department, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Department, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
+                                <MudTh>Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Sl">@(FilteredDepartments.ToList().IndexOf(context) + 1)</MudTd>
+                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
+                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditDept(context)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteDept(context.Id)" />
+                                </MudTd>
+                            </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                            </PagerContent>
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                        </NoRecordsContent>
+                        </MudTable>
+                    </div>
                 </div>
             }
 
@@ -172,39 +181,45 @@
                         </div>
                         <div class="flex gap-2 items-center max-sm:justify-between">
                             <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department:</span>
-                            <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-xs w-[180px] max-sm:w-[150px] cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_sectionDeptFilter">
-                                <option value="0">All Departments</option>
-                                @foreach (var dept in _departments)
-                                {
-                                    <option value="@dept.Id">@dept.NameEn</option>
-                                }
-                            </select>
+                            <MudSelect T="int" @bind-Value="_sectionDeptFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@(0)">All Departments</MudSelectItem>
+                                    @foreach (var dept in _departments)
+                                    {
+                                        <MudSelectItem Value="@dept.Id">@dept.NameEn</MudSelectItem>
+                                    }
+                                </MudSelect>
                         </div>
                     </div>
 
-                    <DataTable TItem="Section" Items="FilteredSections">
-                        <ActionsContent>
-                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddSection">+ Add Section</button>
-                        </ActionsContent>
-                        <HeaderTemplate>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Department</th>
-                        </HeaderTemplate>
-                        <RowTemplate Context="item">
-                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredSections.ToList().IndexOf(item) + 1)</td>
-                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
-                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
-                            <td class="p-2.5 px-4">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">@item.DepartmentNameEn</span>
-                            </td>
-                        </RowTemplate>
-                        <RowActionsContent Context="item">
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditSection(item)">Edit</button>
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteSection(item.Id)">Delete</button>
-                        </RowActionsContent>
-                    </DataTable>
+                    <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                        <MudTable Items="@FilteredSections" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Sl</MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Section, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Section, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Section, object>(x=>x.DepartmentNameEn)">Department</MudTableSortLabel></MudTh>
+                                <MudTh>Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Sl">@(FilteredSections.ToList().IndexOf(context) + 1)</MudTd>
+                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
+                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Department">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">@context.DepartmentNameEn</span>
+                                </MudTd>
+                                <MudTd DataLabel="Actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditSection(context)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteSection(context.Id)" />
+                                </MudTd>
+                            </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                            </PagerContent>
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                        </NoRecordsContent>
+                        </MudTable>
+                    </div>
                 </div>
             }
 
@@ -220,39 +235,45 @@
                         </div>
                         <div class="flex gap-2 items-center max-sm:justify-between">
                             <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
-                            <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-xs w-[180px] max-sm:w-[150px] cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_desigSectionFilter">
-                                <option value="0">All Sections</option>
-                                @foreach (var sec in _sections)
-                                {
-                                    <option value="@sec.Id">@sec.NameEn</option>
-                                }
-                            </select>
+                            <MudSelect T="int" @bind-Value="_desigSectionFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@(0)">All Sections</MudSelectItem>
+                                    @foreach (var sec in _sections)
+                                    {
+                                        <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
+                                    }
+                                </MudSelect>
                         </div>
                     </div>
 
-                    <DataTable TItem="Designation" Items="FilteredDesignations">
-                        <ActionsContent>
-                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddDesig">+ Add Designation</button>
-                        </ActionsContent>
-                        <HeaderTemplate>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Section</th>
-                        </HeaderTemplate>
-                        <RowTemplate Context="item">
-                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredDesignations.ToList().IndexOf(item) + 1)</td>
-                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
-                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
-                            <td class="p-2.5 px-4">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">@item.SectionNameEn</span>
-                            </td>
-                        </RowTemplate>
-                        <RowActionsContent Context="item">
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditDesig(item)">Edit</button>
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteDesig(item.Id)">Delete</button>
-                        </RowActionsContent>
-                    </DataTable>
+                    <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                        <MudTable Items="@FilteredDesignations" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Sl</MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Designation, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Designation, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Designation, object>(x=>x.SectionNameEn)">Section</MudTableSortLabel></MudTh>
+                                <MudTh>Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Sl">@(FilteredDesignations.ToList().IndexOf(context) + 1)</MudTd>
+                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
+                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Section">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">@context.SectionNameEn</span>
+                                </MudTd>
+                                <MudTd DataLabel="Actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditDesig(context)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteDesig(context.Id)" />
+                                </MudTd>
+                            </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                            </PagerContent>
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                        </NoRecordsContent>
+                        </MudTable>
+                    </div>
                 </div>
             }
 
@@ -268,39 +289,45 @@
                         </div>
                         <div class="flex gap-2 items-center max-sm:justify-between">
                             <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
-                            <select class="border border-zinc-200 rounded-lg p-2 px-3 bg-white outline-none text-xs w-[180px] max-sm:w-[150px] cursor-pointer hover:bg-zinc-50 transition-colors" @bind="_lineSectionFilter">
-                                <option value="0">All Sections</option>
-                                @foreach (var sec in _sections)
-                                {
-                                    <option value="@sec.Id">@sec.NameEn</option>
-                                }
-                            </select>
+                            <MudSelect T="int" @bind-Value="_lineSectionFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@(0)">All Sections</MudSelectItem>
+                                    @foreach (var sec in _sections)
+                                    {
+                                        <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
+                                    }
+                                </MudSelect>
                         </div>
                     </div>
 
-                    <DataTable TItem="Line" Items="FilteredLines">
-                        <ActionsContent>
-                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddLine">+ Add Line</button>
-                        </ActionsContent>
-                        <HeaderTemplate>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left w-[60px]">Sl</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (EN)</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Name (BN)</th>
-                            <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Section</th>
-                        </HeaderTemplate>
-                        <RowTemplate Context="item">
-                            <td class="p-2.5 px-4 text-zinc-800 font-semibold">@(FilteredLines.ToList().IndexOf(item) + 1)</td>
-                            <td class="p-2.5 px-4 text-zinc-900 font-bold font-body">@item.NameEn</td>
-                            <td class="p-2.5 px-4 text-zinc-700 font-sutonnymj">@item.NameBn</td>
-                            <td class="p-2.5 px-4">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">@item.SectionNameEn</span>
-                            </td>
-                        </RowTemplate>
-                        <RowActionsContent Context="item">
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-zinc-700 hover:bg-zinc-100 w-full" type="button" @onclick="() => OpenEditLine(item)">Edit</button>
-                            <button class="bg-transparent border-0 text-left py-1.5 px-3 text-xs cursor-pointer text-red-600 hover:bg-zinc-100 w-full" type="button" @onclick="() => ConfirmDeleteLine(item.Id)">Delete</button>
-                        </RowActionsContent>
-                    </DataTable>
+                    <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                        <MudTable Items="@FilteredLines" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                            <HeaderContent>
+                                <MudTh>Sl</MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Line, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Line, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
+                                <MudTh><MudTableSortLabel SortBy="new Func<Line, object>(x=>x.SectionNameEn)">Section</MudTableSortLabel></MudTh>
+                                <MudTh>Actions</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Sl">@(FilteredLines.ToList().IndexOf(context) + 1)</MudTd>
+                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
+                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Section">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">@context.SectionNameEn</span>
+                                </MudTd>
+                                <MudTd DataLabel="Actions">
+                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditLine(context)" />
+                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteLine(context.Id)" />
+                                </MudTd>
+                            </RowTemplate>
+                            <PagerContent>
+                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                            </PagerContent>
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                        </NoRecordsContent>
+                        </MudTable>
+                    </div>
                 </div>
             }
 
@@ -345,13 +372,13 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department</label>
-                                <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @bind="_editingSection.DepartmentId">
-                                    <option value="0">-- Select Department --</option>
+                                <MudSelect T="int" @bind-Value="_editingSection.DepartmentId" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@(0)">-- Select Department --</MudSelectItem>
                                     @foreach (var dept in _departments)
                                     {
-                                        <option value="@dept.Id">@dept.NameEn</option>
+                                        <MudSelectItem Value="@dept.Id">@dept.NameEn</MudSelectItem>
                                     }
-                                </select>
+                                </MudSelect>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
@@ -382,13 +409,13 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
-                                <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @bind="_editingDesig.SectionId">
-                                    <option value="0">-- Select Section --</option>
+                                <MudSelect T="int" @bind-Value="_editingDesig.SectionId" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@(0)">-- Select Section --</MudSelectItem>
                                     @foreach (var sec in _sections)
                                     {
-                                        <option value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</option>
+                                        <MudSelectItem Value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</MudSelectItem>
                                     }
-                                </select>
+                                </MudSelect>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
@@ -419,13 +446,13 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
-                                <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors cursor-pointer" @bind="_editingLine.SectionId">
-                                    <option value="0">-- Select Section --</option>
+                                <MudSelect T="int" @bind-Value="_editingLine.SectionId" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                    <MudSelectItem Value="@(0)">-- Select Section --</MudSelectItem>
                                     @foreach (var sec in _sections)
                                     {
-                                        <option value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</option>
+                                        <MudSelectItem Value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</MudSelectItem>
                                     }
-                                </select>
+                                </MudSelect>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>

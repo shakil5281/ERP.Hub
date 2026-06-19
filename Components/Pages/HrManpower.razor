@@ -13,23 +13,30 @@
                 </div>
             </div>
 
-            <!-- Manpower Stats DataTable -->
-            <DataTable TItem="ManpowerStat" Items="_manpowerStats">
-                <HeaderTemplate>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left font-heading">Department</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Active Headcount</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Vacancies</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Target Capacity</th>
-                    <th class="bg-zinc-50 text-zinc-500 text-xs font-semibold p-2.5 px-4 border-b border-zinc-200 text-left">Utilization</th>
-                </HeaderTemplate>
-                <RowTemplate Context="stat">
-                    <td class="p-2.5 px-4 text-zinc-900 font-bold font-heading">@stat.Department</td>
-                    <td class="p-2.5 px-4 text-zinc-800 text-center font-semibold">@stat.ActiveHeadcount</td>
-                    <td class="p-2.5 px-4 text-indigo-600 text-center font-semibold">@stat.Vacancies</td>
-                    <td class="p-2.5 px-4 text-zinc-700 text-center font-semibold">@stat.TargetCapacity</td>
-                    <td class="p-2.5 px-4 text-zinc-850 text-xs font-semibold">@stat.Utilization</td>
-                </RowTemplate>
-            </DataTable>
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_manpowerStats" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.Department)">Department</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.ActiveHeadcount)">Active Headcount</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.Vacancies)">Vacancies</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.TargetCapacity)">Target Capacity</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.Utilization)">Utilization</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Department">@context.Department</MudTd>
+                        <MudTd DataLabel="Active Headcount">@context.ActiveHeadcount</MudTd>
+                        <MudTd DataLabel="Vacancies">@context.Vacancies</MudTd>
+                        <MudTd DataLabel="Target Capacity">@context.TargetCapacity</MudTd>
+                        <MudTd DataLabel="Utilization">@context.Utilization</MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                <NoRecordsContent>
+                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                </NoRecordsContent>
+                </MudTable>
+            </div>
         </div>
     </Authorized>
     <NotAuthorized>

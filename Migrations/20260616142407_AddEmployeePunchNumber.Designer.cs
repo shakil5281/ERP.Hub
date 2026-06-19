@@ -4,6 +4,7 @@ using ERPHub.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ERPHub.Migrations
 {
     [DbContext(typeof(ErpDbContext))]
-    partial class ErpDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260616142407_AddEmployeePunchNumber")]
+    partial class AddEmployeePunchNumber
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,69 +24,6 @@ namespace ERPHub.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("ERPHub.Models.AttendanceRecord", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime?>("ActualInPunch")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("ActualOutPunch")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("AttendanceDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<TimeSpan?>("AttendanceInTime")
-                        .HasColumnType("time");
-
-                    b.Property<TimeSpan?>("AttendanceOutTime")
-                        .HasColumnType("time");
-
-                    b.Property<string>("AttendanceStatus")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("EarlyExitMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("EmployeeId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("LateMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int>("OvertimeMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Remarks")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<int>("ShiftId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WorkedMinutes")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AttendanceDate");
-
-                    b.HasIndex("EmployeeId", "AttendanceDate")
-                        .IsUnique();
-
-                    b.ToTable("attendancerecords");
-                });
 
             modelBuilder.Entity("ERPHub.Models.Company", b =>
                 {
@@ -270,33 +210,6 @@ namespace ERPHub.Migrations
                     b.ToTable("Employees");
                 });
 
-            modelBuilder.Entity("ERPHub.Models.Holiday", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("HolidayDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("HolidayName")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<bool>("IsRecurring")
-                        .HasColumnType("bit");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("HolidayDate")
-                        .IsUnique();
-
-                    b.ToTable("Holidays");
-                });
-
             modelBuilder.Entity("ERPHub.Models.Invoice", b =>
                 {
                     b.Property<int>("Id")
@@ -363,47 +276,6 @@ namespace ERPHub.Migrations
                     b.HasIndex("InvoiceId");
 
                     b.ToTable("InvoiceItems");
-                });
-
-            modelBuilder.Entity("ERPHub.Models.LeaveApplication", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("EmployeeId")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("LeaveDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("LeaveType")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("leaveapplications");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Line", b =>
@@ -588,26 +460,11 @@ namespace ERPHub.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BreakMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int>("DuplicateIntervalMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int>("GraceInMinutes")
-                        .HasColumnType("int");
-
-                    b.Property<int>("HalfDayThresholdMinutes")
-                        .HasColumnType("int");
-
                     b.Property<TimeSpan>("InTime")
                         .HasColumnType("time");
 
                     b.Property<TimeSpan>("LateTime")
                         .HasColumnType("time");
-
-                    b.Property<int>("MinimumOvertimeMinutes")
-                        .HasColumnType("int");
 
                     b.Property<string>("OffDay")
                         .IsRequired()

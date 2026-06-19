@@ -20,16 +20,17 @@
 
 /* Modal base */
 #components-reconnect-modal {
-    background: white;
+    background: linear-gradient(135deg, #1e1b2e 0%, #1a1a2e 50%, #16213e 100%);
+    color: #e2e8f0;
     width: 22rem;
     max-width: 90vw;
-    padding: 2rem 2rem 1.75rem;
-    border: none;
-    border-radius: 1rem;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    padding: 2.5rem 2rem 2rem;
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: 1.25rem;
+    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
     opacity: 0;
-    transform: translateY(16px) scale(0.96);
-    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), overlay 0.3s allow-discrete;
+    transform: translateY(20px) scale(0.95);
+    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), overlay 0.3s allow-discrete;
 }
 
 #components-reconnect-modal[open] {
@@ -38,7 +39,8 @@
 }
 
 #components-reconnect-modal::backdrop {
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
     opacity: 0;
     transition: opacity 0.3s ease, overlay 0.3s allow-discrete;
 }
@@ -50,7 +52,7 @@
 @starting-style {
     #components-reconnect-modal[open] {
         opacity: 0;
-        transform: translateY(16px) scale(0.96);
+        transform: translateY(20px) scale(0.95);
     }
 
     #components-reconnect-modal[open]::backdrop {
@@ -63,40 +65,51 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1.25rem;
+    gap: 1rem;
     text-align: center;
 }
 
 /* Text */
-#components-reconnect-modal p {
+.components-reconnect-title {
+    margin: 0;
+    font-family: 'Outfit', system-ui, -apple-system, sans-serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #f1f5f9;
+    line-height: 1.4;
+}
+
+.components-reconnect-desc {
     margin: 0;
     font-family: system-ui, -apple-system, sans-serif;
-    font-size: 0.9rem;
-    color: #374151;
+    font-size: 0.85rem;
+    color: #94a3b8;
     line-height: 1.5;
 }
 
-#components-reconnect-modal p strong {
+.components-reconnect-desc strong {
     font-weight: 700;
-    color: #111827;
+    color: #818cf8;
 }
 
 /* Button */
 .components-reconnect-button {
     border: none;
-    background: #111827;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
     color: white;
     font-family: system-ui, -apple-system, sans-serif;
     font-size: 0.85rem;
     font-weight: 600;
-    padding: 0.5rem 2rem;
-    border-radius: 0.5rem;
+    padding: 0.6rem 2rem;
+    border-radius: 0.75rem;
     cursor: pointer;
-    transition: background 0.15s ease, transform 0.1s ease;
+    transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
 }
 
 .components-reconnect-button:hover {
-    background: #1f2937;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
 }
 
 .components-reconnect-button:active {
@@ -105,24 +118,32 @@
 
 /* Spinner */
 .components-rejoining-animation {
-    width: 48px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    margin-bottom: 0.5rem;
 }
 
 .components-spinner {
     width: 100%;
     height: 100%;
-    color: #111827;
-    animation: spin 1s linear infinite;
+    color: #6366f1;
+    animation: spin 1.2s linear infinite;
 }
 
-.components-spinner-path {
-    stroke-dasharray: 60;
-    stroke-dashoffset: 60;
+.components-spinner-arc {
     animation: dash 1.5s ease-in-out infinite;
+}
+
+.components-spinner-icon {
+    position: absolute;
+    width: 28px;
+    height: 28px;
+    color: #818cf8;
+    opacity: 0.8;
 }
 
 @keyframes spin {
@@ -130,7 +151,65 @@
 }
 
 @keyframes dash {
-    0% { stroke-dashoffset: 60; }
-    50% { stroke-dashoffset: 8; }
-    100% { stroke-dashoffset: 60; }
+    0% { stroke-dashoffset: 180; }
+    50% { stroke-dashoffset: 45; }
+    100% { stroke-dashoffset: 180; }
+}
+
+/* Status icon */
+.components-status-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-bottom: 0.25rem;
+}
+
+.components-status-icon svg {
+    width: 28px;
+    height: 28px;
+}
+
+.components-status-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: 2px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Progress bar */
+.components-progress-bar {
+    width: 100%;
+    max-width: 200px;
+    height: 3px;
+    background: rgba(99, 102, 241, 0.15);
+    border-radius: 99px;
+    overflow: hidden;
+    margin-top: 0.25rem;
+}
+
+.components-progress-bar-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, #6366f1, #8b5cf6);
+    border-radius: 99px;
+    animation: progress 2s ease-in-out infinite;
+    transform-origin: left;
+}
+
+.components-progress-bar-pulse {
+    animation: progressPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes progress {
+    0% { transform: scaleX(0); }
+    50% { transform: scaleX(0.8); }
+    100% { transform: scaleX(0); }
+}
+
+@keyframes progressPulse {
+    0% { transform: scaleX(0.1); opacity: 1; }
+    50% { transform: scaleX(0.9); opacity: 0.7; }
+    100% { transform: scaleX(0.1); opacity: 1; }
 }

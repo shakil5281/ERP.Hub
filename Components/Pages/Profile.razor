@@ -4,184 +4,182 @@
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        <div class="animate-fade-in">
-            <!-- Header -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+        @if (_profileUser != null)
+        {
+            @* Header *@
+            <div class="d-flex justify-content-between align-items-center mb-6" style="flex-wrap:wrap;">
                 <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">My Profile</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage your personal information, credentials, and account preferences.</p>
+                    <MudText Typo="Typo.h4" Class="fw-extrabold">My Profile</MudText>
+                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Manage your personal information, credentials, and account preferences.</MudText>
                 </div>
             </div>
 
-            @if (_profileUser != null)
+            @* Profile Hero Card *@
+            <MudPaper Elevation="1" Outlined="true" Class="mb-6 overflow-hidden" Style="border-radius:12px;">
+                <div style="height:100px; border-bottom:1px solid var(--mud-palette-table-lines); background:linear-gradient(to right, rgba(99,102,241,0.1), rgba(16,185,129,0.1), rgba(99,102,241,0.1));"></div>
+                <div class="px-6 pb-6" style="margin-top:-48px;">
+                    <div class="d-flex align-items-end" style="gap:20px;">
+                        <MudPaper Elevation="2" Class="d-flex align-items-center justify-content-center flex-shrink-0" Style="width:80px;height:80px;border-radius:12px;overflow:hidden;border:2px solid white;background-color:var(--mud-palette-table-hover);">
+                            <MudText Typo="Typo.h4" Class="mud-secondary-text-color fw-bold">@GetInitials(_profileUser.FullName)</MudText>
+                        </MudPaper>
+                        <div class="flex-grow-1 pt-3">
+                            <MudText Typo="Typo.h5" Class="fw-extrabold">@_profileUser.FullName</MudText>
+                            <div class="d-flex align-items-center" style="gap:8px; margin-top:2px;">
+                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@@@_profileUser.Username</MudText>
+                                <span style="width:4px;height:4px;border-radius:50%;background-color:var(--mud-palette-table-lines);"></span>
+                                <MudChip Size="Size.Small" Color="@(_profileUser.Role == "Admin" ? Color.Info : Color.Success)" Class="fw-bold" Style="font-size:10px;" T="string">
+                                    @_profileUser.Role
+                                </MudChip>
+                            </div>
+                        </div>
+                        <div class="d-flex text-center" style="gap:16px;">
+                            <MudPaper Elevation="0" Outlined="true" Class="px-4 py-2" Style="border-radius:8px;">
+                                <MudText Typo="Typo.body2" Class="fw-extrabold">@_totalCompanies</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold mt-1" Style="letter-spacing:0.05em;">Companies</MudText>
+                            </MudPaper>
+                            <MudPaper Elevation="0" Outlined="true" Class="px-4 py-2" Style="border-radius:8px;">
+                                <MudText Typo="Typo.body2" Class="fw-extrabold">@_totalProducts</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold mt-1" Style="letter-spacing:0.05em;">Products</MudText>
+                            </MudPaper>
+                            <MudPaper Elevation="0" Outlined="true" Class="px-4 py-2" Style="border-radius:8px;">
+                                <MudText Typo="Typo.body2" Class="fw-extrabold">@_totalInvoices</MudText>
+                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold mt-1" Style="letter-spacing:0.05em;">Invoices</MudText>
+                            </MudPaper>
+                        </div>
+                    </div>
+                </div>
+            </MudPaper>
+
+            <MudGrid Spacing="6">
+                @* Personal Information *@
+                <MudItem xs="12" lg="8">
+                    <MudPaper Elevation="1" Outlined="true" Style="border-radius:12px; overflow:hidden;">
+                        <div class="pa-5 px-6" style="border-bottom:1px solid var(--mud-palette-table-lines);">
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Personal Information</MudText>
+                        </div>
+                        <div class="pa-5 px-6">
+                            <MudGrid Spacing="5">
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Full Name"
+                                                  @bind-Value="_editFullName"
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="Enter full name"
+                                                  FullWidth="true"
+                                                  dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Username"
+                                                  Value="@_profileUser.Username"
+                                                  Variant="Variant.Outlined"
+                                                  FullWidth="true"
+                                                  dense="true"
+                                                  ReadOnly="true"
+                                                  Disabled="true"
+                                                  HelperText="Username cannot be changed." />
+                                </MudItem>
+                            </MudGrid>
+                            <MudGrid Spacing="5" Class="mt-3">
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Email Address"
+                                                  @bind-Value="_editEmail"
+                                                  Variant="Variant.Outlined"
+                                                  Placeholder="user@example.com"
+                                                  FullWidth="true"
+                                                  dense="true" />
+                                </MudItem>
+                                <MudItem xs="12" sm="6">
+                                    <MudTextField Label="Role"
+                                                  Value="@_profileUser.Role"
+                                                  Variant="Variant.Outlined"
+                                                  FullWidth="true"
+                                                  dense="true"
+                                                  ReadOnly="true"
+                                                  Disabled="true" />
+                                </MudItem>
+                            </MudGrid>
+                            <div class="d-flex justify-content-end" style="gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid var(--mud-palette-table-lines);">
+                                <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" @onclick="ResetForm">Cancel</MudButton>
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@(!_hasChanges)" @onclick="SaveProfile">Save Changes</MudButton>
+                            </div>
+                        </div>
+                    </MudPaper>
+                </MudItem>
+
+                @* Right Column *@
+                <MudItem xs="12" lg="4" Class="d-flex flex-column" Style="gap:24px;">
+                    @* Change Password *@
+                    <MudPaper Elevation="1" Outlined="true" Style="border-radius:12px; overflow:hidden;">
+                        <div class="pa-5 px-6" style="border-bottom:1px solid var(--mud-palette-table-lines);">
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Change Password</MudText>
+                        </div>
+                        <div class="pa-5 px-6 d-flex flex-column" style="gap:16px;">
+                            <MudTextField Label="Current Password"
+                                          @bind-Value="_currentPassword"
+                                          Variant="Variant.Outlined"
+                                          InputType="InputType.Password"
+                                          Placeholder="Enter current password"
+                                          FullWidth="true"
+                                          dense="true" />
+                            <MudTextField Label="New Password"
+                                          @bind-Value="_newPassword"
+                                          Variant="Variant.Outlined"
+                                          InputType="InputType.Password"
+                                          Placeholder="Enter new password"
+                                          FullWidth="true"
+                                          dense="true" />
+                            <MudTextField Label="Confirm New Password"
+                                          @bind-Value="_confirmPassword"
+                                          Variant="Variant.Outlined"
+                                          InputType="InputType.Password"
+                                          Placeholder="Confirm new password"
+                                          FullWidth="true"
+                                          dense="true" />
+
+                            @if (!string.IsNullOrEmpty(_passwordMessage))
+                            {
+                                <MudAlert Severity="@(_passwordSuccess ? Severity.Success : Severity.Error)" Class="pa-2" dense="true">
+                                    <MudText Typo="Typo.caption" Class="fw-semibold">@_passwordMessage</MudText>
+                                </MudAlert>
+                            }
+
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Small" @onclick="ChangePassword">Update Password</MudButton>
+                        </div>
+                    </MudPaper>
+
+                    @* Recent Activity *@
+                    <MudPaper Elevation="1" Outlined="true" Style="border-radius:12px; overflow:hidden;">
+                        <div class="pa-5 px-6" style="border-bottom:1px solid var(--mud-palette-table-lines);">
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Recent Activity</MudText>
+                        </div>
+                        <div class="pa-5 px-6 d-flex flex-column" style="gap:14px;">
+                            @foreach (var activity in _activities)
+                            {
+                                <div class="d-flex" style="gap:12px; padding-bottom:14px; border-bottom:1px solid var(--mud-palette-table-lines);">
+                                    <div style="width:8px; height:8px; border-radius:50%; margin-top:6px; flex-shrink:0; background-color:@activity.Color;"></div>
+                                    <div class="flex-grow-1">
+                                        <MudText Typo="Typo.body2" Class="fw-semibold">@activity.Title</MudText>
+                                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@activity.TimeDescription</MudText>
+                                    </div>
+                                </div>
+                            }
+                            @if (!_activities.Any())
+                            {
+                                <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-6">No recent activity.</MudText>
+                            }
+                        </div>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+
+            @* Success Toast *@
+            @if (_showToast)
             {
-                <!-- Profile Hero Card -->
-                <div class="bg-white border border-zinc-200 rounded-xl shadow-sm mb-6 overflow-hidden">
-                    <div class="h-[100px] bg-gradient-to-r from-indigo-500/10 via-emerald-500/10 to-indigo-500/10 border-b border-zinc-100"></div>
-                    <div class="px-6 pb-6 -mt-12">
-                        <div class="flex items-end gap-5 max-sm:flex-col max-sm:items-center max-sm:text-center">
-                            <div class="w-20 h-20 rounded-xl bg-zinc-100 border-2 border-white shadow-md flex items-center justify-center text-zinc-600 font-bold text-2xl overflow-hidden select-none flex-shrink-0">
-                                @GetInitials(_profileUser.FullName)
-                            </div>
-                            <div class="flex-1 pt-3 max-sm:pt-0">
-                                <h3 class="text-lg font-extrabold text-zinc-950 font-heading">@_profileUser.FullName</h3>
-                                <div class="flex items-center gap-2 mt-0.5 max-sm:justify-center">
-                                    <span class="text-xs text-zinc-500">@@@_profileUser.Username</span>
-                                    <span class="w-1 h-1 rounded-full bg-zinc-300"></span>
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @(_profileUser.Role == "Admin" ? "bg-indigo-50 text-indigo-700" : "bg-emerald-50 text-emerald-700")">
-                                        @_profileUser.Role
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="flex gap-4 text-center max-sm:flex-wrap max-sm:justify-center">
-                                <div class="px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-100">
-                                    <div class="text-sm font-extrabold text-zinc-950">@_totalCompanies</div>
-                                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Companies</div>
-                                </div>
-                                <div class="px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-100">
-                                    <div class="text-sm font-extrabold text-zinc-950">@_totalProducts</div>
-                                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Products</div>
-                                </div>
-                                <div class="px-4 py-2 rounded-lg bg-zinc-50 border border-zinc-100">
-                                    <div class="text-sm font-extrabold text-zinc-950">@_totalInvoices</div>
-                                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider mt-0.5">Invoices</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="d-flex align-items-center" style="position:fixed; bottom:24px; right:24px; background-color:var(--mud-palette-success); color:white; font-size:12px; font-weight:600; padding:12px 20px; border-radius:12px; box-shadow:var(--mud-elevation-8); z-index:9999; gap:10px;">
+                    <span>✓</span>
+                    <span>@_toastMessage</span>
                 </div>
-
-                <div class="grid grid-cols-3 gap-6 max-xl:grid-cols-1">
-                    <!-- Personal Information -->
-                    <div class="col-span-2 max-xl:col-span-1 bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                        <div class="p-5 px-6 border-b border-zinc-100">
-                            <h3 class="font-bold text-sm text-zinc-950 font-heading">Personal Information</h3>
-                        </div>
-                        <div class="p-5 px-6">
-                            <div class="grid grid-cols-2 gap-5 max-sm:grid-cols-1">
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Full Name</label>
-                                    <input type="text"
-                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
-                                           @bind="_editFullName"
-                                           placeholder="Enter full name" />
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Username</label>
-                                    <input type="text"
-                                           class="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-500 font-body text-[13.5px] outline-none cursor-not-allowed"
-                                           value="@_profileUser.Username"
-                                           readonly disabled />
-                                    <span class="text-[10px] text-zinc-400">Username cannot be changed.</span>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-5 mt-4 max-sm:grid-cols-1">
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Email Address</label>
-                                    <input type="email"
-                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
-                                           @bind="_editEmail"
-                                           placeholder="user@example.com" />
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Role</label>
-                                    <input type="text"
-                                           class="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-500 font-body text-[13.5px] outline-none cursor-not-allowed"
-                                           value="@_profileUser.Role"
-                                           readonly disabled />
-                                </div>
-                            </div>
-                            <div class="flex justify-end gap-3 mt-6 pt-5 border-t border-zinc-100">
-                                <button type="button"
-                                        class="py-2 px-5 border border-zinc-200 rounded-lg bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-50 transition-colors cursor-pointer"
-                                        @onclick="ResetForm">Cancel</button>
-                                <button type="button"
-                                        class="py-2 px-5 rounded-lg bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                                        disabled="@(!_hasChanges)"
-                                        @onclick="SaveProfile">Save Changes</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right Column -->
-                    <div class="col-span-1 flex flex-col gap-6">
-                        <!-- Change Password -->
-                        <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                            <div class="p-5 px-6 border-b border-zinc-100">
-                                <h3 class="font-bold text-sm text-zinc-950 font-heading">Change Password</h3>
-                            </div>
-                            <div class="p-5 px-6 flex flex-col gap-4">
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Current Password</label>
-                                    <input type="password"
-                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
-                                           @bind="_currentPassword"
-                                           placeholder="Enter current password" />
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">New Password</label>
-                                    <input type="password"
-                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
-                                           @bind="_newPassword"
-                                           placeholder="Enter new password" />
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Confirm New Password</label>
-                                    <input type="password"
-                                           class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors"
-                                           @bind="_confirmPassword"
-                                           placeholder="Confirm new password" />
-                                </div>
-
-                                @if (!string.IsNullOrEmpty(_passwordMessage))
-                                {
-                                    <div class="text-[11px] font-semibold @(_passwordSuccess ? "text-emerald-600" : "text-red-500") flex items-center gap-1.5">
-                                        <span>@(_passwordSuccess ? "✓" : "✗")</span>
-                                        <span>@_passwordMessage</span>
-                                    </div>
-                                }
-
-                                <button type="button"
-                                        class="w-full py-2.5 px-4 rounded-lg bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer mt-1"
-                                        @onclick="ChangePassword">Update Password</button>
-                            </div>
-                        </div>
-
-                        <!-- Recent Activity -->
-                        <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
-                            <div class="p-5 px-6 border-b border-zinc-100">
-                                <h3 class="font-bold text-sm text-zinc-950 font-heading">Recent Activity</h3>
-                            </div>
-                            <div class="p-5 px-6 flex flex-col gap-3.5">
-                                @foreach (var activity in _activities)
-                                {
-                                    <div class="flex gap-3 pb-3.5 border-b border-zinc-100 last:border-0 last:pb-0">
-                                        <div class="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style="background-color: @activity.Color;"></div>
-                                        <div class="flex-1">
-                                            <p class="font-semibold text-zinc-800 text-xs leading-snug">@activity.Title</p>
-                                            <span class="text-[10px] text-zinc-400">@activity.TimeDescription</span>
-                                        </div>
-                                    </div>
-                                }
-                                @if (!_activities.Any())
-                                {
-                                    <div class="text-center py-6 text-xs text-zinc-400">No recent activity.</div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Success Toast -->
-                @if (_showToast)
-                {
-                    <div class="fixed bottom-6 right-6 bg-emerald-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
-                        <span>✓</span>
-                        <span>@_toastMessage</span>
-                    </div>
-                }
             }
-        </div>
+        }
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
