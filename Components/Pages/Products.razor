@@ -134,10 +134,16 @@
                         </div>
                     </div>
 
-                    <!-- Custom DatePicker Component Integration -->
+                    <!-- Date Picker -->
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Last Updated Date</label>
-                        <DatePicker @bind-Value="_editingProduct.LastUpdated" />
+                        <MudDatePicker Date="@_editingProduct.LastUpdated"
+                                       DateChanged="@(d => { if (d.HasValue) _editingProduct.LastUpdated = d.Value; })"
+                                       Label="Last Updated Date"
+                                       Editable="true"
+                                       Placeholder="Select Date"
+                                       DateFormat="yyyy-MM-dd"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense" />
                     </div>
 
                     <div class="flex flex-col gap-1.5">

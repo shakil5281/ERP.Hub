@@ -53,7 +53,14 @@
                 </div>
                 <div class="flex gap-2 items-center">
                     <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
-                    <input type="date" class="border border-zinc-200 rounded-lg p-1.5 px-3 bg-white outline-none text-sm cursor-pointer hover:bg-zinc-50 transition-colors" value="@_absentDate.ToString("yyyy-MM-dd")" @onchange="OnDateChanged" />
+                    <MudDatePicker Date="@_absentDate"
+                                   DateChanged="OnDateChanged"
+                                   Label="Date"
+                                   Editable="true"
+                                   Placeholder="Select Date"
+                                   DateFormat="yyyy-MM-dd"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
                 </div>
             </div>
 
@@ -221,11 +228,11 @@
         return (remarks, "None");
     }
 
-    private async Task OnDateChanged(ChangeEventArgs e)
+    private async Task OnDateChanged(DateTime? date)
     {
-        if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate))
+        if (date.HasValue)
         {
-            _absentDate = parsedDate;
+            _absentDate = date.Value;
             await LoadData();
             Snackbar.Add($"Loaded absences for {_absentDate.ToString("yyyy-MM-dd")}", Severity.Info);
         }

@@ -48,15 +48,27 @@
                     <MudTextField @bind-Value="_newInvoice.ClientEmail" For="@(() => _newInvoice.ClientEmail)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="billing@client.com" />
                 </div>
 
-                <!-- Custom DatePicker Component Integrations -->
+                <!-- Date Pickers -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Issue Date</label>
-                        <DatePicker @bind-Value="_newInvoice.IssueDate" />
+                        <MudDatePicker Date="@_newInvoice.IssueDate"
+                                       DateChanged="@(d => { if (d.HasValue) _newInvoice.IssueDate = d.Value; })"
+                                       Label="Issue Date"
+                                       Editable="true"
+                                       Placeholder="Select Date"
+                                       DateFormat="yyyy-MM-dd"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense" />
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Due Date</label>
-                        <DatePicker @bind-Value="_newInvoice.DueDate" />
+                        <MudDatePicker Date="@_newInvoice.DueDate"
+                                       DateChanged="@(d => { if (d.HasValue) _newInvoice.DueDate = d.Value; })"
+                                       Label="Due Date"
+                                       Editable="true"
+                                       Placeholder="Select Date"
+                                       DateFormat="yyyy-MM-dd"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense" />
                     </div>
                 </div>
 

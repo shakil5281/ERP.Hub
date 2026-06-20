@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace ERPHub.Components.Pages;
 
-public partial class AddEmployee
+public partial class EditEmployee
 {
     [Inject]
     private HttpClient Http { get; set; } = default!;
@@ -19,8 +19,12 @@ public partial class AddEmployee
     [Inject]
     private NavigationManager NavManager { get; set; } = default!;
 
-    private Employee _employee = new();
+    [Parameter]
+    public int Id { get; set; }
+
+    private Employee? _employee;
     private bool _isSaving = false;
+    private bool _isLoading = true;
     private int _activeTabIndex = 0;
 
     private bool _showToast = false;
@@ -38,8 +42,6 @@ public partial class AddEmployee
     private string _gender = string.Empty;
     private DateTime? _dob;
     private DateTime? _joiningDate = DateTime.Today;
-    private string _spouseName = string.Empty;
-    private int _childrenCount = 0;
     private string _accountType = string.Empty;
     private string _accountNumber = string.Empty;
     private string _accountPlaceholder = "Select account type first";
@@ -72,40 +74,28 @@ public partial class AddEmployee
     private List<AddressUpazila> _permanentFilteredUpazilas => _permanentDistrictId == 0 ? new() :
         BangladeshAddressData.GetUpazilasByDistrict(_permanentDistrictId);
 
-    private void OnGrossSalaryChanged(decimal gross)
-    {
-        _grossSalary = gross;
-        _employee.BasicSalary = Math.Round(gross * 0.536m, 2);
-        _houseRent = Math.Round(_employee.BasicSalary * 0.50m, 2);
-        _foodAllowance = Math.Round(gross * 0.10m, 2);
-        _medicalAllowance = Math.Round(gross * 0.06m, 2);
-        _conveyanceAllowance = Math.Round(gross * 0.036m, 2);
-        _totalSalary = _employee.BasicSalary + _houseRent + _foodAllowance + _medicalAllowance + _conveyanceAllowance;
-    }
-
     private IBrowserFile? _photoFile;
     private IBrowserFile? _signatureFile;
     private string? _photoPreview;
     private string? _signaturePreview;
 
-    private List<Section> _filteredSections => _employee.DepartmentId == 0 ? new() :
-        _allSections.Where(s => s.DepartmentId == _employee.DepartmentId).ToList();
+    private List<Section> _filteredSections => _employee?.DepartmentId == 0 ? new() :
+        _allSections.Where(s => s.DepartmentId == _employee!.DepartmentId).ToList();
 
-    private List<Designation> _filteredDesignations => _employee.SectionId == 0 ? new() :
-        _allDesignations.Where(d => d.SectionId == _employee.SectionId).ToList();
+    private List<Designation> _filteredDesignations => _employee?.SectionId == 0 ? new() :
+        _allDesignations.Where(d => d.SectionId == _employee!.SectionId).ToList();
 
-    private List<Line> _filteredLines => _employee.SectionId == 0 ? new() :
-        _allLines.Where(l => l.SectionId == _employee.SectionId).ToList();
+    private List<Line> _filteredLines => _employee?.SectionId == 0 ? new() :
+        _allLines.Where(l => l.SectionId == _employee!.SectionId).ToList();
 
     protected override async Task OnInitializedAsync()
     {
         var baseUri = NavManager.BaseUri;
-        await Task.WhenAll(
-            LoadDataAsync(baseUri)
-        );
+        await LoadLookupDataAsync(baseUri);
+        await LoadEmployeeAsync(baseUri);
     }
 
-    private async Task LoadDataAsync(string baseUri)
+    private async Task LoadLookupDataAsync(string baseUri)
     {
         try
         {
@@ -122,8 +112,62 @@ public partial class AddEmployee
         }
     }
 
+    private async Task LoadEmployeeAsync(string baseUri)
+    {
+        try
+        {
+            _employee = await Http.GetFromJsonAsync<Employee>($"{baseUri}api/employees/{Id}");
+            if (_employee != null)
+            {
+                _gender = _employee.Gender;
+                if (DateTime.TryParseExact(_employee.DateOfBirth, "dd/MM/yyyy", null, System.Globalization.DateTimeStyles.None, out var dob))
+                    _dob = dob;
+                _joiningDate = _employee.JoiningDate;
+                _grossSalary = _employee.GrossSalary;
+                _photoPreview = string.IsNullOrEmpty(_employee.PhotoBase64) ? null : _employee.PhotoBase64;
+                _signaturePreview = string.IsNullOrEmpty(_employee.SignatureBase64) ? null : _employee.SignatureBase64;
+
+                // Set address dropdown states
+                _presentDivisionId = _employee.PresentDivisionId;
+                _presentDistrictId = _employee.PresentDistrictId;
+                _permanentDivisionId = _employee.PermanentDivisionId;
+                _permanentDistrictId = _employee.PermanentDistrictId;
+
+                // Calculate salary breakdown
+                OnGrossSalaryChanged(_grossSalary);
+
+                // Set account type placeholder (this clears _accountNumber, so set account values after)
+                _accountType = _employee.AccountType;
+                OnAccountTypeChanged(_accountType);
+                _accountNumber = _employee.AccountNumber;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading employee: {ex.Message}");
+            ShowErrorToast("Failed to load employee data.");
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void OnGrossSalaryChanged(decimal gross)
+    {
+        _grossSalary = gross;
+        if (_employee == null) return;
+        _employee.BasicSalary = Math.Round(gross * 0.536m, 2);
+        _houseRent = Math.Round(_employee.BasicSalary * 0.50m, 2);
+        _foodAllowance = Math.Round(gross * 0.10m, 2);
+        _medicalAllowance = Math.Round(gross * 0.06m, 2);
+        _conveyanceAllowance = Math.Round(gross * 0.036m, 2);
+        _totalSalary = _employee.BasicSalary + _houseRent + _foodAllowance + _medicalAllowance + _conveyanceAllowance;
+    }
+
     private void OnDepartmentValueChanged(int value)
     {
+        if (_employee == null) return;
         _employee.DepartmentId = value;
         _employee.SectionId = 0;
         _employee.DesignationId = 0;
@@ -132,6 +176,7 @@ public partial class AddEmployee
 
     private void OnSectionValueChanged(int value)
     {
+        if (_employee == null) return;
         _employee.SectionId = value;
         _employee.DesignationId = 0;
         _employee.LineId = 0;
@@ -140,7 +185,8 @@ public partial class AddEmployee
     private void OnJoiningDateChanged(DateTime? date)
     {
         _joiningDate = date;
-        _employee.JoiningDate = date ?? DateTime.Today;
+        if (_employee != null)
+            _employee.JoiningDate = date ?? DateTime.Today;
     }
 
     private void OnAccountTypeChanged(string value)
@@ -203,30 +249,31 @@ public partial class AddEmployee
     {
         _presentDivisionId = value;
         _presentDistrictId = 0;
-        _employee.PresentUpazilaId = 0;
+        if (_employee != null) _employee.PresentUpazilaId = 0;
     }
 
     private void OnPresentDistrictChanged(int value)
     {
         _presentDistrictId = value;
-        _employee.PresentUpazilaId = 0;
+        if (_employee != null) _employee.PresentUpazilaId = 0;
     }
 
     private void OnPermanentDivisionChanged(int value)
     {
         _permanentDivisionId = value;
         _permanentDistrictId = 0;
-        _employee.PermanentUpazilaId = 0;
+        if (_employee != null) _employee.PermanentUpazilaId = 0;
     }
 
     private void OnPermanentDistrictChanged(int value)
     {
         _permanentDistrictId = value;
-        _employee.PermanentUpazilaId = 0;
+        if (_employee != null) _employee.PermanentUpazilaId = 0;
     }
 
     private void OnSameAsPresentChanged(bool value)
     {
+        if (_employee == null) return;
         _sameAsPresent = value;
         if (_sameAsPresent)
         {
@@ -271,15 +318,14 @@ public partial class AddEmployee
         }
     }
 
-    private async Task SaveEmployee()
+    private async Task UpdateEmployee()
     {
+        if (_employee == null) return;
         _isSaving = true;
         try
         {
             _employee.DateOfBirth = _dob?.ToString("dd/MM/yyyy") ?? string.Empty;
             _employee.Gender = _gender;
-            _employee.SpouseName = _spouseName;
-            _employee.ChildrenCount = _childrenCount;
             _employee.AccountType = _accountType;
             _employee.AccountNumber = _accountNumber;
             _employee.GrossSalary = _grossSalary;
@@ -294,23 +340,23 @@ public partial class AddEmployee
             _employee.Company = null;
 
             var baseUri = NavManager.BaseUri;
-            var response = await Http.PostAsJsonAsync($"{baseUri}api/employees", _employee);
+            var response = await Http.PutAsJsonAsync($"{baseUri}api/employees/{Id}", _employee);
 
             if (response.IsSuccessStatusCode)
             {
-                ShowToast("Employee added successfully.");
+                ShowToast("Employee updated successfully.");
                 await Task.Delay(1200);
                 NavManager.NavigateTo("/hr/employees");
             }
             else
             {
                 var errorBody = await response.Content.ReadAsStringAsync();
-                ShowErrorToast($"Failed to save employee. {errorBody}");
+                ShowErrorToast($"Failed to update employee. {errorBody}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error saving employee: {ex.Message}");
+            Console.WriteLine($"Error updating employee: {ex.Message}");
             ShowErrorToast($"Error: {ex.Message}");
         }
         finally

@@ -43,6 +43,13 @@ namespace ERPHub.Controllers
             if (employee == null)
                 return BadRequest("Invalid employee data.");
 
+            employee.Department = null;
+            employee.Section = null;
+            employee.Designation = null;
+            employee.Line = null;
+            employee.Shift = null;
+            employee.Company = null;
+
             await _erpService.AddEmployeeAsync(employee);
             return CreatedAtAction(nameof(GetEmployee), new { id = employee.Id }, employee);
         }
@@ -57,6 +64,15 @@ namespace ERPHub.Controllers
             var existing = await _erpService.GetEmployeeByIdAsync(id);
             if (existing == null)
                 return NotFound($"Employee with ID {id} not found.");
+
+            // Null out navigation properties so model validation doesn't
+            // fail on their [Required] fields (e.g. NameBn)
+            employee.Department = null;
+            employee.Section = null;
+            employee.Designation = null;
+            employee.Line = null;
+            employee.Shift = null;
+            employee.Company = null;
 
             await _erpService.UpdateEmployeeAsync(employee);
             return NoContent();

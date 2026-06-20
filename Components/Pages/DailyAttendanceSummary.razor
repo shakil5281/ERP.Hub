@@ -15,6 +15,8 @@
                 <MudDatePicker Label="Date"
                                Date="@_selectedDate"
                                DateChanged="@(d => { if (d.HasValue) _selectedDate = d.Value; })"
+                               Editable="true"
+                               Placeholder="Select Date"
                                DateFormat="yyyy-MM-dd"
                                dense="true"
                                Margin="Margin.Dense"

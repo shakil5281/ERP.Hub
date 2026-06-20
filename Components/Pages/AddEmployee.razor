@@ -4,7 +4,7 @@
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        <div class="animate-fade-in max-w-4xl mx-auto">
+        <div class="animate-fade-in max-w-7xl mx-auto">
             <!-- Header -->
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
@@ -24,169 +24,617 @@
                 <EditForm Model="@_employee" OnValidSubmit="SaveEmployee">
                     <DataAnnotationsValidator />
 
-                    <div class="p-5 sm:p-6 flex flex-col gap-8">
-                        <!-- Basic Information -->
-                        <section>
-                            <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                Basic Information
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Employee ID <span class="text-red-400">*</span></label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.EmployeeId" placeholder="e.g. EMP-001" />
-                                    <ValidationMessage For="@(() => _employee.EmployeeId)" class="text-[11px] font-semibold text-red-500 mt-1" />
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Punch Number <span class="text-red-400">*</span></label>
-                                    <InputNumber class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.PunchNumber" placeholder="e.g. 1001" />
-                                </div>
-                                <div class="flex flex-col gap-1.5 sm:col-span-2">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Full Name <span class="text-red-400">*</span></label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.EmployeeName" placeholder="e.g. Jane Doe" />
-                                    <ValidationMessage For="@(() => _employee.EmployeeName)" class="text-[11px] font-semibold text-red-500 mt-1" />
-                                </div>
-                            </div>
-                        </section>
+                    <div class="p-5 sm:p-6">
+                        <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Color="Color.Default" Rounded="true" KeepPanelsAlive="true" Class="add-employee-tabs">
 
-                        <hr class="border-zinc-100" />
+                            @* ===== TAB 1: Personal Info ===== *@
+                            <MudTabPanel Text="Personal Info" Icon="@Icons.Material.Filled.Person">
+                                <div class="pt-5">
+                                    <MudGrid>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_employee.EmployeeId"
+                                                          Label="Employee ID"
+                                                          Placeholder="e.g. EMP-001"
+                                                          Required="true"
+                                                          RequiredError="Employee ID is required."
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudNumericField @bind-Value="_employee.PunchNumber"
+                                                             Label="Punch Number"
+                                                             Placeholder="e.g. 1001"
+                                                             Variant="Variant.Text"
+                                                             Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12">
+                                            <MudTextField @bind-Value="_employee.EmployeeName"
+                                                          Label="Full Name"
+                                                          Placeholder="e.g. Jane Doe"
+                                                          Required="true"
+                                                          RequiredError="Full Name is required."
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_employee.NID"
+                                                          Label="National ID (NID)"
+                                                          Placeholder="e.g. 1234567890"
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_employee.MobileNo"
+                                                          Label="Mobile Number"
+                                                          Placeholder="e.g. +880 1711-000000"
+                                                          Required="true"
+                                                          RequiredError="Mobile Number is required."
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_employee.Email"
+                                                          Label="Email Address"
+                                                          Placeholder="e.g. jane.doe@company.com"
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudDatePicker @bind-Date="_dob"
+                                                           Label="Date of Birth"
+                                                           Editable="true"
+                                                           Placeholder="Select Date"
+                                                           DateFormat="dd/MM/yyyy"
+                                                           Variant="Variant.Text"
+                                                           Margin="Margin.Dense"
+                                                           Adornment="Adornment.End"
+                                                           AdornmentIcon="@Icons.Material.Filled.CalendarToday" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="string" @bind-Value="_gender"
+                                                       Label="Gender"
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="@("Male")" />
+                                                <MudSelectItem Value="@("Female")" />
+                                                <MudSelectItem Value="@("Other")" />
+                                            </MudSelect>
+                                        </MudItem>
+                                    </MudGrid>
+                                </div>
+                            </MudTabPanel>
 
-                        <!-- Family Details -->
-                        <section>
-                            <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                Family Details
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Father's Name</label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.FatherName" placeholder="e.g. John Doe" />
+                            @* ===== TAB 2: Family Info ===== *@
+                            <MudTabPanel Text="Family Info" Icon="@Icons.Material.Filled.FamilyRestroom">
+                                <div class="pt-5">
+                                    <MudGrid>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_employee.FatherName"
+                                                          Label="Father's Name"
+                                                          Placeholder="e.g. John Doe"
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_employee.MotherName"
+                                                          Label="Mother's Name"
+                                                          Placeholder="e.g. Mary Doe"
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudTextField @bind-Value="_spouseName"
+                                                          Label="Spouse Name"
+                                                          Placeholder="e.g. Sarah Doe"
+                                                          Variant="Variant.Text"
+                                                          Margin="Margin.Dense" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudNumericField @bind-Value="_childrenCount"
+                                                             Label="Number of Children"
+                                                             Min="0"
+                                                             Variant="Variant.Text"
+                                                             Margin="Margin.Dense" />
+                                        </MudItem>
+                                    </MudGrid>
                                 </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Mother's Name</label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.MotherName" placeholder="e.g. Mary Doe" />
-                                </div>
-                                <div class="flex flex-col gap-1.5 sm:col-span-2">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">National ID (NID)</label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.NID" placeholder="e.g. 1234567890" />
-                                </div>
-                            </div>
-                        </section>
+                            </MudTabPanel>
 
-                        <hr class="border-zinc-100" />
-
-                        <!-- Contact & Address -->
-                        <section>
-                            <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                Contact & Address
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Mobile Number <span class="text-red-400">*</span></label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.MobileNo" placeholder="e.g. +880 1711-000000" />
-                                    <ValidationMessage For="@(() => _employee.MobileNo)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                            @* ===== TAB 3: Office Info ===== *@
+                            <MudTabPanel Text="Office Info" Icon="@Icons.Material.Filled.Work">
+                                <div class="pt-5">
+                                    <MudGrid>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="int" @bind-Value="_employee.CompanyId"
+                                                       Label="Company Name"
+                                                       Required="true"
+                                                       RequiredError="Company is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="0">Select Company</MudSelectItem>
+                                                @foreach (var comp in _companies)
+                                                {
+                                                    <MudSelectItem Value="@comp.Id">@comp.CompanyNameEn</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="int" Value="_employee.DepartmentId"
+                                                       ValueChanged="@( (int v) => OnDepartmentValueChanged(v) )"
+                                                       Label="Department"
+                                                       Required="true"
+                                                       RequiredError="Department is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="0">Select Department</MudSelectItem>
+                                                @foreach (var dept in _departments)
+                                                {
+                                                    <MudSelectItem Value="@dept.Id">@dept.NameEn</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="int" Value="_employee.SectionId"
+                                                       ValueChanged="@( (int v) => OnSectionValueChanged(v) )"
+                                                       Label="Section"
+                                                       Required="true"
+                                                       RequiredError="Section is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="0">Select Section</MudSelectItem>
+                                                @foreach (var sec in _filteredSections)
+                                                {
+                                                    <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="int" @bind-Value="_employee.DesignationId"
+                                                       Label="Designation"
+                                                       Required="true"
+                                                       RequiredError="Designation is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="0">Select Designation</MudSelectItem>
+                                                @foreach (var desig in _filteredDesignations)
+                                                {
+                                                    <MudSelectItem Value="@desig.Id">@desig.NameEn</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="int" @bind-Value="_employee.LineId"
+                                                       Label="Line"
+                                                       Required="true"
+                                                       RequiredError="Line is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="0">Select Line</MudSelectItem>
+                                                @foreach (var line in _filteredLines)
+                                                {
+                                                    <MudSelectItem Value="@line.Id">@line.NameEn</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="int" @bind-Value="_employee.ShiftId"
+                                                       Label="Shift"
+                                                       Required="true"
+                                                       RequiredError="Shift is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="0">Select Shift</MudSelectItem>
+                                                @foreach (var shift in _shifts)
+                                                {
+                                                    <MudSelectItem Value="@shift.Id">@shift.ShiftName</MudSelectItem>
+                                                }
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudDatePicker Date="@_joiningDate"
+                                                           DateChanged="@( (DateTime? d) => OnJoiningDateChanged(d) )"
+                                                           Label="Joining Date"
+                                                           Editable="true"
+                                                           Placeholder="Select Date"
+                                                           DateFormat="dd/MM/yyyy"
+                                                           Variant="Variant.Text"
+                                                           Margin="Margin.Dense"
+                                                           Adornment="Adornment.End"
+                                                           AdornmentIcon="@Icons.Material.Filled.CalendarToday" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="string" @bind-Value="_employee.EmployeeStatus"
+                                                       Label="Employee Status"
+                                                       Required="true"
+                                                       RequiredError="Employee Status is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="@("Regular")" />
+                                                <MudSelectItem Value="@("Resign")" />
+                                                <MudSelectItem Value="@("Left")" />
+                                                <MudSelectItem Value="@("Close")" />
+                                            </MudSelect>
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSwitch @bind-Value="_employee.OverTimeStatus"
+                                                       Label="OverTime Status"
+                                                       Color="Color.Primary"
+                                                       Class="mt-2" />
+                                        </MudItem>
+                                        <MudItem xs="12" sm="6">
+                                            <MudSelect T="string" @bind-Value="_employee.EmployeeType"
+                                                       Label="Employee Type"
+                                                       Required="true"
+                                                       RequiredError="Employee Type is required."
+                                                       Variant="Variant.Text"
+                                                       Margin="Margin.Dense">
+                                                <MudSelectItem Value="@("Permanent")" />
+                                                <MudSelectItem Value="@("Contract")" />
+                                                <MudSelectItem Value="@("Probation")" />
+                                                <MudSelectItem Value="@("Intern")" />
+                                                <MudSelectItem Value="@("Part-Time")" />
+                                            </MudSelect>
+                                        </MudItem>
+                                    </MudGrid>
                                 </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Email Address</label>
-                                    <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.Email" placeholder="e.g. jane.doe@company.com" />
-                                </div>
-                                <div class="flex flex-col gap-1.5 sm:col-span-2">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Address</label>
-                                    <InputTextArea class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors min-h-[72px] resize-y" @bind-Value="_employee.Address" placeholder="e.g. 123 Industrial Area, Dhaka" />
-                                </div>
-                            </div>
-                        </section>
+                            </MudTabPanel>
 
-                        <hr class="border-zinc-100" />
+                            @* ===== TAB 4: Salary & Account ===== *@
+                            <MudTabPanel Text="Salary & Account" Icon="@Icons.Material.Filled.AccountBalance">
+                                <div class="pt-5 flex flex-col gap-6">
 
-                        <!-- Employment Details -->
-                        <section>
-                            <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-4 flex items-center gap-2">
-                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                </svg>
-                                Employment Details
-                            </h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                <!-- Department -->
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department <span class="text-red-400">*</span></label>
-                                    <select class="block w-full appearance-none pl-3.5 pr-10 py-2.5 border border-zinc-200 focus:border-black rounded-lg bg-white text-[13.5px] transition-colors outline-none text-zinc-900 font-body cursor-pointer" @bind="_employee.DepartmentId" @bind:after="OnDepartmentChanged">
-                                        <option value="0">Select Department</option>
-                                        @foreach (var dept in _departments)
+                                    @* --- Salary Section --- *@
+                                    <div>
+                                        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                            </svg>
+                                            Salary Details
+                                        </h4>
+                                        <MudGrid>
+                                            <MudItem xs="12" sm="6">
+                                                <MudNumericField Value="_grossSalary"
+                                                                 Label="Gross Salary"
+                                                                 Placeholder="0.00"
+                                                                 Adornment="Adornment.Start"
+                                                                 AdornmentText="৳"
+                                                                 Variant="Variant.Text"
+                                                                 Margin="Margin.Dense"
+                                                                 ValueChanged="@( (decimal v) => OnGrossSalaryChanged(v) )" />
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudNumericField Value="_employee.BasicSalary"
+                                                                 Label="Basic Salary"
+                                                                 Placeholder="0.00"
+                                                                 Adornment="Adornment.Start"
+                                                                 AdornmentText="৳"
+                                                                 Variant="Variant.Text"
+                                                                 Margin="Margin.Dense"
+                                                                 Disabled="true" />
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudNumericField Value="_houseRent"
+                                                                 Label="House Rent"
+                                                                 Placeholder="0.00"
+                                                                 Adornment="Adornment.Start"
+                                                                 AdornmentText="৳"
+                                                                 Variant="Variant.Text"
+                                                                 Margin="Margin.Dense"
+                                                                 Disabled="true" />
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudNumericField Value="_foodAllowance"
+                                                                 Label="Food Allowance"
+                                                                 Placeholder="0.00"
+                                                                 Adornment="Adornment.Start"
+                                                                 AdornmentText="৳"
+                                                                 Variant="Variant.Text"
+                                                                 Margin="Margin.Dense"
+                                                                 Disabled="true" />
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudNumericField Value="_medicalAllowance"
+                                                                 Label="Medical Allowance"
+                                                                 Placeholder="0.00"
+                                                                 Adornment="Adornment.Start"
+                                                                 AdornmentText="৳"
+                                                                 Variant="Variant.Text"
+                                                                 Margin="Margin.Dense"
+                                                                 Disabled="true" />
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudNumericField Value="_conveyanceAllowance"
+                                                                 Label="Conveyance"
+                                                                 Placeholder="0.00"
+                                                                 Adornment="Adornment.Start"
+                                                                 AdornmentText="৳"
+                                                                 Variant="Variant.Text"
+                                                                 Margin="Margin.Dense"
+                                                                 Disabled="true" />
+                                            </MudItem>
+                                            <MudItem xs="12">
+                                                <div class="flex items-center gap-2 mt-1">
+                                                    <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Total:</span>
+                                                    <span class="text-sm font-bold text-black">৳ @_totalSalary.ToString("N2")</span>
+                                                </div>
+                                            </MudItem>
+                                        </MudGrid>
+                                    </div>
+
+                                    <hr class="border-zinc-100" />
+
+                                    @* --- Account Section --- *@
+                                    <div>
+                                        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                            </svg>
+                                            Account Details
+                                        </h4>
+                                        <MudGrid>
+                                            <MudItem xs="12" sm="6">
+                                                <MudSelect T="string" Value="_accountType"
+                                                           ValueChanged="@( (string v) => OnAccountTypeChanged(v) )"
+                                                           Label="Account Type"
+                                                           Variant="Variant.Text"
+                                                           Margin="Margin.Dense">
+                                                    <MudSelectItem Value="@("mCash")" />
+                                                    <MudSelectItem Value="@("Card")" />
+                                                </MudSelect>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudTextField Value="_accountNumber"
+                                                              ValueChanged="@( (string v) => OnAccountNumberChanged(v) )"
+                                                              Label="Account Number"
+                                                              Placeholder="@_accountPlaceholder"
+                                                              MaxLength="@_accountMaxLength"
+                                                              Variant="Variant.Text"
+                                                              Margin="Margin.Dense"
+                                                              Error="@_accountNumberError"
+                                                              ErrorText="@_accountNumberErrorText" />
+                                            </MudItem>
+                                        </MudGrid>
+                                    </div>
+
+                                </div>
+                            </MudTabPanel>
+
+                            @* ===== TAB 5: Address ===== *@
+                            <MudTabPanel Text="Address" Icon="@Icons.Material.Filled.LocationOn">
+                                <div class="pt-5 flex flex-col gap-6">
+
+                                    @* --- Present Address --- *@
+                                    <div>
+                                        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            </svg>
+                                            Present Address
+                                        </h4>
+                                        <MudGrid>
+                                            <MudItem xs="12" sm="6">
+                                                <MudTextField @bind-Value="_employee.PresentVillage"
+                                                              Label="Village / Neighborhood"
+                                                              Placeholder="e.g. Vill: Genda"
+                                                              Variant="Variant.Text"
+                                                              Margin="Margin.Dense" />
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudTextField @bind-Value="_employee.PresentPostOffice"
+                                                              Label="Post Office (P.O.)"
+                                                              Placeholder="e.g. GPO"
+                                                              Variant="Variant.Text"
+                                                              Margin="Margin.Dense" />
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudSelect T="int" Value="_presentDivisionId"
+                                                           ValueChanged="@( (int v) => OnPresentDivisionChanged(v) )"
+                                                           Label="Division"
+                                                           Required="true"
+                                                           RequiredError="Division is required."
+                                                           Variant="Variant.Text"
+                                                           Margin="Margin.Dense">
+                                                    <MudSelectItem Value="0">Select Division</MudSelectItem>
+                                                    @foreach (var div in _divisions)
+                                                    {
+                                                        <MudSelectItem Value="@div.Id">@div.Name</MudSelectItem>
+                                                    }
+                                                </MudSelect>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudSelect T="int" Value="_presentDistrictId"
+                                                           ValueChanged="@( (int v) => OnPresentDistrictChanged(v) )"
+                                                           Label="District (Zila)"
+                                                           Required="true"
+                                                           RequiredError="District is required."
+                                                           Variant="Variant.Text"
+                                                           Margin="Margin.Dense"
+                                                           Disabled="@(_presentDivisionId == 0)">
+                                                    <MudSelectItem Value="0">Select District</MudSelectItem>
+                                                    @foreach (var dist in _presentFilteredDistricts)
+                                                    {
+                                                        <MudSelectItem Value="@dist.Id">@dist.Name</MudSelectItem>
+                                                    }
+                                                </MudSelect>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudSelect T="int" @bind-Value="_employee.PresentUpazilaId"
+                                                           Label="Sub-district (Upazila/Thana)"
+                                                           Required="true"
+                                                           RequiredError="Upazila is required."
+                                                           Variant="Variant.Text"
+                                                           Margin="Margin.Dense"
+                                                           Disabled="@(_presentDistrictId == 0)">
+                                                    <MudSelectItem Value="0">Select Upazila</MudSelectItem>
+                                                    @foreach (var upa in _presentFilteredUpazilas)
+                                                    {
+                                                        <MudSelectItem Value="@upa.Id">@upa.Name</MudSelectItem>
+                                                    }
+                                                </MudSelect>
+                                            </MudItem>
+                                            <MudItem xs="12" sm="6">
+                                                <MudTextField @bind-Value="_employee.PresentPostalCode"
+                                                              Label="Postal Code"
+                                                              Placeholder="e.g. 1234"
+                                                              MaxLength="4"
+                                                              Variant="Variant.Text"
+                                                              Margin="Margin.Dense" />
+                                            </MudItem>
+                                        </MudGrid>
+                                    </div>
+
+                                    <hr class="border-zinc-100" />
+
+                                    @* --- Permanent Address --- *@
+                                    <div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                                </svg>
+                                                Permanent Address
+                                            </h4>
+                                            <MudCheckBox T="bool" Value="_sameAsPresent"
+                                                         ValueChanged="@( (bool v) => OnSameAsPresentChanged(v) )"
+                                                         Label="Same as Present"
+                                                         Color="Color.Primary" />
+                                        </div>
+
+                                        @if (!_sameAsPresent)
                                         {
-                                            <option value="@dept.Id">@dept.NameEn</option>
+                                            <MudGrid>
+                                                <MudItem xs="12" sm="6">
+                                                    <MudTextField @bind-Value="_employee.PermanentVillage"
+                                                                  Label="Village / Neighborhood"
+                                                                  Placeholder="e.g. Vill: Genda"
+                                                                  Variant="Variant.Text"
+                                                                  Margin="Margin.Dense" />
+                                                </MudItem>
+                                                <MudItem xs="12" sm="6">
+                                                    <MudTextField @bind-Value="_employee.PermanentPostOffice"
+                                                                  Label="Post Office (P.O.)"
+                                                                  Placeholder="e.g. GPO"
+                                                                  Variant="Variant.Text"
+                                                                  Margin="Margin.Dense" />
+                                                </MudItem>
+                                                <MudItem xs="12" sm="6">
+                                                    <MudSelect T="int" Value="_permanentDivisionId"
+                                                               ValueChanged="@( (int v) => OnPermanentDivisionChanged(v) )"
+                                                               Label="Division"
+                                                               Required="true"
+                                                               RequiredError="Division is required."
+                                                               Variant="Variant.Text"
+                                                               Margin="Margin.Dense">
+                                                        <MudSelectItem Value="0">Select Division</MudSelectItem>
+                                                        @foreach (var div in _divisions)
+                                                        {
+                                                            <MudSelectItem Value="@div.Id">@div.Name</MudSelectItem>
+                                                        }
+                                                    </MudSelect>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="6">
+                                                    <MudSelect T="int" Value="_permanentDistrictId"
+                                                               ValueChanged="@( (int v) => OnPermanentDistrictChanged(v) )"
+                                                               Label="District (Zila)"
+                                                               Required="true"
+                                                               RequiredError="District is required."
+                                                               Variant="Variant.Text"
+                                                               Margin="Margin.Dense"
+                                                               Disabled="@(_permanentDivisionId == 0)">
+                                                        <MudSelectItem Value="0">Select District</MudSelectItem>
+                                                        @foreach (var dist in _permanentFilteredDistricts)
+                                                        {
+                                                            <MudSelectItem Value="@dist.Id">@dist.Name</MudSelectItem>
+                                                        }
+                                                    </MudSelect>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="6">
+                                                    <MudSelect T="int" @bind-Value="_employee.PermanentUpazilaId"
+                                                               Label="Sub-district (Upazila/Thana)"
+                                                               Required="true"
+                                                               RequiredError="Upazila is required."
+                                                               Variant="Variant.Text"
+                                                               Margin="Margin.Dense"
+                                                               Disabled="@(_permanentDistrictId == 0)">
+                                                        <MudSelectItem Value="0">Select Upazila</MudSelectItem>
+                                                        @foreach (var upa in _permanentFilteredUpazilas)
+                                                        {
+                                                            <MudSelectItem Value="@upa.Id">@upa.Name</MudSelectItem>
+                                                        }
+                                                    </MudSelect>
+                                                </MudItem>
+                                                <MudItem xs="12" sm="6">
+                                                    <MudTextField @bind-Value="_employee.PermanentPostalCode"
+                                                                  Label="Postal Code"
+                                                                  Placeholder="e.g. 1234"
+                                                                  MaxLength="4"
+                                                                  Variant="Variant.Text"
+                                                                  Margin="Margin.Dense" />
+                                                </MudItem>
+                                            </MudGrid>
                                         }
-                                    </select>
+                                    </div>
+
                                 </div>
-                                <!-- Section -->
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section <span class="text-red-400">*</span></label>
-                                    <select class="block w-full appearance-none pl-3.5 pr-10 py-2.5 border border-zinc-200 focus:border-black rounded-lg bg-white text-[13.5px] transition-colors outline-none text-zinc-900 font-body cursor-pointer" @bind="_employee.SectionId" @bind:after="OnSectionChanged">
-                                        <option value="0">Select Section</option>
-                                        @foreach (var sec in _filteredSections)
-                                        {
-                                            <option value="@sec.Id">@sec.NameEn</option>
-                                        }
-                                    </select>
+                            </MudTabPanel>
+
+                            @* ===== TAB 6: Signature & Image ===== *@
+                            <MudTabPanel Text="Signature & Image" Icon="@Icons.Material.Filled.Image">
+                                <div class="pt-5">
+                                    <MudGrid>
+                                        <MudItem xs="12" sm="6">
+                                            <div class="border border-dashed border-zinc-300 rounded-xl p-6 text-center hover:border-zinc-400 transition-colors">
+                                                <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Size="Size.Large" Color="Color.Secondary" Class="mb-3" />
+                                                <MudText Typo="Typo.body2" Class="mb-2 font-semibold text-zinc-700">Employee Photo</MudText>
+                                                <MudText Typo="Typo.caption" Class="text-zinc-400 mb-3">JPG, PNG up to 2MB</MudText>
+
+                                                @if (!string.IsNullOrEmpty(_photoPreview))
+                                                {
+                                                    <div class="mb-3 flex justify-center">
+                                                        <MudImage Src="@_photoPreview"
+                                                                 Width="120" Height="120"
+                                                                 ObjectFit="ObjectFit.Cover"
+                                                                 Class="rounded-lg border border-zinc-200" />
+                                                    </div>
+                                                }
+
+                                                <label class="inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-sm">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Upload" Size="Size.Small" />
+                                                    Choose Photo
+                                                    <InputFile OnChange="OnPhotoSelected" Accept=".jpg,.jpeg,.png" class="hidden" />
+                                                </label>
+                                            </div>
+                                        </MudItem>
+
+                                        <MudItem xs="12" sm="6">
+                                            <div class="border border-dashed border-zinc-300 rounded-xl p-6 text-center hover:border-zinc-400 transition-colors">
+                                                <MudIcon Icon="@Icons.Material.Filled.Draw" Size="Size.Large" Color="Color.Secondary" Class="mb-3" />
+                                                <MudText Typo="Typo.body2" Class="mb-2 font-semibold text-zinc-700">Signature</MudText>
+                                                <MudText Typo="Typo.caption" Class="text-zinc-400 mb-3">JPG, PNG up to 1MB</MudText>
+
+                                                @if (!string.IsNullOrEmpty(_signaturePreview))
+                                                {
+                                                    <div class="mb-3 flex justify-center">
+                                                        <MudImage Src="@_signaturePreview"
+                                                                 Width="200" Height="80"
+                                                                 ObjectFit="ObjectFit.Contain"
+                                                                 Class="rounded-lg border border-zinc-200" />
+                                                    </div>
+                                                }
+
+                                                <label class="inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-sm">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Upload" Size="Size.Small" />
+                                                    Choose Signature
+                                                    <InputFile OnChange="OnSignatureSelected" Accept=".jpg,.jpeg,.png" class="hidden" />
+                                                </label>
+                                            </div>
+                                        </MudItem>
+                                    </MudGrid>
                                 </div>
-                                <!-- Designation -->
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Designation <span class="text-red-400">*</span></label>
-                                    <select class="block w-full appearance-none pl-3.5 pr-10 py-2.5 border border-zinc-200 focus:border-black rounded-lg bg-white text-[13.5px] transition-colors outline-none text-zinc-900 font-body cursor-pointer" @bind="_employee.DesignationId">
-                                        <option value="0">Select Designation</option>
-                                        @foreach (var desig in _filteredDesignations)
-                                        {
-                                            <option value="@desig.Id">@desig.NameEn</option>
-                                        }
-                                    </select>
-                                </div>
-                                <!-- Line -->
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Line <span class="text-red-400">*</span></label>
-                                    <select class="block w-full appearance-none pl-3.5 pr-10 py-2.5 border border-zinc-200 focus:border-black rounded-lg bg-white text-[13.5px] transition-colors outline-none text-zinc-900 font-body cursor-pointer" @bind="_employee.LineId">
-                                        <option value="0">Select Line</option>
-                                        @foreach (var line in _filteredLines)
-                                        {
-                                            <option value="@line.Id">@line.NameEn</option>
-                                        }
-                                    </select>
-                                </div>
-                                <!-- Shift -->
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Shift <span class="text-red-400">*</span></label>
-                                    <select class="block w-full appearance-none pl-3.5 pr-10 py-2.5 border border-zinc-200 focus:border-black rounded-lg bg-white text-[13.5px] transition-colors outline-none text-zinc-900 font-body cursor-pointer" @bind="_employee.ShiftId">
-                                        <option value="0">Select Shift</option>
-                                        @foreach (var shift in _shifts)
-                                        {
-                                            <option value="@shift.Id">@shift.ShiftName</option>
-                                        }
-                                    </select>
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Joining Date</label>
-                                    <DatePicker @bind-Value="_employee.JoiningDate" />
-                                </div>
-                                <div class="flex flex-col gap-1.5">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Basic Salary</label>
-                                    <InputNumber class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_employee.BasicSalary" placeholder="0.00" />
-                                </div>
-                                <div class="flex flex-col gap-1.5 justify-end">
-                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Status</label>
-                                    <label class="inline-flex items-center gap-3 cursor-pointer py-2.5">
-                                        <InputCheckbox class="w-4 h-4 rounded border-zinc-300 text-black focus:ring-black cursor-pointer" @bind-Value="_employee.IsActive" />
-                                        <span class="text-[13.5px] font-medium text-zinc-700">Active Employee</span>
-                                    </label>
-                                </div>
-                            </div>
-                        </section>
+                            </MudTabPanel>
+
+                        </MudTabs>
                     </div>
 
                     <!-- Action Bar -->

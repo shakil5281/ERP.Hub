@@ -18,14 +18,42 @@ namespace ERPHub.Models
 
         public string MotherName { get; set; } = string.Empty;
 
-        public string Address { get; set; } = string.Empty;
-
         public string NID { get; set; } = string.Empty;
 
         [Required]
         public string MobileNo { get; set; } = string.Empty;
 
         public string Email { get; set; } = string.Empty;
+
+        public string DateOfBirth { get; set; } = string.Empty;
+
+        public string Gender { get; set; } = string.Empty;
+
+        // Family (missing from model)
+        public string SpouseName { get; set; } = string.Empty;
+
+        public int ChildrenCount { get; set; }
+
+        // Account
+        public string AccountType { get; set; } = string.Empty;
+
+        public string AccountNumber { get; set; } = string.Empty;
+
+        // Present Address
+        public string PresentVillage { get; set; } = string.Empty;
+        public string PresentPostOffice { get; set; } = string.Empty;
+        public int PresentDivisionId { get; set; }
+        public int PresentDistrictId { get; set; }
+        public int PresentUpazilaId { get; set; }
+        public string PresentPostalCode { get; set; } = string.Empty;
+
+        // Permanent Address
+        public string PermanentVillage { get; set; } = string.Empty;
+        public string PermanentPostOffice { get; set; } = string.Empty;
+        public int PermanentDivisionId { get; set; }
+        public int PermanentDistrictId { get; set; }
+        public int PermanentUpazilaId { get; set; }
+        public string PermanentPostalCode { get; set; } = string.Empty;
 
         [Required]
         public int DepartmentId { get; set; }
@@ -56,6 +84,20 @@ namespace ERPHub.Models
 
         public decimal BasicSalary { get; set; }
 
-        public bool IsActive { get; set; } = true;
+        public decimal GrossSalary { get; set; }
+
+        public string PhotoBase64 { get; set; } = string.Empty;
+
+        public string SignatureBase64 { get; set; } = string.Empty;
+
+        public string EmployeeStatus { get; set; } = "Regular";
+
+        public int CompanyId { get; set; }
+
+        public Company? Company { get; set; }
+
+        public bool OverTimeStatus { get; set; }
+
+        public string EmployeeType { get; set; } = string.Empty;
     }
 }

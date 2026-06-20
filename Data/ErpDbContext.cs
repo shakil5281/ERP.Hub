@@ -90,6 +90,10 @@ namespace ERPHub.Data
                 .HasColumnType("decimal(18, 2)");
 
             modelBuilder.Entity<Employee>()
+                .Property(e => e.GrossSalary)
+                .HasColumnType("decimal(18, 2)");
+
+            modelBuilder.Entity<Employee>()
                 .HasOne(e => e.Department)
                 .WithMany()
                 .HasForeignKey(e => e.DepartmentId)
@@ -117,6 +121,12 @@ namespace ERPHub.Data
                 .HasOne(e => e.Shift)
                 .WithMany()
                 .HasForeignKey(e => e.ShiftId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasOne(e => e.Company)
+                .WithMany()
+                .HasForeignKey(e => e.CompanyId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Employee>()

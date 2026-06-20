@@ -31,8 +31,14 @@
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Date</label>
-                                    <input type="date" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none" @bind="_entryDate" />
+                                    <MudDatePicker Date="@_entryDate"
+                                                   DateChanged="@(d => { if (d.HasValue) _entryDate = d.Value; })"
+                                                   Label="Date"
+                                                   Editable="true"
+                                                   Placeholder="Select Date"
+                                                   DateFormat="yyyy-MM-dd"
+                                                   Variant="Variant.Outlined"
+                                                   Margin="Margin.Dense" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Time</label>

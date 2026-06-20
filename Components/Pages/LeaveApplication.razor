@@ -33,12 +33,24 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Start Date</label>
-                                <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer" @bind="_startDate" @bind:format="yyyy-MM-dd" />
+                                <MudDatePicker Date="@_startDate"
+                                               DateChanged="@(d => { if (d.HasValue) _startDate = d.Value; })"
+                                               Label="Start Date"
+                                               Editable="true"
+                                               Placeholder="Select Date"
+                                               DateFormat="yyyy-MM-dd"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense" />
                             </div>
                             <div class="flex flex-col gap-1.5">
-                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">End Date</label>
-                                <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer" @bind="_endDate" @bind:format="yyyy-MM-dd" />
+                                <MudDatePicker Date="@_endDate"
+                                               DateChanged="@(d => { if (d.HasValue) _endDate = d.Value; })"
+                                               Label="End Date"
+                                               Editable="true"
+                                               Placeholder="Select Date"
+                                               DateFormat="yyyy-MM-dd"
+                                               Variant="Variant.Outlined"
+                                               Margin="Margin.Dense" />
                             </div>
                         </div>
                         <div class="flex flex-col gap-1.5">

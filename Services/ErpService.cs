@@ -523,18 +523,41 @@ namespace ERPHub.Services
                 existing.EmployeeName = employee.EmployeeName;
                 existing.FatherName = employee.FatherName;
                 existing.MotherName = employee.MotherName;
-                existing.Address = employee.Address;
                 existing.NID = employee.NID;
                 existing.MobileNo = employee.MobileNo;
                 existing.Email = employee.Email;
+                existing.DateOfBirth = employee.DateOfBirth;
+                existing.Gender = employee.Gender;
+                existing.SpouseName = employee.SpouseName;
+                existing.ChildrenCount = employee.ChildrenCount;
+                existing.AccountType = employee.AccountType;
+                existing.AccountNumber = employee.AccountNumber;
+                existing.PresentVillage = employee.PresentVillage;
+                existing.PresentPostOffice = employee.PresentPostOffice;
+                existing.PresentDivisionId = employee.PresentDivisionId;
+                existing.PresentDistrictId = employee.PresentDistrictId;
+                existing.PresentUpazilaId = employee.PresentUpazilaId;
+                existing.PresentPostalCode = employee.PresentPostalCode;
+                existing.PermanentVillage = employee.PermanentVillage;
+                existing.PermanentPostOffice = employee.PermanentPostOffice;
+                existing.PermanentDivisionId = employee.PermanentDivisionId;
+                existing.PermanentDistrictId = employee.PermanentDistrictId;
+                existing.PermanentUpazilaId = employee.PermanentUpazilaId;
+                existing.PermanentPostalCode = employee.PermanentPostalCode;
                 existing.DepartmentId = employee.DepartmentId;
                 existing.SectionId = employee.SectionId;
                 existing.DesignationId = employee.DesignationId;
                 existing.LineId = employee.LineId;
                 existing.ShiftId = employee.ShiftId;
+                existing.CompanyId = employee.CompanyId;
                 existing.JoiningDate = employee.JoiningDate;
                 existing.BasicSalary = employee.BasicSalary;
-                existing.IsActive = employee.IsActive;
+                existing.GrossSalary = employee.GrossSalary;
+                existing.PhotoBase64 = employee.PhotoBase64;
+                existing.SignatureBase64 = employee.SignatureBase64;
+                existing.EmployeeStatus = employee.EmployeeStatus;
+                existing.OverTimeStatus = employee.OverTimeStatus;
+                existing.EmployeeType = employee.EmployeeType;
                 await _context.SaveChangesAsync();
             }
         }
@@ -984,7 +1007,7 @@ namespace ERPHub.Services
 
         public async Task CalculateDailySalariesAsync(DateTime date)
         {
-            var employees = await _context.Employees.Where(e => e.IsActive).ToListAsync();
+            var employees = await _context.Employees.Where(e => e.EmployeeStatus == "Regular").ToListAsync();
             var attendanceRecords = await _context.AttendanceRecords
                 .Where(a => a.AttendanceDate == date.Date)
                 .ToListAsync();
@@ -1146,7 +1169,7 @@ namespace ERPHub.Services
 
         public async Task RecalculateManpowerAsync()
         {
-            var employees = await _context.Employees.Where(e => e.IsActive).ToListAsync();
+            var employees = await _context.Employees.Where(e => e.EmployeeStatus == "Regular").ToListAsync();
             var manpowers = await _context.Manpowers.ToListAsync();
 
             foreach (var mp in manpowers)

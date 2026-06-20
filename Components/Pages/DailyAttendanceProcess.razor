@@ -16,12 +16,24 @@
 
             <div class="bg-white border border-zinc-200 rounded-lg p-6 mb-4 flex flex-wrap gap-4 items-end">
                 <div>
-                    <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Start Date</label>
-                    <input type="date" class="border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors" @bind="_fromDate" />
+                    <MudDatePicker Date="@_fromDate"
+                                   DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })"
+                                   Label="Start Date"
+                                   Editable="true"
+                                   Placeholder="Select Date"
+                                   DateFormat="yyyy-MM-dd"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
                 </div>
                 <div>
-                    <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">End Date</label>
-                    <input type="date" class="border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black transition-colors" @bind="_toDate" />
+                    <MudDatePicker Date="@_toDate"
+                                   DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })"
+                                   Label="End Date"
+                                   Editable="true"
+                                   Placeholder="Select Date"
+                                   DateFormat="yyyy-MM-dd"
+                                   Variant="Variant.Outlined"
+                                   Margin="Margin.Dense" />
                 </div>
                 <div>
                     <button type="button" class="px-5 py-2 bg-black text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2" @onclick="ProcessAttendance" disabled="@_isProcessing">

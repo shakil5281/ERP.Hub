@@ -23,72 +23,84 @@
                         <input type="text" class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black" @bind="_employeeId" placeholder="Leave empty for all employees" />
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">From Date</label>
-                        <input type="date" class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black" @bind="_fromDate" />
+                        <MudDatePicker Date="@_fromDate"
+                                       DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })"
+                                       Label="From Date"
+                                       Editable="true"
+                                       Placeholder="Select Date"
+                                       DateFormat="yyyy-MM-dd"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense" />
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">To Date</label>
-                        <input type="date" class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black" @bind="_toDate" />
+                        <MudDatePicker Date="@_toDate"
+                                       DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })"
+                                       Label="To Date"
+                                       Editable="true"
+                                       Placeholder="Select Date"
+                                       DateFormat="yyyy-MM-dd"
+                                       Variant="Variant.Outlined"
+                                       Margin="Margin.Dense" />
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Company</label>
-                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_companyId">
-                            <option value="0">All Companies</option>
+                        <MudSelect T="int" @bind-Value="_companyId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
+                            <MudSelectItem Value="0">All Companies</MudSelectItem>
                             @foreach (var c in _companies)
                             {
-                                <option value="@c.Id">@c.CompanyNameEn</option>
+                                <MudSelectItem Value="@c.Id">@c.CompanyNameEn</MudSelectItem>
                             }
-                        </select>
+                        </MudSelect>
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Department</label>
-                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_departmentId">
-                            <option value="0">All Departments</option>
+                        <MudSelect T="int" @bind-Value="_departmentId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
+                            <MudSelectItem Value="0">All Departments</MudSelectItem>
                             @foreach (var d in _departments)
                             {
-                                <option value="@d.Id">@d.NameEn</option>
+                                <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
                             }
-                        </select>
+                        </MudSelect>
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Section</label>
-                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_sectionId">
-                            <option value="0">All Sections</option>
+                        <MudSelect T="int" @bind-Value="_sectionId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
+                            <MudSelectItem Value="0">All Sections</MudSelectItem>
                             @foreach (var s in _sections)
                             {
-                                <option value="@s.Id">@s.NameEn</option>
+                                <MudSelectItem Value="@s.Id">@s.NameEn</MudSelectItem>
                             }
-                        </select>
+                        </MudSelect>
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Designation</label>
-                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_designationId">
-                            <option value="0">All Designations</option>
+                        <MudSelect T="int" @bind-Value="_designationId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
+                            <MudSelectItem Value="0">All Designations</MudSelectItem>
                             @foreach (var dg in _designations)
                             {
-                                <option value="@dg.Id">@dg.NameEn</option>
+                                <MudSelectItem Value="@dg.Id">@dg.NameEn</MudSelectItem>
                             }
-                        </select>
+                        </MudSelect>
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Line</label>
-                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_lineId">
-                            <option value="0">All Lines</option>
+                        <MudSelect T="int" @bind-Value="_lineId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
+                            <MudSelectItem Value="0">All Lines</MudSelectItem>
                             @foreach (var l in _lines)
                             {
-                                <option value="@l.Id">@l.NameEn</option>
+                                <MudSelectItem Value="@l.Id">@l.NameEn</MudSelectItem>
                             }
-                        </select>
+                        </MudSelect>
                     </div>
                     <div>
                         <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Shift</label>
-                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_shiftId">
-                            <option value="0">All Shifts</option>
+                        <MudSelect T="int" @bind-Value="_shiftId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
+                            <MudSelectItem Value="0">All Shifts</MudSelectItem>
                             @foreach (var sh in _shifts)
                             {
-                                <option value="@sh.Id">@sh.ShiftName</option>
+                                <MudSelectItem Value="@sh.Id">@sh.ShiftName</MudSelectItem>
                             }
-                        </select>
+                        </MudSelect>
                     </div>
                 </div>
                 <div class="flex gap-2 mt-4">

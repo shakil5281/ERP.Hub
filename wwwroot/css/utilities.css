@@ -560,6 +560,10 @@ table th, table td, .mud-table-cell {
 .max-w-md   { max-width: 28rem; }
 .max-w-xl   { max-width: 36rem; }
 .max-w-4xl  { max-width: 56rem; }
+.max-w-5xl  { max-width: 64rem; }
+.max-w-6xl  { max-width: 72rem; }
+.max-w-7xl  { max-width: 80rem; }
+.max-w-full { max-width: 100%; }
 .max-w-\[80px\]  { max-width: 80px; }
 .max-w-\[280px\] { max-width: 280px; }
 .max-w-\[320px\] { max-width: 320px; }

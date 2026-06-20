@@ -30,6 +30,8 @@
                                    DateChanged="@(d => { if (d.HasValue) _selectedDate = d.Value; })"
                                    MinDate="@_minDate"
                                    MaxDate="@_maxDate"
+                                   Editable="true"
+                                   Placeholder="Select Date"
                                    DateFormat="yyyy-MM-dd"
                                    dense="true"
                                    Margin="Margin.Dense"

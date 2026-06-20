@@ -23,7 +23,7 @@ namespace ERPHub.Services
 
             var employees = employeeId != null
                 ? await _context.Employees.Include(e => e.Shift).Where(e => e.EmployeeId == employeeId).ToListAsync()
-                : await _context.Employees.Include(e => e.Shift).Where(e => e.IsActive).ToListAsync();
+                : await _context.Employees.Include(e => e.Shift).Where(e => e.EmployeeStatus == "Regular").ToListAsync();
 
             var punchRecords = await _context.PunchRecords
                 .Where(p => p.LogDateTime >= from.AddHours(-2) && p.LogDateTime <= to.Date.AddDays(1).AddHours(2))
@@ -290,7 +290,7 @@ namespace ERPHub.Services
             if (activeEmployees.HasValue)
             {
                 var filteredEmpIds = await _context.Employees
-                    .Where(e => e.IsActive == activeEmployees.Value)
+                    .Where(e => activeEmployees.Value ? e.EmployeeStatus == "Regular" : e.EmployeeStatus != "Regular")
                     .Select(e => e.EmployeeId)
                     .ToListAsync();
                 query = query.Where(a => filteredEmpIds.Contains(a.EmployeeId));
