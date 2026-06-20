@@ -21,113 +21,11 @@
                      Class="organogram-tabs mb-4"
                      Style="background-color: white; color: black;"
                      KeepPanelsAlive="true">
-                <MudTabPanel Text="Tree View" Icon="@Icons.Material.Filled.AccountTree" />
                 <MudTabPanel Text="Department" Icon="@Icons.Material.Filled.Business" />
                 <MudTabPanel Text="Section" Icon="@Icons.Material.Filled.Dns" />
                 <MudTabPanel Text="Designation" Icon="@Icons.Material.Filled.Work" />
                 <MudTabPanel Text="Line" Icon="@Icons.Material.Filled.LinearScale" />
             </MudTabs>
-
-            <!-- ==================== TREE TAB ==================== -->
-            @if (_activeTab == "tree")
-            {
-                <div class="animate-fade-in bg-white border border-zinc-200 rounded-lg p-6 shadow-sm mb-6">
-                    @if (!_organogramTree.Any())
-                    {
-                        <p class="text-zinc-500 text-sm">No organogram data available.</p>
-                    }
-                    else
-                    {
-                        <div class="flex flex-col gap-6">
-                            @foreach (var company in _organogramTree)
-                            {
-                                <div class="border border-zinc-200 rounded-lg p-4 bg-zinc-50 shadow-sm">
-                                    <div class="flex items-center gap-3 mb-4">
-                                        <div class="w-10 h-10 rounded-lg bg-black text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
-                                            </svg>
-                                        </div>
-                                        <div>
-                                            <h3 class="text-lg font-bold text-zinc-900 font-body">@company.NameEn</h3>
-                                            <p class="text-sm text-zinc-600 font-sutonnymj">@company.NameBn</p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="ml-5 border-l-2 border-zinc-300 pl-5 flex flex-col gap-5">
-                                        @foreach (var dept in company.Departments)
-                                        {
-                                            <div class="bg-white border border-zinc-200 rounded-md p-4 shadow-sm hover:border-indigo-300 transition-colors">
-                                                <div class="flex items-center gap-2 mb-3">
-                                                    <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
-                                                    <div>
-                                                        <h4 class="text-[15px] font-bold text-indigo-800">@dept.NameEn</h4>
-                                                        <p class="text-xs text-zinc-500 font-sutonnymj">@dept.NameBn</p>
-                                                    </div>
-                                                </div>
-                                                
-                                                <div class="ml-3 border-l-2 border-indigo-100 pl-4 flex flex-col gap-3">
-                                                    @foreach (var sec in dept.Sections)
-                                                    {
-                                                        <div class="bg-indigo-50/30 border border-indigo-100 rounded-md p-3">
-                                                            <div class="mb-3 border-b border-indigo-100 pb-2">
-                                                                <h5 class="text-sm font-bold text-emerald-700">@sec.NameEn</h5>
-                                                                <p class="text-xs text-zinc-500 font-sutonnymj">@sec.NameBn</p>
-                                                            </div>
-                                                            <div class="grid grid-cols-2 gap-4 max-sm:grid-cols-1">
-                                                                <div class="bg-white rounded border border-zinc-100 p-2 shadow-sm">
-                                                                    <h6 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-zinc-400" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" />
-                                                                        </svg>
-                                                                        Designations
-                                                                    </h6>
-                                                                    <ul class="text-[13px] text-zinc-700 space-y-1">
-                                                                        @foreach (var desig in sec.Designations)
-                                                                        {
-                                                                            <li class="flex items-center gap-1.5">
-                                                                                <div class="w-1 h-1 rounded-full bg-zinc-300"></div>
-                                                                                <span class="font-semibold text-zinc-800">@desig.NameEn</span> 
-                                                                                <span class="text-zinc-400 font-sutonnymj text-[11px]">(@desig.NameBn)</span>
-                                                                            </li>
-                                                                        }
-                                                                        @if(!sec.Designations.Any()) { <li class="text-zinc-400 italic text-xs">No designations</li> }
-                                                                    </ul>
-                                                                </div>
-                                                                <div class="bg-white rounded border border-zinc-100 p-2 shadow-sm">
-                                                                    <h6 class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
-                                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-zinc-400" viewBox="0 0 20 20" fill="currentColor">
-                                                                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                                                                        </svg>
-                                                                        Lines
-                                                                    </h6>
-                                                                    <ul class="text-[13px] text-zinc-700 space-y-1">
-                                                                        @foreach (var line in sec.Lines)
-                                                                        {
-                                                                            <li class="flex items-center gap-1.5">
-                                                                                <div class="w-1 h-1 rounded-full bg-zinc-300"></div>
-                                                                                <span class="font-semibold text-zinc-800">@line.NameEn</span> 
-                                                                                <span class="text-zinc-400 font-sutonnymj text-[11px]">(@line.NameBn)</span>
-                                                                            </li>
-                                                                        }
-                                                                        @if(!sec.Lines.Any()) { <li class="text-zinc-400 italic text-xs">No lines</li> }
-                                                                    </ul>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    }
-                                                    @if(!dept.Sections.Any()) { <div class="text-xs text-zinc-400 italic p-2">No sections</div> }
-                                                </div>
-                                            </div>
-                                        }
-                                        @if(!company.Departments.Any()) { <div class="text-sm text-zinc-400 italic p-2">No departments</div> }
-                                    </div>
-                                </div>
-                            }
-                        </div>
-                    }
-                </div>
-            }
 
             <!-- ==================== DEPARTMENT TAB ==================== -->
             @if (_activeTab == "department")
@@ -138,6 +36,9 @@
                             <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors"
                                    placeholder="Search departments..."
                                    @bind="_deptSearch" @bind:event="oninput" />
+                        </div>
+                        <div>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddDept">+ Add Department</button>
                         </div>
                     </div>
 
@@ -152,7 +53,7 @@
                             <RowTemplate>
                                 <MudTd DataLabel="Sl">@(FilteredDepartments.ToList().IndexOf(context) + 1)</MudTd>
                                 <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
                                 <MudTd DataLabel="Actions">
                                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditDept(context)" />
                                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteDept(context.Id)" />
@@ -179,15 +80,18 @@
                                    placeholder="Search sections..."
                                    @bind="_sectionSearch" @bind:event="oninput" />
                         </div>
-                        <div class="flex gap-2 items-center max-sm:justify-between">
-                            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department:</span>
-                            <MudSelect T="int" @bind-Value="_sectionDeptFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                        <div class="flex gap-4 items-center max-sm:flex-col max-sm:items-stretch">
+                            <div class="flex gap-2 items-center max-sm:justify-between">
+                                <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department:</span>
+                                <MudSelect T="int" @bind-Value="_sectionDeptFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@(0)">All Departments</MudSelectItem>
                                     @foreach (var dept in _departments)
                                     {
                                         <MudSelectItem Value="@dept.Id">@dept.NameEn</MudSelectItem>
                                     }
                                 </MudSelect>
+                            </div>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddSection">+ Add Section</button>
                         </div>
                     </div>
 
@@ -203,7 +107,7 @@
                             <RowTemplate>
                                 <MudTd DataLabel="Sl">@(FilteredSections.ToList().IndexOf(context) + 1)</MudTd>
                                 <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
                                 <MudTd DataLabel="Department">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">@context.DepartmentNameEn</span>
                                 </MudTd>
@@ -233,15 +137,18 @@
                                    placeholder="Search designations..."
                                    @bind="_desigSearch" @bind:event="oninput" />
                         </div>
-                        <div class="flex gap-2 items-center max-sm:justify-between">
-                            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
-                            <MudSelect T="int" @bind-Value="_desigSectionFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                        <div class="flex gap-4 items-center max-sm:flex-col max-sm:items-stretch">
+                            <div class="flex gap-2 items-center max-sm:justify-between">
+                                <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
+                                <MudSelect T="int" @bind-Value="_desigSectionFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@(0)">All Sections</MudSelectItem>
                                     @foreach (var sec in _sections)
                                     {
                                         <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
                                     }
                                 </MudSelect>
+                            </div>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddDesig">+ Add Designation</button>
                         </div>
                     </div>
 
@@ -257,7 +164,7 @@
                             <RowTemplate>
                                 <MudTd DataLabel="Sl">@(FilteredDesignations.ToList().IndexOf(context) + 1)</MudTd>
                                 <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
                                 <MudTd DataLabel="Section">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">@context.SectionNameEn</span>
                                 </MudTd>
@@ -287,15 +194,18 @@
                                    placeholder="Search lines..."
                                    @bind="_lineSearch" @bind:event="oninput" />
                         </div>
-                        <div class="flex gap-2 items-center max-sm:justify-between">
-                            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
-                            <MudSelect T="int" @bind-Value="_lineSectionFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                        <div class="flex gap-4 items-center max-sm:flex-col max-sm:items-stretch">
+                            <div class="flex gap-2 items-center max-sm:justify-between">
+                                <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
+                                <MudSelect T="int" @bind-Value="_lineSectionFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@(0)">All Sections</MudSelectItem>
                                     @foreach (var sec in _sections)
                                     {
                                         <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
                                     }
                                 </MudSelect>
+                            </div>
+                            <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddLine">+ Add Line</button>
                         </div>
                     </div>
 
@@ -311,7 +221,7 @@
                             <RowTemplate>
                                 <MudTd DataLabel="Sl">@(FilteredLines.ToList().IndexOf(context) + 1)</MudTd>
                                 <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)">@context.NameBn</MudTd>
+                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
                                 <MudTd DataLabel="Section">
                                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">@context.SectionNameEn</span>
                                 </MudTd>
@@ -372,7 +282,7 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department</label>
-                                <MudSelect T="int" @bind-Value="_editingSection.DepartmentId" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                <MudSelect T="int" @bind-Value="_editingSection.DepartmentId" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@(0)">-- Select Department --</MudSelectItem>
                                     @foreach (var dept in _departments)
                                     {
@@ -409,7 +319,7 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
-                                <MudSelect T="int" @bind-Value="_editingDesig.SectionId" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                <MudSelect T="int" @bind-Value="_editingDesig.SectionId" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@(0)">-- Select Section --</MudSelectItem>
                                     @foreach (var sec in _sections)
                                     {
@@ -446,7 +356,7 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
-                                <MudSelect T="int" @bind-Value="_editingLine.SectionId" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                                <MudSelect T="int" @bind-Value="_editingLine.SectionId" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
                                     <MudSelectItem Value="@(0)">-- Select Section --</MudSelectItem>
                                     @foreach (var sec in _sections)
                                     {

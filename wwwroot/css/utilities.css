@@ -6,11 +6,52 @@
 
 /* ---------- Font Face ---------- */
 @font-face {
+  font-family: 'Open Sans';
+  src: url("https://fonts.gstatic.com/s/opensans/v34/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4G4w.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  src: url("https://fonts.gstatic.com/s/opensans/v34/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4G4w.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  src: url("https://fonts.gstatic.com/s/opensans/v34/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4G4w.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  src: url("https://fonts.gstatic.com/s/opensans/v34/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4G4w.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Open Sans';
+  src: url("https://fonts.gstatic.com/s/opensans/v34/memSYaGs126MiZpBA-UvWbX2vVnXBbObj2OVZyOOSr4dVJWUgsgH1x4G4w.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
   font-family: 'SutonnyMJ';
   src: local('SutonnyMJ'), local('Sutonny MJ'), local('Sutonny-MJ'), local('Sutonny'), local('Sutonny Regular'), local('Sutonny-Regular'), local('SutonnyMJ-Regular'),
        url("https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.woff2") format("woff2"),
        url("https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.woff") format("woff"),
        url("https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.ttf") format("truetype");
+}
+
+/* ---------- Global Font Default ---------- */
+html, body {
+  font-family: 'Open Sans', sans-serif !important;
 }
 
 /* ---------- Animations / Keyframes ---------- */
@@ -42,8 +83,8 @@
 .animate-slide-down { animation: slide-down 0.3s ease; }
 
 /* ---------- Font Families ---------- */
-.font-heading   { font-family: "Outfit", sans-serif; }
-.font-body      { font-family: "Plus Jakarta Sans", sans-serif; }
+.font-heading   { font-family: "Open Sans", sans-serif; }
+.font-body      { font-family: "Open Sans", sans-serif; }
 .font-sutonnymj,
 .font-bn        { font-family: "SutonnyMJ", sans-serif !important; }
 .font-mono      { font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace; }
@@ -53,6 +94,15 @@
 .font-sutonnymj::placeholder,
 input.font-sutonnymj::placeholder,
 textarea.font-sutonnymj::placeholder { font-size: 0.775rem !important; }
+
+.font-sutonnymj input,
+.font-sutonnymj textarea,
+.font-sutonnymj select,
+.font-sutonnymj .mud-input-control-input-container,
+.font-sutonnymj .mud-input,
+.font-sutonnymj .mud-input-slot {
+    font-family: "SutonnyMJ", sans-serif !important;
+}
 
 .data-table-sutonny th,
 .data-table-sutonny td,
@@ -65,12 +115,17 @@ textarea.font-sutonnymj::placeholder { font-size: 0.775rem !important; }
   font-size: 0.875rem !important;
 }
 
-/* ---------- Table base font-size (was in input.css) ---------- */
+/* ---------- Table base font-size and nowrap ---------- */
 table, table th, table td,
 .data-table-base, .data-table-base th, .data-table-base td,
 .data-table-base span, .data-table-base div, .data-table-base p,
-.data-table-base a, .data-table-base code {
+.data-table-base a, .data-table-base code,
+.mud-table-cell {
   font-size: 0.875rem !important;
+}
+
+table th, table td, .mud-table-cell {
+  white-space: nowrap !important;
 }
 
 /* ============================================================
@@ -548,7 +603,7 @@ table, table th, table td,
 .left-3\.5   { left: 0.875rem; }
 
 .z-10       { z-index: 10; }
-.z-\[1000\]  { z-index: 1000; }
+.z-\[1000\]  { z-index: 2000; }
 .z-\[9999\]  { z-index: 9999; }
 
 /* ---------- Transform ---------- */

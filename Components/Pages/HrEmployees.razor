@@ -47,8 +47,8 @@
                         <!-- Filters Container: 3 Columns -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <!-- Department -->
-                            <MudSelect T="string" @bind-Value="_selectedDept" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
+                            <MudSelect T="string" @bind-Value="_selectedDept" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("")">All Departments</MudSelectItem>
                                 @foreach (var dept in _departments)
                                 {
                                     <MudSelectItem Value="@dept.NameEn">@dept.NameEn</MudSelectItem>
@@ -56,15 +56,15 @@
                             </MudSelect>
 
                             <!-- Status -->
-                            <MudSelect T="string" @bind-Value="_selectedStatus" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@((string?)null)">All Statuses</MudSelectItem>
+                            <MudSelect T="string" @bind-Value="_selectedStatus" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("")">All Statuses</MudSelectItem>
                                 <MudSelectItem Value="@("Active")">Active</MudSelectItem>
                                 <MudSelectItem Value="@("Inactive")">Inactive</MudSelectItem>
                             </MudSelect>
 
                             <!-- Year -->
-                            <MudSelect T="string" @bind-Value="_selectedYear" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@((string?)null)">All Years</MudSelectItem>
+                            <MudSelect T="string" @bind-Value="_selectedYear" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                                <MudSelectItem Value="@("")">All Years</MudSelectItem>
                                 <MudSelectItem Value="@("2020")">2020</MudSelectItem>
                                 <MudSelectItem Value="@("2021")">2021</MudSelectItem>
                                 <MudSelectItem Value="@("2022")">2022</MudSelectItem>

@@ -1,74 +1,48 @@
 <script type="module" src="@Assets["Components/Layout/ReconnectModal.razor.js"]"></script>
 
-<dialog id="components-reconnect-modal" data-nosnippet>
+<div id="components-reconnect-modal" class="components-reconnect-hide" data-nosnippet>
     <div class="components-reconnect-container">
-        <!-- Spinner animation -->
-        <div class="components-rejoining-animation">
-            <svg class="components-spinner" viewBox="0 0 80 80" fill="none">
-                <circle cx="40" cy="40" r="32" stroke="currentColor" stroke-width="4" opacity="0.1" />
-                <circle cx="40" cy="40" r="32" stroke="currentColor" stroke-width="4" stroke-dasharray="180" stroke-dashoffset="180" stroke-linecap="round" class="components-spinner-arc" />
-            </svg>
-            <div class="components-spinner-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/>
-                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
-                    <line x1="6" y1="6" x2="6.01" y2="6"/>
-                    <line x1="6" y1="18" x2="6.01" y2="18"/>
-                </svg>
-            </div>
+        <!-- New Simple Loading Animation Reconnection -->
+        <div class="components-reconnect-spinner-container">
+            <div class="components-reconnect-spinner"></div>
+            <div class="components-reconnect-pulse-circle"></div>
         </div>
 
-        <!-- First attempt -->
-        <div class="components-reconnect-first-attempt-visible">
-            <h2 class="components-reconnect-title">Reconnecting to server...</h2>
-            <p class="components-reconnect-desc">Please wait while we restore your session</p>
-            <div class="components-progress-bar">
-                <div class="components-progress-bar-fill"></div>
+        <!-- Reconnection States -->
+        <div class="components-reconnect-states">
+            <!-- First attempt -->
+            <div class="components-reconnect-first-attempt-visible">
+                <h2 class="components-reconnect-title">Reconnecting</h2>
+                <p class="components-reconnect-desc">Attempting to restore session...</p>
             </div>
-        </div>
 
-        <!-- Repeated attempts -->
-        <div class="components-reconnect-repeated-attempt-visible">
-            <h2 class="components-reconnect-title">Still trying...</h2>
-            <p class="components-reconnect-desc">Reconnecting in <strong id="components-seconds-to-next-attempt"></strong> seconds</p>
-            <div class="components-progress-bar">
-                <div class="components-progress-bar-fill components-progress-bar-pulse"></div>
+            <!-- Repeated attempts -->
+            <div class="components-reconnect-repeated-attempt-visible">
+                <h2 class="components-reconnect-title">Retrying Connection</h2>
+                <p class="components-reconnect-desc">Reconnecting in <strong id="components-seconds-to-next-attempt"></strong>s</p>
             </div>
-        </div>
 
-        <!-- Paused by server -->
-        <div class="components-pause-visible">
-            <h2 class="components-reconnect-title">Session paused</h2>
-            <p class="components-reconnect-desc">The server has paused your session</p>
-            <button id="components-resume-button" class="components-reconnect-button">Resume Session</button>
-        </div>
-
-        <!-- Resume failed -->
-        <div class="components-resume-failed-visible">
-            <div class="components-status-icon components-status-error">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="15" y1="9" x2="9" y2="15"/>
-                    <line x1="9" y1="9" x2="15" y2="15"/>
-                </svg>
+            <!-- Paused by server -->
+            <div class="components-pause-visible">
+                <h2 class="components-reconnect-title">Connection Paused</h2>
+                <p class="components-reconnect-desc">Your session has been paused</p>
+                <button id="components-resume-button" class="components-reconnect-button">Resume Session</button>
             </div>
-            <h2 class="components-reconnect-title">Resume failed</h2>
-            <p class="components-reconnect-desc">Unable to restore your session. Please try again.</p>
-            <button id="components-retry-resume-button" class="components-reconnect-button">Retry</button>
-        </div>
 
-        <!-- Reconnect failed -->
-        <div class="components-reconnect-failed-visible">
-            <div class="components-status-icon components-status-error">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="15" y1="9" x2="9" y2="15"/>
-                    <line x1="9" y1="9" x2="15" y2="15"/>
-                </svg>
+            <!-- Resume failed -->
+            <div class="components-resume-failed-visible">
+                <h2 class="components-reconnect-title">Connection Failed</h2>
+                <p class="components-reconnect-desc">Could not resume your session</p>
+                <button id="components-retry-resume-button" class="components-reconnect-button">Retry Connection</button>
             </div>
-            <h2 class="components-reconnect-title">Connection lost</h2>
-            <p class="components-reconnect-desc">We couldn't reconnect to the server. Please reload the page.</p>
-            <button id="components-reconnect-button" class="components-reconnect-button">Reload Page</button>
+
+            <!-- Reconnect failed -->
+            <div class="components-reconnect-failed-visible">
+                <h2 class="components-reconnect-title">Connection Lost</h2>
+                <p class="components-reconnect-desc">Unable to connect to the server</p>
+                <button id="components-reconnect-button" class="components-reconnect-button">Reload Page</button>
+            </div>
         </div>
     </div>
-</dialog>
+</div>
+

@@ -1,0 +1,387 @@
+@page "/payroll/daily-salary-sheet"
+
+<PageTitle>ERPHub - Daily Salary Sheet</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Daily Salary Sheet</h2>
+                    <p class="text-zinc-500 text-sm mt-0.5 font-body">View, verify, and approve daily wage calculations, overtime, allowances, and attendance penalties.</p>
+                </div>
+                <div class="flex gap-2">
+                    <button class="inline-flex items-center py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer text-xs" @onclick="RecalculateAll">
+                        <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" Class="mr-1" /> Recalculate Sheet
+                    </button>
+                    <button class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick="ExportToExcel">
+                        <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="mr-1" /> Export Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Salary Metrics Grid -->
+            <div class="grid grid-cols-4 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Processed Headcount</div>
+                    <div class="text-xl font-extrabold text-zinc-950 mt-1">@TotalEmployees Employees</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider">Total Basic Wage</div>
+                    <div class="text-xl font-extrabold text-zinc-950 mt-1">@TotalBasicPay.ToString("C")</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-emerald-600">Total OT Wage</div>
+                    <div class="text-xl font-extrabold text-emerald-600 mt-1">@TotalOtPay.ToString("C")</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm text-indigo-700 bg-indigo-50/10">
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Net Daily Payout</div>
+                    <div class="text-xl font-extrabold text-indigo-700 mt-1">@NetDailyPayout.ToString("C")</div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                <div class="flex gap-3 flex-1 max-w-[700px] max-sm:flex-col">
+                    <input type="text" 
+                           class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" 
+                           placeholder="Search by Employee ID or Name..." 
+                           @bind="_searchQuery" @bind:event="oninput" />
+                    
+                    <div class="w-48 max-sm:w-full">
+                        <MudSelect T="string" @bind-Value="_deptFilter" Placeholder="All Departments" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
+                            <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
+                            <MudSelectItem Value="@("Production")">Production</MudSelectItem>
+                            <MudSelectItem Value="@("HR")">HR</MudSelectItem>
+                            <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
+                            <MudSelectItem Value="@("Marketing")">Marketing</MudSelectItem>
+                            <MudSelectItem Value="@("Management")">Management</MudSelectItem>
+                        </MudSelect>
+                    </div>
+
+                    <div class="w-48 max-sm:w-full">
+                        <MudSelect T="string" @bind-Value="_statusFilter" Placeholder="All Statuses" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@((string?)null)">All Attendance</MudSelectItem>
+                            <MudSelectItem Value="@("Present")">Present</MudSelectItem>
+                            <MudSelectItem Value="@("Late")">Late</MudSelectItem>
+                            <MudSelectItem Value="@("On Leave")">On Leave</MudSelectItem>
+                            <MudSelectItem Value="@("Absent")">Absent</MudSelectItem>
+                        </MudSelect>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
+                    <input type="date" class="border border-zinc-200 rounded-lg p-1.5 px-3 bg-white outline-none text-sm cursor-pointer hover:bg-zinc-50 transition-colors" value="@_sheetDate.ToString("yyyy-MM-dd")" @onchange="OnDateChanged" />
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@FilteredRecords" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.EmpId)">Emp ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Name)">Employee Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Department)">Department</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.AttendanceStatus)">Attendance</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.DailyBasic)">Daily Basic</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.OtHours)">OT Hours</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.OtPay)">OT Pay</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Allowances)">Allowances</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Deductions)">Deductions</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.NetPay)">Net Daily Pay</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Status)">Pay Status</MudTableSortLabel></MudTh>
+                        <MudTh Class="text-right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
+                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
+                        <MudTd DataLabel="Department">@context.Department</MudTd>
+                        <MudTd DataLabel="Attendance">
+                            @if (context.AttendanceStatus == "Present")
+                            {
+                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Present</span>
+                            }
+                            else if (context.AttendanceStatus == "Late")
+                            {
+                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Late</span>
+                            }
+                            else if (context.AttendanceStatus == "On Leave" || context.AttendanceStatus == "Leave")
+                            {
+                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">On Leave</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Absent</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Daily Basic">@context.DailyBasic.ToString("C")</MudTd>
+                        <MudTd DataLabel="OT Hours">@context.OtHours.ToString("F1") hrs</MudTd>
+                        <MudTd DataLabel="OT Pay" Class="text-emerald-700">@context.OtPay.ToString("C")</MudTd>
+                        <MudTd DataLabel="Allowances">@context.Allowances.ToString("C")</MudTd>
+                        <MudTd DataLabel="Deductions" Class="text-rose-600">@context.Deductions.ToString("C")</MudTd>
+                        <MudTd DataLabel="Net Daily Pay" Class="font-bold text-zinc-900">@context.NetPay.ToString("C")</MudTd>
+                        <MudTd DataLabel="Pay Status">
+                            @if (context.Status == "Approved")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                            }
+                            else if (context.Status == "Pending")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-zinc-50 text-zinc-600 border border-zinc-200">Processed</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
+                            @if (context.Status == "Pending" || context.Status == "Processed")
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="@Size.Small" Color="Color.Success" title="Approve Pay" OnClick="() => ApprovePay(context)" />
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Default" title="Edit Adjustment" OnClick="() => OpenAdjustmentDialog(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
+                    </PagerContent>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No employee records match the filters.</MudText>
+                    </NoRecordsContent>
+                </MudTable>
+            </div>
+        </div>
+
+        @if (_showAdjustmentDialog && _activeRecord != null)
+        {
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in">
+                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4">
+                    <h3 class="text-base font-bold text-zinc-950 font-heading mb-1">Adjust Pay: @_activeRecord.Name</h3>
+                    <p class="text-xs text-zinc-500 mb-4">Modify allowances and deductions for @_sheetDate.ToString("MMMM dd, yyyy").</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Daily Basic ($)</label>
+                            <input type="number" step="0.01" class="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none" @bind="_activeRecord.DailyBasic" readonly />
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Allowances ($)</label>
+                                <input type="number" step="0.01" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeRecord.Allowances" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Deductions ($)</label>
+                                <input type="number" step="0.01" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeRecord.Deductions" />
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">OT Hours</label>
+                                <input type="number" step="0.5" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeRecord.OtHours" @oninput="UpdateOtCalculation" />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">OT Pay ($)</label>
+                                <input type="number" step="0.01" class="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none" @bind="_activeRecord.OtPay" readonly />
+                            </div>
+                        </div>
+                        <div class="bg-zinc-50 rounded-lg p-3 border border-zinc-200">
+                            <div class="flex justify-between text-xs font-semibold text-zinc-600">
+                                <span>Calculated Net:</span>
+                                <span class="font-bold text-zinc-950">@_activeRecord.NetPay.ToString("C")</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 mt-6">
+                        <button class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="CloseAdjustmentDialog">Cancel</button>
+                        <button class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveAdjustment">Save Adjustments</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private IErpService ErpService { get; set; } = default!;
+    [Inject] private AttendanceService AttendanceService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _searchQuery = string.Empty;
+    private string _deptFilter = string.Empty;
+    private string _statusFilter = string.Empty;
+    private DateTime _sheetDate = DateTime.Today;
+
+    private bool _showAdjustmentDialog = false;
+    private DailySalaryUiRecord? _activeRecord;
+
+    private List<DailySalaryUiRecord> _records = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var dbRecords = await ErpService.GetDailySalaryRecordsAsync(_sheetDate);
+        if (!dbRecords.Any())
+        {
+            await ErpService.CalculateDailySalariesAsync(_sheetDate);
+            dbRecords = await ErpService.GetDailySalaryRecordsAsync(_sheetDate);
+        }
+
+        var employees = await ErpService.GetEmployeesAsync();
+        var departments = await ErpService.GetDepartmentsAsync();
+        var attendanceRecords = await AttendanceService.GetAttendanceRecordsAsync(_sheetDate, _sheetDate);
+
+        var empMap = employees.GroupBy(e => e.EmployeeId).ToDictionary(g => g.Key, g => g.First());
+        var deptMap = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
+        var attMap = attendanceRecords.GroupBy(a => a.EmployeeId).ToDictionary(g => g.Key, g => g.First().AttendanceStatus);
+
+        _records = dbRecords.Select(db => {
+            empMap.TryGetValue(db.EmployeeId, out var emp);
+            string deptName = (emp != null && deptMap.TryGetValue(emp.DepartmentId, out var dn)) ? dn : "IT";
+            attMap.TryGetValue(db.EmployeeId, out var attStatus);
+
+            return new DailySalaryUiRecord
+            {
+                Id = db.Id,
+                EmpId = db.EmployeeId,
+                Name = emp?.EmployeeName ?? "Unknown",
+                Department = deptName,
+                AttendanceStatus = attStatus ?? "Absent",
+                DailyBasic = db.DailyBasic,
+                OtHours = db.OtHours,
+                OtPay = db.OtPay,
+                Allowances = db.Allowances,
+                Deductions = db.Deductions,
+                Status = db.Status,
+                DbRecord = db
+            };
+        }).ToList();
+    }
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate))
+        {
+            _sheetDate = parsedDate;
+            await LoadData();
+            Snackbar.Add($"Loaded daily salary sheet for {_sheetDate.ToString("yyyy-MM-dd")}", Severity.Info);
+        }
+    }
+
+    private async Task ApprovePay(DailySalaryUiRecord record)
+    {
+        await ErpService.ApproveDailySalaryRecordAsync(record.Id);
+        await LoadData();
+        Snackbar.Add($"Daily payment approved for {record.Name}", Severity.Success);
+    }
+
+    private void OpenAdjustmentDialog(DailySalaryUiRecord record)
+    {
+        _activeRecord = new DailySalaryUiRecord
+        {
+            Id = record.Id,
+            EmpId = record.EmpId,
+            Name = record.Name,
+            Department = record.Department,
+            AttendanceStatus = record.AttendanceStatus,
+            DailyBasic = record.DailyBasic,
+            OtHours = record.OtHours,
+            OtPay = record.OtPay,
+            Allowances = record.Allowances,
+            Deductions = record.Deductions,
+            Status = record.Status,
+            DbRecord = record.DbRecord
+        };
+        _showAdjustmentDialog = true;
+    }
+
+    private void CloseAdjustmentDialog()
+    {
+        _showAdjustmentDialog = false;
+        _activeRecord = null;
+    }
+
+    private void UpdateOtCalculation(ChangeEventArgs e)
+    {
+        if (_activeRecord == null) return;
+        if (double.TryParse(e.Value?.ToString(), out var hours))
+        {
+            _activeRecord.OtHours = hours;
+            decimal hourlyRate = (_activeRecord.DailyBasic / 8.0m) * 1.5m;
+            _activeRecord.OtPay = (decimal)hours * hourlyRate;
+        }
+    }
+
+    private async Task SaveAdjustment()
+    {
+        if (_activeRecord != null)
+        {
+            var db = _activeRecord.DbRecord;
+            db.DailyBasic = _activeRecord.DailyBasic;
+            db.OtHours = _activeRecord.OtHours;
+            db.OtPay = _activeRecord.OtPay;
+            db.Allowances = _activeRecord.Allowances;
+            db.Deductions = _activeRecord.Deductions;
+            db.NetPay = _activeRecord.NetPay;
+            db.Status = _activeRecord.Status;
+
+            await ErpService.UpdateDailySalaryRecordAsync(db);
+            await LoadData();
+            Snackbar.Add($"Pay adjustment saved for {_activeRecord.Name}", Severity.Success);
+        }
+        CloseAdjustmentDialog();
+    }
+
+    private async Task RecalculateAll()
+    {
+        await ErpService.CalculateDailySalariesAsync(_sheetDate);
+        await LoadData();
+        Snackbar.Add("Recalculation complete. All wages re-synced with daily attendance records.", Severity.Success);
+    }
+
+    private void ExportToExcel()
+    {
+        Snackbar.Add($"Daily Salary Sheet exported to ERPHub_Daily_Salary_{_sheetDate:yyyyMMdd}.xlsx successfully.", Severity.Success);
+    }
+
+    private int TotalEmployees => FilteredRecords.Count();
+    private decimal TotalBasicPay => FilteredRecords.Sum(r => r.AttendanceStatus == "Absent" ? 0m : r.DailyBasic);
+    private decimal TotalOtPay => FilteredRecords.Sum(r => r.OtPay);
+    private decimal NetDailyPayout => FilteredRecords.Sum(r => r.NetPay);
+
+    private IEnumerable<DailySalaryUiRecord> FilteredRecords =>
+        _records.Where(r => 
+            (string.IsNullOrEmpty(_deptFilter) || r.Department == _deptFilter) &&
+            (string.IsNullOrEmpty(_statusFilter) || r.AttendanceStatus == _statusFilter) &&
+            (string.IsNullOrEmpty(_searchQuery) || 
+             r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
+             r.EmpId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+        );
+
+    public class DailySalaryUiRecord
+    {
+        public int Id { get; set; }
+        public string EmpId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public string AttendanceStatus { get; set; } = string.Empty;
+        public decimal DailyBasic { get; set; }
+        public double OtHours { get; set; }
+        public decimal OtPay { get; set; }
+        public decimal Allowances { get; set; }
+        public decimal Deductions { get; set; }
+        public string Status { get; set; } = string.Empty;
+
+        public decimal NetPay => (AttendanceStatus == "Absent" ? 0m : DailyBasic) + OtPay + Allowances - Deductions;
+        public ERPHub.Models.DailySalaryRecord DbRecord { get; set; } = default!;
+    }
+}

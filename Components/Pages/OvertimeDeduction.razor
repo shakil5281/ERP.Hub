@@ -1,0 +1,309 @@
+@page "/attendance/overtime-deduction"
+
+<PageTitle>ERPHub - Overtime Deduction</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Overtime Deduction</h2>
+                    <p class="text-zinc-500 text-sm mt-0.5 font-body">Audit, adjust, and authorize overtime hours deductions triggered by late clock-ins or early departures.</p>
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-3 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-rose-600">Total Deducted Hours</div>
+                    <div class="text-xl font-extrabold text-rose-600 mt-1">@TotalDeductionsCount hrs</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-emerald-600">Total Audited Hours</div>
+                    <div class="text-xl font-extrabold text-emerald-600 mt-1">@AuditedHoursCount hrs</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm text-amber-600 bg-amber-50/10">
+                    <div class="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Pending Audit logs</div>
+                    <div class="text-xl font-extrabold text-amber-600 mt-1">@PendingAuditCount Logs</div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                <div class="flex gap-3 flex-1 max-w-[600px] max-sm:flex-col">
+                    <input type="text" 
+                           class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" 
+                           placeholder="Search by Employee ID or Name..." 
+                           @bind="_searchQuery" @bind:event="oninput" />
+                    
+                    <div class="w-48 max-sm:w-full">
+                        <MudSelect T="string" @bind-Value="_deptFilter" Placeholder="Department" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
+                            <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
+                            <MudSelectItem Value="@("Production")">Production</MudSelectItem>
+                            <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
+                        </MudSelect>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
+                    <input type="date" class="border border-zinc-200 rounded-lg p-1.5 px-3 bg-white outline-none text-sm cursor-pointer hover:bg-zinc-50 transition-colors" value="@_selectedDate.ToString("yyyy-MM-dd")" @onchange="OnDateChanged" />
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@FilteredRecords" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Emp ID</MudTh>
+                        <MudTh>Employee Name</MudTh>
+                        <MudTh>Department</MudTh>
+                        <MudTh>Calculated OT</MudTh>
+                        <MudTh>Deductions</MudTh>
+                        <MudTh>Net Approved OT</MudTh>
+                        <MudTh>Reason</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh Class="text-right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
+                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
+                        <MudTd DataLabel="Department">@context.Department</MudTd>
+                        <MudTd DataLabel="Calculated OT">@context.BaseOt hrs</MudTd>
+                        <MudTd DataLabel="Deductions" Class="text-rose-600 font-bold">@context.DeductionOt hrs</MudTd>
+                        <MudTd DataLabel="Net Approved OT" Class="font-semibold text-zinc-900">@context.NetOt hrs</MudTd>
+                        <MudTd DataLabel="Reason"><span class="text-xs text-zinc-500 italic">@context.Reason</span></MudTd>
+                        <MudTd DataLabel="Status">
+                            @if (context.Status == "Approved")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending Audit</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
+                            @if (context.Status == "Pending")
+                            {
+                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="@Size.Small" Color="Color.Success" title="Approve Deduction" OnClick="() => ApproveDeduction(context)" />
+                            }
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Default" title="Adjust Hours" OnClick="() => OpenAdjustDialog(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </div>
+
+        <!-- Adjust Dialog -->
+        @if (_showAdjustDialog && _activeRecord != null)
+        {
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in">
+                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4">
+                    <h3 class="text-base font-bold text-zinc-950 font-heading mb-1">Adjust Overtime Deduction</h3>
+                    <p class="text-xs text-zinc-500 mb-4">Set docked OT hours for @_activeRecord.Name.</p>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Base OT Hours</label>
+                                <input type="number" step="0.5" class="w-full bg-zinc-50 border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none" @bind="_activeRecord.BaseOt" readonly />
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Deducted Hours</label>
+                                <input type="number" step="0.5" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeRecord.DeductionOt" />
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Reason for Deduction</label>
+                            <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeRecord.Reason" placeholder="Late in offset, policy rules, etc." />
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 mt-6">
+                        <button class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="CloseAdjustDialog">Cancel</button>
+                        <button class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveDeduction">Save Deduction</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private IErpService ErpService { get; set; } = default!;
+    [Inject] private AttendanceService AttendanceService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _searchQuery = string.Empty;
+    private string _deptFilter = string.Empty;
+    private DateTime _selectedDate = DateTime.Today;
+
+    private bool _showAdjustDialog = false;
+    private OvertimeDeductionUiRecord? _activeRecord;
+
+    private double TotalDeductionsCount => FilteredRecords.Sum(r => r.DeductionOt);
+    private double AuditedHoursCount => FilteredRecords.Where(r => r.Status == "Approved").Sum(r => r.NetOt);
+    private int PendingAuditCount => FilteredRecords.Count(r => r.Status == "Pending");
+
+    private List<OvertimeDeductionUiRecord> _records = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var dbDeductions = await ErpService.GetOvertimeDeductionsAsync();
+        var filteredDb = dbDeductions.Where(d => d.DeductionDate.Date == _selectedDate.Date).ToList();
+
+        if (!filteredDb.Any())
+        {
+            var attendanceRecords = await AttendanceService.GetAttendanceRecordsAsync(_selectedDate, _selectedDate);
+            foreach (var att in attendanceRecords)
+            {
+                if (att.OvertimeMinutes > 0)
+                {
+                    double otHours = Math.Round(att.OvertimeMinutes / 60.0, 1);
+                    double deducedHours = 0.0;
+                    string reason = "No deduction";
+
+                    if (att.LateMinutes > 0)
+                    {
+                        deducedHours = Math.Round(att.LateMinutes / 60.0, 1);
+                        if (deducedHours > otHours) deducedHours = otHours;
+                        reason = $"{att.LateMinutes} mins late arrival offset";
+                    }
+
+                    var newDeduction = new ERPHub.Models.OvertimeDeduction
+                    {
+                        EmployeeId = att.EmployeeId,
+                        DeductionDate = _selectedDate.Date,
+                        BaseOtHours = otHours,
+                        DeductedHours = deducedHours,
+                        Reason = reason,
+                        Status = "Pending"
+                    };
+
+                    await ErpService.AddOvertimeDeductionAsync(newDeduction);
+                }
+            }
+
+            dbDeductions = await ErpService.GetOvertimeDeductionsAsync();
+            filteredDb = dbDeductions.Where(d => d.DeductionDate.Date == _selectedDate.Date).ToList();
+        }
+
+        var employees = await ErpService.GetEmployeesAsync();
+        var departments = await ErpService.GetDepartmentsAsync();
+
+        var empMap = employees.GroupBy(e => e.EmployeeId).ToDictionary(g => g.Key, g => g.First());
+        var deptMap = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
+
+        _records = filteredDb.Select(d => {
+            empMap.TryGetValue(d.EmployeeId, out var emp);
+            string deptName = (emp != null && deptMap.TryGetValue(emp.DepartmentId, out var dn)) ? dn : "IT";
+
+            return new OvertimeDeductionUiRecord
+            {
+                Id = d.Id,
+                EmpId = d.EmployeeId,
+                Name = emp?.EmployeeName ?? "Unknown Employee",
+                Department = deptName,
+                BaseOt = d.BaseOtHours,
+                DeductionOt = d.DeductedHours,
+                Reason = d.Reason,
+                Status = d.Status,
+                DbRecord = d
+            };
+        }).ToList();
+    }
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate))
+        {
+            _selectedDate = parsedDate;
+            await LoadData();
+            Snackbar.Add($"Loaded OT audit records for {_selectedDate.ToString("yyyy-MM-dd")}", Severity.Info);
+        }
+    }
+
+    private async Task ApproveDeduction(OvertimeDeductionUiRecord record)
+    {
+        await ErpService.ApproveOvertimeDeductionAsync(record.Id);
+        await LoadData();
+        Snackbar.Add($"OT hours approved for {record.Name}", Severity.Success);
+    }
+
+    private void OpenAdjustDialog(OvertimeDeductionUiRecord record)
+    {
+        _activeRecord = new OvertimeDeductionUiRecord
+        {
+            Id = record.Id,
+            EmpId = record.EmpId,
+            Name = record.Name,
+            Department = record.Department,
+            BaseOt = record.BaseOt,
+            DeductionOt = record.DeductionOt,
+            Reason = record.Reason,
+            Status = record.Status,
+            DbRecord = record.DbRecord
+        };
+        _showAdjustDialog = true;
+    }
+
+    private void CloseAdjustDialog()
+    {
+        _showAdjustDialog = false;
+        _activeRecord = null;
+    }
+
+    private async Task SaveDeduction()
+    {
+        if (_activeRecord != null)
+        {
+            if (_activeRecord.DeductionOt > _activeRecord.BaseOt)
+            {
+                Snackbar.Add("Deducted hours cannot exceed calculated OT hours.", Severity.Warning);
+                return;
+            }
+
+            var db = _activeRecord.DbRecord;
+            db.DeductedHours = _activeRecord.DeductionOt;
+            db.Reason = _activeRecord.Reason;
+            db.Status = _activeRecord.Status;
+
+            await ErpService.UpdateOvertimeDeductionAsync(db);
+            await LoadData();
+            Snackbar.Add($"Deduction modified for {_activeRecord.Name}.", Severity.Success);
+        }
+        CloseAdjustDialog();
+    }
+
+    private IEnumerable<OvertimeDeductionUiRecord> FilteredRecords =>
+        _records.Where(r =>
+            (string.IsNullOrEmpty(_deptFilter) || r.Department == _deptFilter) &&
+            (string.IsNullOrEmpty(_searchQuery) ||
+             r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+             r.EmpId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+        );
+
+    public class OvertimeDeductionUiRecord
+    {
+        public int Id { get; set; }
+        public string EmpId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public double BaseOt { get; set; }
+        public double DeductionOt { get; set; }
+        public double NetOt => Math.Max(0, BaseOt - DeductionOt);
+        public string Reason { get; set; } = string.Empty;
+        public string Status { get; set; } = "Pending";
+        public ERPHub.Models.OvertimeDeduction DbRecord { get; set; } = default!;
+    }
+}

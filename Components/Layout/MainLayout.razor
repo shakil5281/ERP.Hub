@@ -9,12 +9,9 @@
     <MudDrawer @bind-Open="_drawerOpen"
                Variant="DrawerVariant.Responsive"
                ClipMode="DrawerClipMode.Always"
+               Width="256px"
                Class="app-drawer">
         <div class="drawer-content">
-            <div class="drawer-brand">
-                <div class="brand-logo-mark"></div>
-                <span class="brand-text">ERPHub</span>
-            </div>
             <div class="drawer-nav-scroll">
                 <NavMenu />
             </div>
@@ -22,7 +19,7 @@
                 <div class="drawer-footer-divider"></div>
                 <div class="drawer-footer-info">
                     <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Small" Class="mud-secondary-text-color" />
-                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color">v1.0.0</MudText>
+                    <MudText Typo="Typo.caption" Color='Color.Primary'>v1.0.0</MudText>
                 </div>
             </div>
         </div>
@@ -36,9 +33,9 @@
                                Size="Size.Small"
                                Class="topbar-menu-btn"
                                aria-label="Toggle sidebar" />
-                <div class="topbar-brand-mobile">
+                <div class="topbar-brand">
                     <div class="brand-logo-mark brand-logo-sm"></div>
-                    <MudText Typo="Typo.subtitle2" Class="fw-bold">ERPHub</MudText>
+                    <span class="brand-text">ERPHub</span>
                 </div>
             </div>
 
@@ -74,11 +71,11 @@
                     @if (_showNotifications)
                     {
                         <div class="topbar-overlay" @onclick="CloseNotifications"></div>
-                        <div class="notif-panel">
+                        <div class="notif-panel" style="color: black;">
                             <div class="notif-header">
                                 <div>
                                     <MudText Typo="Typo.subtitle2" Class="fw-bold">Notifications</MudText>
-                                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@_unreadCount unread</MudText>
+                                    <MudText Typo="Typo.caption" Color='Color.Primary'>@_unreadCount unread</MudText>
                                 </div>
                                 @if (_unreadCount > 0)
                                 {
@@ -106,7 +103,7 @@
                                                         <span class="notif-dot"></span>
                                                     }
                                                 </div>
-                                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color notif-msg">@n.Message</MudText>
+                                                <MudText Typo="Typo.caption" Class="notif-msg">@n.Message</MudText>
                                                 <MudText Typo="Typo.caption" Class="notif-time">@FormatTimeAgo(n.Timestamp)</MudText>
                                             </div>
                                         </div>
@@ -116,7 +113,7 @@
                                 {
                                     <div class="notif-empty">
                                         <MudIcon Icon="@Icons.Material.Filled.NotificationsOff" Size="Size.Large" Class="mud-secondary-text-color" />
-                                        <MudText Typo="Typo.body2" Class="mud-secondary-text-color">No notifications</MudText>
+                                        <MudText Typo="Typo.body2">No notifications</MudText>
                                     </div>
                                 }
                             </div>
@@ -132,34 +129,34 @@
                                     <MudText Typo="Typo.caption" Class="fw-bold">@GetInitials(authCtx.User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value)</MudText>
                                 </MudAvatar>
                                 <div class="profile-info d-none d-sm-flex">
-                                    <MudText Typo="Typo.caption" Class="fw-semibold profile-name-text">@authCtx.User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</MudText>
-                                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color profile-role-text">@GetUserRole(authCtx.User)</MudText>
+                                    <MudText Typo="Typo.caption" Class="fw-semibold profile-name-text" Style="color: black;">@authCtx.User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</MudText>
+                                    <MudText Typo="Typo.caption" Class="profile-role-text" Style="color: black;">@GetUserRole(authCtx.User)</MudText>
                                 </div>
                                 <MudIcon Icon="@Icons.Material.Filled.ExpandMore" Size="Size.Small" Class="mud-secondary-text-color d-none d-sm-flex" />
-                            </div>
-
-                            @if (_showProfileMenu)
-                            {
-                                <div class="topbar-overlay" @onclick="CloseProfileMenu"></div>
-                                <div class="profile-panel">
-                                    <div class="profile-panel-header">
-                                        <MudAvatar Size="Size.Small" Color="Color.Primary">
-                                            <MudText Typo="Typo.caption" Class="fw-bold">@GetInitials(authCtx.User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value)</MudText>
-                                        </MudAvatar>
-                                        <div>
-                                            <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="font-size:13px;">@authCtx.User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</MudText>
-                                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color" Style="font-size:11px;">@GetUserRole(authCtx.User)</MudText>
-                                        </div>
-                                    </div>
-                                    <div class="profile-panel-divider"></div>
-                                    <div class="profile-panel-item" @onclick='() => { CloseProfileMenu(); Nav.NavigateTo("/profile"); }'>
-                                        <MudIcon Icon="@Icons.Material.Filled.PersonOutline" Size="Size.Small" />
-                                        <span>My Profile</span>
-                                    </div>
-                                    <div class="profile-panel-item">
-                                        <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
-                                        <span>Settings</span>
-                                    </div>
+                             </div>
+ 
+                             @if (_showProfileMenu)
+                             {
+                                 <div class="topbar-overlay" @onclick="CloseProfileMenu"></div>
+                                 <div class="profile-panel">
+                                     <div class="profile-panel-header">
+                                         <MudAvatar Size="Size.Small" Color="Color.Primary">
+                                             <MudText Typo="Typo.caption" Class="fw-bold">@GetInitials(authCtx.User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value)</MudText>
+                                         </MudAvatar>
+                                         <div>
+                                             <MudText Typo="Typo.subtitle2" Class="fw-bold" Style="font-size:13px; color: black;">@authCtx.User.FindFirst(System.Security.Claims.ClaimTypes.GivenName)?.Value</MudText>
+                                             <MudText Typo="Typo.caption" Class="" Style="font-size:11px; color: black;">@GetUserRole(authCtx.User)</MudText>
+                                         </div>
+                                     </div>
+                                     <div class="profile-panel-divider"></div>
+                                     <div class="profile-panel-item" style="color: black;" @onclick='() => { CloseProfileMenu(); Nav.NavigateTo("/profile"); }'>
+                                         <MudIcon Icon="@Icons.Material.Filled.PersonOutline" Size="Size.Small" />
+                                         <span>My Profile</span>
+                                     </div>
+                                     <div class="profile-panel-item" style="color: black;">
+                                         <MudIcon Icon="@Icons.Material.Filled.Settings" Size="Size.Small" />
+                                         <span>Settings</span>
+                                     </div>
                                     <div class="profile-panel-divider"></div>
                                     <div class="profile-panel-item profile-logout" @onclick="HandleLogout">
                                         <MudIcon Icon="@Icons.Material.Filled.Logout" Size="Size.Small" />

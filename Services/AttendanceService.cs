@@ -108,7 +108,7 @@ namespace ERPHub.Services
                 windowOutTime = windowOutTime.AddDays(1);
 
             var empPunches = allPunches
-                .Where(p => p.EmployeeId == emp.EmployeeId
+                .Where(p => p.PunchNumber == emp.PunchNumber
                     && p.LogDateTime >= windowInTime
                     && p.LogDateTime <= windowOutTime)
                 .OrderBy(p => p.LogDateTime)
@@ -351,6 +351,91 @@ namespace ERPHub.Services
             if (holiday != null)
             {
                 _context.Holidays.Remove(holiday);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task UpdateAttendanceRecordPunchAsync(int id, DateTime? inPunch, DateTime? outPunch, string reason)
+        {
+            var record = await _context.AttendanceRecords.FindAsync(id);
+            if (record == null) return;
+
+            record.ActualInPunch = inPunch;
+            record.ActualOutPunch = outPunch;
+            if (!string.IsNullOrEmpty(reason))
+            {
+                record.Remarks = reason;
+            }
+
+            var emp = await _context.Employees.Include(e => e.Shift).FirstOrDefaultAsync(e => e.EmployeeId == record.EmployeeId);
+            if (emp != null && emp.Shift != null)
+            {
+                var shift = emp.Shift;
+                var shiftInTime = record.AttendanceDate.Date.Add(shift.InTime);
+                var shiftOutTime = record.AttendanceDate.Date.Add(shift.OutTime);
+                if (shift.OutTime < shift.InTime)
+                    shiftOutTime = shiftOutTime.AddDays(1);
+
+                DateTime firstPunch = inPunch ?? shiftInTime;
+                DateTime lastPunch = outPunch ?? shiftOutTime;
+
+                var lateMinutes = 0;
+                var earlyExitMinutes = 0;
+                var overtimeMinutes = 0;
+                var status = "Present";
+
+                if (inPunch.HasValue)
+                {
+                    if (firstPunch > shiftInTime.AddMinutes(shift.GraceInMinutes))
+                    {
+                        lateMinutes = (int)(firstPunch - shiftInTime).TotalMinutes - shift.GraceInMinutes;
+                        if (lateMinutes < 0) lateMinutes = 0;
+                        status = "Late";
+                    }
+                }
+
+                if (outPunch.HasValue)
+                {
+                    if (lastPunch < shiftOutTime)
+                      {
+                        earlyExitMinutes = (int)(shiftOutTime - lastPunch).TotalMinutes;
+                        if (earlyExitMinutes < 0) earlyExitMinutes = 0;
+                        status = "Early Exit";
+                    }
+                    else if (lastPunch > shiftOutTime)
+                    {
+                        overtimeMinutes = (int)(lastPunch - shiftOutTime).TotalMinutes;
+                        if (overtimeMinutes < shift.MinimumOvertimeMinutes)
+                            overtimeMinutes = 0;
+                        else
+                            status = "Present + Overtime";
+                    }
+                }
+
+                var workedMinutes = (int)(lastPunch - firstPunch).TotalMinutes - shift.BreakMinutes;
+                if (workedMinutes < 0) workedMinutes = 0;
+
+                record.LateMinutes = lateMinutes;
+                record.EarlyExitMinutes = earlyExitMinutes;
+                record.WorkedMinutes = workedMinutes;
+                record.OvertimeMinutes = overtimeMinutes;
+                record.AttendanceStatus = status;
+            }
+            else
+            {
+                record.AttendanceStatus = "Present";
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateAbsentStatusAsync(int id, string status, string remarks, string excusedBy)
+        {
+            var record = await _context.AttendanceRecords.FindAsync(id);
+            if (record != null)
+            {
+                record.AttendanceStatus = status;
+                record.Remarks = remarks + (string.IsNullOrEmpty(excusedBy) ? "" : $" (Excused By: {excusedBy})");
                 await _context.SaveChangesAsync();
             }
         }

@@ -10,6 +10,7 @@ namespace ERPHub.Data
         }
 
         public DbSet<Company> Companies => Set<Company>();
+        public DbSet<BusinessGroup> BusinessGroups => Set<BusinessGroup>();
         public DbSet<Product> Products => Set<Product>();
         public DbSet<ProjectTask> ProjectTasks => Set<ProjectTask>();
         public DbSet<Invoice> Invoices => Set<Invoice>();
@@ -25,6 +26,13 @@ namespace ERPHub.Data
         public DbSet<AttendanceRecord> AttendanceRecords => Set<AttendanceRecord>();
         public DbSet<Holiday> Holidays => Set<Holiday>();
         public DbSet<LeaveApplication> LeaveApplications => Set<LeaveApplication>();
+        public DbSet<JobCard> JobCards => Set<JobCard>();
+        public DbSet<ManualPunchLog> ManualPunchLogs => Set<ManualPunchLog>();
+        public DbSet<OvertimeDeduction> OvertimeDeductions => Set<OvertimeDeduction>();
+        public DbSet<DailySalaryRecord> DailySalaryRecords => Set<DailySalaryRecord>();
+        public DbSet<Manpower> Manpowers => Set<Manpower>();
+        public DbSet<ManpowerRequirement> ManpowerRequirements => Set<ManpowerRequirement>();
+        public DbSet<Separation> Separations => Set<Separation>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -116,8 +124,11 @@ namespace ERPHub.Data
                 .IsUnique();
 
             modelBuilder.Entity<PunchRecord>()
-                .HasIndex(p => new { p.EmployeeId, p.LogDateTime })
+                .HasIndex(p => new { p.UserPunchId, p.LogDateTime })
                 .IsUnique();
+
+            modelBuilder.Entity<PunchRecord>()
+                .HasIndex(p => p.PunchNumber);
 
             modelBuilder.Entity<PunchRecord>()
                 .HasIndex(p => p.LogDateTime);
@@ -135,6 +146,95 @@ namespace ERPHub.Data
             modelBuilder.Entity<Holiday>()
                 .HasIndex(h => h.HolidayDate)
                 .IsUnique();
+
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.DailyBasic)
+                .HasColumnType("decimal(18, 2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.OtPay)
+                .HasColumnType("decimal(18, 2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.Allowances)
+                .HasColumnType("decimal(18, 2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.Deductions)
+                .HasColumnType("decimal(18, 2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.NetPay)
+                .HasColumnType("decimal(18, 2)");
+
+            modelBuilder.Entity<Manpower>()
+                .HasOne(m => m.Department)
+                .WithMany()
+                .HasForeignKey(m => m.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Manpower>()
+                .HasOne(m => m.Section)
+                .WithMany()
+                .HasForeignKey(m => m.SectionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Manpower>()
+                .HasOne(m => m.Designation)
+                .WithMany()
+                .HasForeignKey(m => m.DesignationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Manpower>()
+                .HasIndex(m => new { m.DepartmentId, m.SectionId, m.DesignationId })
+                .IsUnique();
+
+            modelBuilder.Entity<ManpowerRequirement>()
+                .HasOne(m => m.Department)
+                .WithMany()
+                .HasForeignKey(m => m.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ManpowerRequirement>()
+                .HasOne(m => m.Section)
+                .WithMany()
+                .HasForeignKey(m => m.SectionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ManpowerRequirement>()
+                .HasOne(m => m.Designation)
+                .WithMany()
+                .HasForeignKey(m => m.DesignationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ManpowerRequirement>()
+                .HasIndex(m => m.Status);
+
+            modelBuilder.Entity<ManpowerRequirement>()
+                .HasIndex(m => m.Priority);
+
+            modelBuilder.Entity<Separation>()
+                .HasOne(s => s.Department)
+                .WithMany()
+                .HasForeignKey(s => s.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Separation>()
+                .HasOne(s => s.Section)
+                .WithMany()
+                .HasForeignKey(s => s.SectionId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Separation>()
+                .HasOne(s => s.Designation)
+                .WithMany()
+                .HasForeignKey(s => s.DesignationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Separation>()
+                .HasIndex(s => s.EmployeeId);
+
+            modelBuilder.Entity<Separation>()
+                .HasIndex(s => s.Status);
+
+            modelBuilder.Entity<Separation>()
+                .HasIndex(s => s.ResignDate);
         }
     }
 }

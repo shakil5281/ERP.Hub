@@ -1,6 +1,5 @@
 @page "/datacollect/punch-log"
-@inject HttpClient Http
-@inject NavigationManager NavManager
+@inject IErpService ErpService
 
 <PageTitle>ERPHub - Collect Punch Log</PageTitle>
 
@@ -99,31 +98,18 @@
 
         try
         {
-            var url = $"{NavManager.BaseUri}api/punchrecords/sync-range?fromDate={_fromDate.Value:yyyy-MM-dd}&toDate={_toDate.Value:yyyy-MM-dd}";
-            var result = await Http.PostAsync(url, null);
-            var content = await result.Content.ReadAsStringAsync();
-
-            if (result.IsSuccessStatusCode)
-            {
-                _syncError = false;
-                _syncMessage = content;
-                _syncButtonText = "Synced!";
-                await Task.Delay(2000);
-                _syncButtonText = "Sync Device";
-            }
-            else
-            {
-                _syncError = true;
-                _syncMessage = content;
-                _syncButtonText = "Sync Failed";
-                await Task.Delay(3000);
-                _syncButtonText = "Sync Device";
-            }
+            var count = await ErpService.SyncPunchRecordsFromZKDeviceAsync(_fromDate, _toDate);
+            _syncError = false;
+            _syncMessage = $"{count} records synced from ZK device.";
+            _syncButtonText = "Synced!";
+            await Task.Delay(2000);
+            _syncButtonText = "Sync Device";
         }
         catch (Exception ex)
         {
             _syncError = true;
-            _syncMessage = ex.Message;
+            var details = ex.InnerException?.Message;
+            _syncMessage = string.IsNullOrEmpty(details) ? ex.Message : $"{ex.Message} ({details})";
             _syncButtonText = "Sync Failed";
             await Task.Delay(3000);
             _syncButtonText = "Sync Device";

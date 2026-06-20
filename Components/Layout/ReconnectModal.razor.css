@@ -3,213 +3,190 @@
 .components-reconnect-repeated-attempt-visible,
 .components-reconnect-failed-visible,
 .components-pause-visible,
-.components-resume-failed-visible {
+.components-resume-failed-visible,
+.components-reconnect-spinner-container {
     display: none;
 }
 
-/* Show relevant sections based on Blazor's CSS classes */
+/* Show spinner container when showing or retrying */
+#components-reconnect-modal.components-reconnect-show .components-reconnect-spinner-container,
+#components-reconnect-modal.components-reconnect-retrying .components-reconnect-spinner-container {
+    display: flex;
+}
+
+/* Show state divs */
 #components-reconnect-modal.components-reconnect-show .components-reconnect-first-attempt-visible,
-#components-reconnect-modal.components-reconnect-show .components-rejoining-animation,
 #components-reconnect-modal.components-reconnect-retrying .components-reconnect-repeated-attempt-visible,
-#components-reconnect-modal.components-reconnect-retrying .components-rejoining-animation,
 #components-reconnect-modal.components-reconnect-failed .components-reconnect-failed-visible,
 #components-reconnect-modal.components-reconnect-paused .components-pause-visible,
 #components-reconnect-modal.components-reconnect-resume-failed .components-resume-failed-visible {
     display: block;
 }
 
-/* Modal base */
+/* Modal Wrapper (Backdrop overlay) */
 #components-reconnect-modal {
-    background: linear-gradient(135deg, #1e1b2e 0%, #1a1a2e 50%, #16213e 100%);
-    color: #e2e8f0;
-    width: 22rem;
-    max-width: 90vw;
-    padding: 2.5rem 2rem 2rem;
-    border: 1px solid rgba(99, 102, 241, 0.15);
-    border-radius: 1.25rem;
-    box-shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-    opacity: 0;
-    transform: translateY(20px) scale(0.95);
-    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), overlay 0.3s allow-discrete;
+    display: none;
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(2, 6, 23, 0.65); /* Dark semi-transparent overlay */
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
 }
 
-#components-reconnect-modal[open] {
-    opacity: 1;
-    transform: translateY(0) scale(1);
+/* Show the modal wrapper under Blazor connection states */
+#components-reconnect-modal.components-reconnect-show,
+#components-reconnect-modal.components-reconnect-retrying,
+#components-reconnect-modal.components-reconnect-failed,
+#components-reconnect-modal.components-reconnect-paused,
+#components-reconnect-modal.components-reconnect-resume-failed {
+    display: flex;
 }
 
-#components-reconnect-modal::backdrop {
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    opacity: 0;
-    transition: opacity 0.3s ease, overlay 0.3s allow-discrete;
-}
-
-#components-reconnect-modal[open]::backdrop {
-    opacity: 1;
-}
-
-@starting-style {
-    #components-reconnect-modal[open] {
-        opacity: 0;
-        transform: translateY(20px) scale(0.95);
-    }
-
-    #components-reconnect-modal[open]::backdrop {
-        opacity: 0;
-    }
-}
-
-/* Container */
+/* Modal Card Container */
 .components-reconnect-container {
+    background: rgba(15, 23, 42, 0.9); /* Slate-900 with alpha */
+    border: 1px solid rgba(99, 102, 241, 0.2); /* Indigo border tint */
+    color: #f8fafc;
+    width: 20rem;
+    max-width: 90vw;
+    padding: 2.25rem 1.75rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 
+                0 0 40px rgba(99, 102, 241, 0.15);
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    justify-content: center;
+    gap: 1.25rem;
     text-align: center;
+    animation: reconnect-fade-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Text */
+@keyframes reconnect-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Spinner */
+.components-reconnect-spinner-container {
+    position: relative;
+    width: 72px;
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.25rem;
+}
+
+.components-reconnect-spinner {
+    position: absolute;
+    width: 56px;
+    height: 56px;
+    border: 3px solid transparent;
+    border-top-color: #6366f1; /* Indigo-500 */
+    border-right-color: #8b5cf6; /* Violet-500 */
+    border-radius: 50%;
+    animation: reconnect-spin 1s linear infinite;
+}
+
+.components-reconnect-pulse-circle {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(99, 102, 241, 0.15);
+    border: 1px solid rgba(99, 102, 241, 0.3);
+    animation: reconnect-pulse 2s ease-in-out infinite;
+}
+
+@keyframes reconnect-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+@keyframes reconnect-pulse {
+    0%, 100% {
+        transform: scale(0.85);
+        opacity: 0.5;
+        background: rgba(99, 102, 241, 0.1);
+    }
+    50% {
+        transform: scale(1.15);
+        opacity: 1;
+        background: rgba(139, 92, 246, 0.25);
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    }
+}
+
+/* Typography */
 .components-reconnect-title {
-    margin: 0;
+    margin: 0 0 0.5rem 0;
     font-family: 'Outfit', system-ui, -apple-system, sans-serif;
-    font-size: 1.15rem;
+    font-size: 1.25rem;
     font-weight: 700;
     color: #f1f5f9;
-    line-height: 1.4;
+    letter-spacing: -0.01em;
 }
 
 .components-reconnect-desc {
     margin: 0;
     font-family: system-ui, -apple-system, sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     color: #94a3b8;
     line-height: 1.5;
 }
 
 .components-reconnect-desc strong {
-    font-weight: 700;
-    color: #818cf8;
+    font-weight: 600;
+    color: #a5b4fc; /* Indigo-300 */
 }
 
 /* Button */
 .components-reconnect-button {
     border: none;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    color: white;
+    outline: none;
+    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    color: #ffffff;
     font-family: system-ui, -apple-system, sans-serif;
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    padding: 0.6rem 2rem;
+    padding: 0.625rem 1.75rem;
     border-radius: 0.75rem;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-    box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+    margin-top: 1rem;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
 }
 
 .components-reconnect-button:hover {
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+    background: linear-gradient(135deg, #4f46e5 0%, #3730a3 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
 }
 
 .components-reconnect-button:active {
-    transform: scale(0.97);
+    transform: translateY(0) scale(0.97);
 }
 
-/* Spinner */
-.components-rejoining-animation {
-    width: 64px;
-    height: 64px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    margin-bottom: 0.5rem;
+/* Specialize the danger reload button */
+#components-reconnect-button.components-reconnect-button {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
 
-.components-spinner {
-    width: 100%;
-    height: 100%;
-    color: #6366f1;
-    animation: spin 1.2s linear infinite;
+#components-reconnect-button.components-reconnect-button:hover {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
 }
 
-.components-spinner-arc {
-    animation: dash 1.5s ease-in-out infinite;
-}
-
-.components-spinner-icon {
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    color: #818cf8;
-    opacity: 0.8;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-@keyframes dash {
-    0% { stroke-dashoffset: 180; }
-    50% { stroke-dashoffset: 45; }
-    100% { stroke-dashoffset: 180; }
-}
-
-/* Status icon */
-.components-status-icon {
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    margin-bottom: 0.25rem;
-}
-
-.components-status-icon svg {
-    width: 28px;
-    height: 28px;
-}
-
-.components-status-error {
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-    border: 2px solid rgba(239, 68, 68, 0.2);
-}
-
-/* Progress bar */
-.components-progress-bar {
-    width: 100%;
-    max-width: 200px;
-    height: 3px;
-    background: rgba(99, 102, 241, 0.15);
-    border-radius: 99px;
-    overflow: hidden;
-    margin-top: 0.25rem;
-}
-
-.components-progress-bar-fill {
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, #6366f1, #8b5cf6);
-    border-radius: 99px;
-    animation: progress 2s ease-in-out infinite;
-    transform-origin: left;
-}
-
-.components-progress-bar-pulse {
-    animation: progressPulse 1.5s ease-in-out infinite;
-}
-
-@keyframes progress {
-    0% { transform: scaleX(0); }
-    50% { transform: scaleX(0.8); }
-    100% { transform: scaleX(0); }
-}
-
-@keyframes progressPulse {
-    0% { transform: scaleX(0.1); opacity: 1; }
-    50% { transform: scaleX(0.9); opacity: 0.7; }
-    100% { transform: scaleX(0.1); opacity: 1; }
-}

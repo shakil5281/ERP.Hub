@@ -1,0 +1,374 @@
+@page "/attendance/job-cards"
+@using ERPHub.Models
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+<PageTitle>ERPHub - Job Card</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <div class="mb-6">
+                <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Job Card</h2>
+                <p class="text-zinc-500 text-xs mt-0.5 font-body">Employee attendance job card report with advanced filters.</p>
+            </div>
+
+            <!-- Advanced Filters -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6">
+                <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Advanced Filters</div>
+                <div class="grid grid-cols-4 gap-3 max-xl:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Employee ID</label>
+                        <input type="text" class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black" @bind="_employeeId" placeholder="Leave empty for all employees" />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">From Date</label>
+                        <input type="date" class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black" @bind="_fromDate" />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">To Date</label>
+                        <input type="date" class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black" @bind="_toDate" />
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Company</label>
+                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_companyId">
+                            <option value="0">All Companies</option>
+                            @foreach (var c in _companies)
+                            {
+                                <option value="@c.Id">@c.CompanyNameEn</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Department</label>
+                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_departmentId">
+                            <option value="0">All Departments</option>
+                            @foreach (var d in _departments)
+                            {
+                                <option value="@d.Id">@d.NameEn</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Section</label>
+                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_sectionId">
+                            <option value="0">All Sections</option>
+                            @foreach (var s in _sections)
+                            {
+                                <option value="@s.Id">@s.NameEn</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Designation</label>
+                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_designationId">
+                            <option value="0">All Designations</option>
+                            @foreach (var dg in _designations)
+                            {
+                                <option value="@dg.Id">@dg.NameEn</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Line</label>
+                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_lineId">
+                            <option value="0">All Lines</option>
+                            @foreach (var l in _lines)
+                            {
+                                <option value="@l.Id">@l.NameEn</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Shift</label>
+                        <select class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none bg-white focus:ring-1 focus:ring-black focus:border-black" @bind="_shiftId">
+                            <option value="0">All Shifts</option>
+                            @foreach (var sh in _shifts)
+                            {
+                                <option value="@sh.Id">@sh.ShiftName</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+                <div class="flex gap-2 mt-4">
+                    <button type="button" class="px-5 py-2 bg-black text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2" @onclick="LoadReport" disabled="@_isLoading">
+                        @if (_isLoading)
+                        {
+                            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
+                        }
+                        Load Job Card
+                    </button>
+                    <button type="button" class="px-4 py-2 border border-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors" @onclick="ClearFilters">Clear</button>
+                    @if (_page != null)
+                    {
+                        <button type="button" class="px-4 py-2 border border-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors" @onclick="PrintReport">Print</button>
+                    }
+                </div>
+            </div>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 mb-4 text-xs font-medium">@_errorMessage</div>
+            }
+
+            @if (_page != null)
+            {
+                <div class="flex items-center justify-between mb-4 max-w-4xl mx-auto">
+                    <button type="button"
+                            class="px-4 py-2 border border-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                            @onclick="LoadPrevious"
+                            disabled="@(!_page.HasPrevious || _isLoading)">
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        Previous
+                    </button>
+                    <div class="text-xs text-zinc-600 font-medium text-center">
+                        <span class="font-bold text-zinc-900">@(_page.CurrentIndex + 1) of @_page.TotalEmployees</span>
+                        <span class="mx-1">—</span>
+                        <span>@_page.Report.EmployeeName</span>
+                        <span class="text-zinc-400">(@_page.Report.EmployeeId)</span>
+                    </div>
+                    <button type="button"
+                            class="px-4 py-2 border border-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+                            @onclick="LoadNext"
+                            disabled="@(!_page.HasNext || _isLoading)">
+                        Next
+                        <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                </div>
+
+                <div id="job-card-print" class="bg-white border border-zinc-300 rounded-lg p-8 max-w-4xl mx-auto shadow-sm job-card-report">
+                    <!-- Header -->
+                    <div class="text-center mb-4">
+                        <h1 class="text-lg font-bold uppercase tracking-wide">@_page.Report.CompanyName</h1>
+                        <p class="text-xs text-zinc-600 mt-1">@_page.Report.CompanyAddress</p>
+                        <p class="text-xs font-semibold mt-2">@_page.Report.FromDate To @_page.Report.ToDate</p>
+                        <p class="text-sm font-bold mt-1 underline">Job Card</p>
+                    </div>
+
+                    <!-- Employee Info -->
+                    <table class="w-full border-collapse border border-zinc-400 text-xs mb-4">
+                        <tbody>
+                            <tr>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold w-24">ID</td>
+                                <td class="border border-zinc-400 px-2 py-1 w-40">@_page.Report.EmployeeId</td>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold w-24">Name</td>
+                                <td class="border border-zinc-400 px-2 py-1">@_page.Report.EmployeeName</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold">Designation</td>
+                                <td class="border border-zinc-400 px-2 py-1">@_page.Report.Designation</td>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold">Grade</td>
+                                <td class="border border-zinc-400 px-2 py-1">@_page.Report.Grade</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold">Department</td>
+                                <td class="border border-zinc-400 px-2 py-1">@_page.Report.Department</td>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold">Line</td>
+                                <td class="border border-zinc-400 px-2 py-1">@_page.Report.Line</td>
+                            </tr>
+                            <tr>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold">Joining Date</td>
+                                <td class="border border-zinc-400 px-2 py-1">@_page.Report.JoiningDate</td>
+                                <td class="border border-zinc-400 px-2 py-1 font-semibold">Section</td>
+                                <td class="border border-zinc-400 px-2 py-1">@_page.Report.Section</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Daily Log -->
+                    <table class="w-full border-collapse border border-zinc-400 text-[11px]">
+                        <thead>
+                            <tr class="bg-zinc-100">
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">Date</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">Shift</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">In Time</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">Out Time</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">Late</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">Working Hour</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">EO</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">OT</th>
+                                <th class="border border-zinc-400 px-1.5 py-1 font-bold">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var day in _page.Report.Days)
+                            {
+                                <tr>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.Date</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.Shift</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.InTime</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.OutTime</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.Late</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.WorkingHour</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.EarlyOut</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center">@day.Overtime</td>
+                                    <td class="border border-zinc-400 px-1.5 py-0.5 text-center font-semibold">@day.Status</td>
+                                </tr>
+                            }
+                            <tr class="font-bold bg-zinc-50">
+                                <td class="border border-zinc-400 px-1.5 py-1" colspan="4"></td>
+                                <td class="border border-zinc-400 px-1.5 py-1 text-center">@_page.Report.Totals.Late</td>
+                                <td class="border border-zinc-400 px-1.5 py-1"></td>
+                                <td class="border border-zinc-400 px-1.5 py-1 text-center">@_page.Report.Totals.EarlyOut</td>
+                                <td class="border border-zinc-400 px-1.5 py-1 text-center">@_page.Report.Totals.Overtime</td>
+                                <td class="border border-zinc-400 px-1.5 py-1"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Summary -->
+                    <div class="mt-4 border border-zinc-400 inline-block text-xs">
+                        <table class="border-collapse">
+                            <tbody>
+                                <tr>
+                                    <td class="border border-zinc-400 px-3 py-1 font-semibold">Present</td>
+                                    <td class="border border-zinc-400 px-3 py-1 text-center w-12">@_page.Report.Summary.Present</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-zinc-400 px-3 py-1 font-semibold">Absent</td>
+                                    <td class="border border-zinc-400 px-3 py-1 text-center">@_page.Report.Summary.Absent</td>
+                                </tr>
+                                <tr>
+                                    <td class="border border-zinc-400 px-3 py-1 font-semibold">Late</td>
+                                    <td class="border border-zinc-400 px-3 py-1 text-center">@_page.Report.Summary.Late</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+<style>
+    @@media print {
+        body * { visibility: hidden; }
+        #job-card-print, #job-card-print * { visibility: visible; }
+        #job-card-print { position: absolute; left: 0; top: 0; width: 100%; border: none; box-shadow: none; }
+    }
+</style>
+
+@code {
+    private string _employeeId = string.Empty;
+    private DateTime _fromDate = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateTime _toDate = DateTime.Today;
+    private int _companyId;
+    private int _departmentId;
+    private int _sectionId;
+    private int _designationId;
+    private int _lineId;
+    private int _shiftId;
+
+    private bool _isLoading;
+    private string? _errorMessage;
+    private JobCardReportPageDto? _page;
+    private int _currentIndex;
+
+    private List<Company> _companies = new();
+    private List<Department> _departments = new();
+    private List<Section> _sections = new();
+    private List<Designation> _designations = new();
+    private List<Line> _lines = new();
+    private List<ERPHub.Models.Shift> _shifts = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var baseUri = NavManager.BaseUri;
+        _companies = await Http.GetFromJsonAsync<List<Company>>($"{baseUri}api/companies") ?? new();
+        _departments = await Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments") ?? new();
+        _sections = await Http.GetFromJsonAsync<List<Section>>($"{baseUri}api/sections") ?? new();
+        _designations = await Http.GetFromJsonAsync<List<Designation>>($"{baseUri}api/designations") ?? new();
+        _lines = await Http.GetFromJsonAsync<List<Line>>($"{baseUri}api/lines") ?? new();
+        _shifts = await Http.GetFromJsonAsync<List<ERPHub.Models.Shift>>($"{baseUri}api/shifts") ?? new();
+    }
+
+    private async Task LoadReport()
+    {
+        _currentIndex = 0;
+        await LoadReportAtIndex(_currentIndex);
+    }
+
+    private async Task LoadPrevious()
+    {
+        if (_page?.HasPrevious == true)
+            await LoadReportAtIndex(_currentIndex - 1);
+    }
+
+    private async Task LoadNext()
+    {
+        if (_page?.HasNext == true)
+            await LoadReportAtIndex(_currentIndex + 1);
+    }
+
+    private async Task LoadReportAtIndex(int index)
+    {
+        _isLoading = true;
+        _errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            var query = $"fromDate={_fromDate:yyyy-MM-dd}&toDate={_toDate:yyyy-MM-dd}&index={index}";
+            if (!string.IsNullOrWhiteSpace(_employeeId))
+                query += $"&employeeId={Uri.EscapeDataString(_employeeId.Trim())}";
+            if (_companyId > 0) query += $"&companyId={_companyId}";
+            if (_departmentId > 0) query += $"&departmentId={_departmentId}";
+            if (_sectionId > 0) query += $"&sectionId={_sectionId}";
+            if (_designationId > 0) query += $"&designationId={_designationId}";
+            if (_lineId > 0) query += $"&lineId={_lineId}";
+            if (_shiftId > 0) query += $"&shiftId={_shiftId}";
+
+            var response = await Http.GetAsync($"{NavManager.BaseUri}api/jobcards/report?{query}");
+            if (response.IsSuccessStatusCode)
+            {
+                _page = await response.Content.ReadFromJsonAsync<JobCardReportPageDto>();
+                _currentIndex = _page?.CurrentIndex ?? 0;
+                _errorMessage = null;
+            }
+            else
+            {
+                _page = null;
+                _errorMessage = "No employees found matching the selected filters.";
+            }
+        }
+        catch (Exception ex)
+        {
+            _page = null;
+            _errorMessage = ex.Message;
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ClearFilters()
+    {
+        _employeeId = string.Empty;
+        _fromDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        _toDate = DateTime.Today;
+        _companyId = 0;
+        _departmentId = 0;
+        _sectionId = 0;
+        _designationId = 0;
+        _lineId = 0;
+        _shiftId = 0;
+        _page = null;
+        _currentIndex = 0;
+        _errorMessage = null;
+    }
+
+    private async Task PrintReport()
+    {
+        await Task.Yield();
+        await JSRuntime.InvokeVoidAsync("print");
+    }
+
+    [Inject] private IJSRuntime JSRuntime { get; set; } = default!;
+}

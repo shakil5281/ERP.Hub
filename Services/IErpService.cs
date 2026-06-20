@@ -35,6 +35,13 @@ namespace ERPHub.Services
         Task SeedDemoCompaniesAsync();
         Task RemoveDemoCompaniesAsync();
 
+        // Business Groups
+        Task<List<BusinessGroup>> GetBusinessGroupsAsync();
+        Task<BusinessGroup?> GetBusinessGroupByIdAsync(int id);
+        Task AddBusinessGroupAsync(BusinessGroup group);
+        Task UpdateBusinessGroupAsync(BusinessGroup group);
+        Task DeleteBusinessGroupAsync(int id);
+
         // Dashboard/ERP Statistics
         Task<decimal> GetTotalRevenueAsync();
         Task<int> GetTotalStockAsync();
@@ -70,5 +77,45 @@ namespace ERPHub.Services
         Task<int> ImportPunchRecordsFromMdbAsync(string mdbFilePath, DateTime? syncDate = null);
         Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? syncDate = null);
         Task<int> SyncPunchRecordsFromZKDeviceAsync(DateTime? fromDate, DateTime? toDate);
+
+        // Manual Punch Logs Operations
+        Task<List<ManualPunchLog>> GetManualPunchLogsAsync();
+        Task AddManualPunchLogAsync(ManualPunchLog log);
+        Task ApproveManualPunchLogAsync(int id);
+        Task DeleteManualPunchLogAsync(int id);
+
+        // Overtime Deductions Operations
+        Task<List<OvertimeDeduction>> GetOvertimeDeductionsAsync();
+        Task AddOvertimeDeductionAsync(OvertimeDeduction deduction);
+        Task UpdateOvertimeDeductionAsync(OvertimeDeduction deduction);
+        Task ApproveOvertimeDeductionAsync(int id);
+
+        // Daily Salary Records Operations
+        Task<List<DailySalaryRecord>> GetDailySalaryRecordsAsync(DateTime date);
+        Task CalculateDailySalariesAsync(DateTime date);
+        Task UpdateDailySalaryRecordAsync(DailySalaryRecord record);
+        Task ApproveDailySalaryRecordAsync(int id);
+
+        // Manpower
+        Task<List<Manpower>> GetManpowersAsync();
+        Task<Manpower?> GetManpowerByIdAsync(int id);
+        Task AddManpowerAsync(Manpower manpower);
+        Task UpdateManpowerAsync(Manpower manpower);
+        Task DeleteManpowerAsync(int id);
+        Task RecalculateManpowerAsync();
+
+        // Manpower Requirements
+        Task<List<ManpowerRequirement>> GetManpowerRequirementsAsync();
+        Task<ManpowerRequirement?> GetManpowerRequirementByIdAsync(int id);
+        Task AddManpowerRequirementAsync(ManpowerRequirement requirement);
+        Task UpdateManpowerRequirementAsync(ManpowerRequirement requirement);
+        Task DeleteManpowerRequirementAsync(int id);
+
+        // Separations
+        Task<List<Separation>> GetSeparationsAsync();
+        Task<Separation?> GetSeparationByIdAsync(int id);
+        Task AddSeparationAsync(Separation separation);
+        Task UpdateSeparationAsync(Separation separation);
+        Task DeleteSeparationAsync(int id);
     }
 }

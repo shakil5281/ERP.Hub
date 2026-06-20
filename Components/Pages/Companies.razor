@@ -31,9 +31,9 @@
             <RowTemplate>
                 <MudTd DataLabel="Sl">@(FilteredCompanies.ToList().IndexOf(context) + 1)</MudTd>
                 <MudTd DataLabel="Company Name (EN)">@context.CompanyNameEn</MudTd>
-                <MudTd DataLabel="Company Name (BN)">@context.CompanyNameBn</MudTd>
+                <MudTd DataLabel="Company Name (BN)" Class="font-sutonnymj">@context.CompanyNameBn</MudTd>
                 <MudTd DataLabel="Address (EN)">@context.AddressEn</MudTd>
-                <MudTd DataLabel="Address (BN)">@context.AddressBn</MudTd>
+                <MudTd DataLabel="Address (BN)" Class="font-sutonnymj">@context.AddressBn</MudTd>
                 <MudTd DataLabel="Email"><code class="text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded">@context.Email</code></MudTd>
                 <MudTd DataLabel="Phone Number">@context.PhoneNumber</MudTd>
                 <MudTd DataLabel="Signature"><span class="font-serif italic border-b border-zinc-300 pb-0.5 text-zinc-600">@context.Signature</span></MudTd>
@@ -75,7 +75,7 @@
                         
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Company Name (BN)</label>
-                            <MudTextField @bind-Value="_editingCompany.CompanyNameBn" For="@(() => _editingCompany.CompanyNameBn)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="একমি কর্পোরেশন" />
+                            <MudTextField @bind-Value="_editingCompany.CompanyNameBn" For="@(() => _editingCompany.CompanyNameBn)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="একমি কর্পোরেশন" Class="font-sutonnymj" />
                         </div>
                     </div>
 
@@ -87,7 +87,7 @@
 
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Address (BN)</label>
-                        <MudTextField @bind-Value="_editingCompany.AddressBn" For="@(() => _editingCompany.AddressBn)" Variant="Variant.Outlined" dense="true" Lines="3" Margin="Margin.Dense" placeholder="যেমন: ১২৩ শিল্প এলাকা, ঢাকা" />
+                        <MudTextField @bind-Value="_editingCompany.AddressBn" For="@(() => _editingCompany.AddressBn)" Variant="Variant.Outlined" dense="true" Lines="3" Margin="Margin.Dense" placeholder="যেমন: ১২৩ শিল্প এলাকা, ঢাকা" Class="font-sutonnymj" />
                     </div>
 
                     <!-- Contact Fields -->

@@ -49,7 +49,7 @@
                            placeholder="Search by ID or Name..." 
                            @bind="_searchQuery" @bind:event="oninput" />
                     
-                    <MudSelect T="string" @bind-Value="_deptFilter" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                    <MudSelect T="string" @bind-Value="_deptFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
                         <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
                         <MudSelectItem Value="@("Production")">Production</MudSelectItem>
                         <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>

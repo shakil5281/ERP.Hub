@@ -9,9 +9,13 @@ namespace ERPHub.Models
         [Key]
         public int Id { get; set; }
 
+        /// <summary>ZK CHECKINOUT.USERID</summary>
         [Required]
-        [MaxLength(50)]
-        public string EmployeeId { get; set; } = string.Empty;
+        public int UserPunchId { get; set; }
+
+        /// <summary>ZK USERINFO.BADGENUMBER — links to Employee.PunchNumber</summary>
+        [Required]
+        public int PunchNumber { get; set; }
 
         [Required]
         public DateTime LogDateTime { get; set; }

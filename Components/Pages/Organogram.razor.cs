@@ -8,18 +8,16 @@ namespace ERPHub.Components.Pages;
 public partial class Organogram
 {
     [Inject] private ErpDbContext DbContext { get; set; } = default!;
-    [Inject] private ERPHub.Services.IErpService ErpService { get; set; } = default!;
 
     private string _activeTab = "department";
-    private int _activeTabIndex = 1; // department is default
+    private int _activeTabIndex = 0; // department is default
 
     private readonly Dictionary<int, string> _tabMap = new()
     {
-        { 0, "tree" },
-        { 1, "department" },
-        { 2, "section" },
-        { 3, "designation" },
-        { 4, "line" }
+        { 0, "department" },
+        { 1, "section" },
+        { 2, "designation" },
+        { 3, "line" }
     };
 
     private void OnTabChanged(int index)
@@ -28,9 +26,6 @@ public partial class Organogram
         _activeTab = _tabMap.TryGetValue(index, out var tab) ? tab : "department";
         StateHasChanged();
     }
-
-    // Tree Data
-    private List<CompanyNodeDto> _organogramTree = new();
 
     // Department
     private List<Department> _departments = new();
@@ -69,8 +64,6 @@ public partial class Organogram
         await LoadSections();
         await LoadDesignations();
         await LoadLines();
-        
-        _organogramTree = await ErpService.GetOrganogramTreeAsync();
     }
 
     // --- Department ---
@@ -110,7 +103,6 @@ public partial class Organogram
 
         await DbContext.SaveChangesAsync();
         await LoadDepartments();
-        _organogramTree = await ErpService.GetOrganogramTreeAsync();
         _showDeptModal = false;
     }
 
@@ -137,7 +129,6 @@ public partial class Organogram
             await LoadSections();
             await LoadDesignations();
             await LoadLines();
-            _organogramTree = await ErpService.GetOrganogramTreeAsync();
         }
     }
 
@@ -202,7 +193,6 @@ public partial class Organogram
         }
         await DbContext.SaveChangesAsync();
         await LoadSections();
-        _organogramTree = await ErpService.GetOrganogramTreeAsync();
         _showSectionModal = false;
     }
 
@@ -223,7 +213,6 @@ public partial class Organogram
             await LoadSections();
             await LoadDesignations();
             await LoadLines();
-            _organogramTree = await ErpService.GetOrganogramTreeAsync();
         }
     }
 
@@ -288,7 +277,6 @@ public partial class Organogram
         }
         await DbContext.SaveChangesAsync();
         await LoadDesignations();
-        _organogramTree = await ErpService.GetOrganogramTreeAsync();
         _showDesigModal = false;
     }
 
@@ -300,7 +288,6 @@ public partial class Organogram
             DbContext.Designations.Remove(entity);
             await DbContext.SaveChangesAsync();
             await LoadDesignations();
-            _organogramTree = await ErpService.GetOrganogramTreeAsync();
         }
     }
 
@@ -365,7 +352,6 @@ public partial class Organogram
         }
         await DbContext.SaveChangesAsync();
         await LoadLines();
-        _organogramTree = await ErpService.GetOrganogramTreeAsync();
         _showLineModal = false;
     }
 
@@ -377,7 +363,6 @@ public partial class Organogram
             DbContext.Lines.Remove(entity);
             await DbContext.SaveChangesAsync();
             await LoadLines();
-            _organogramTree = await ErpService.GetOrganogramTreeAsync();
         }
     }
 }

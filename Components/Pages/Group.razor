@@ -1,4 +1,5 @@
 @page "/group"
+@inject ERPHub.Services.IErpService ErpService
 
 <PageTitle>ERPHub - Business Groups</PageTitle>
 
@@ -9,37 +10,77 @@
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Business Groups</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Define corporate entities, divisions, and geographical groups.</p>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage corporate entities and group listings.</p>
+                </div>
+                <div>
+                    <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer animate-fade-in" @onclick="OpenAddModal">+ Add Group</button>
                 </div>
             </div>
 
+            <!-- Filters Bar -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                <div class="flex-1 max-w-[320px] max-sm:max-w-none">
+                    <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" 
+                           placeholder="Search by group name..." 
+                           @bind="_searchQuery" @bind:event="oninput" />
+                </div>
+            </div>
+
+            <!-- Data Table -->
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_groups" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                <MudTable Items="@FilteredGroups" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
                     <HeaderContent>
+                        <MudTh>Sl</MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<BusinessGroup, object>(x=>x.GroupName)">Group Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BusinessGroup, object>(x=>x.DivisionType)">Division Type</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BusinessGroup, object>(x=>x.TotalLocations)">Total Locations</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BusinessGroup, object>(x=>x.TotalDepartments)">Total Departments</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BusinessGroup, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
+                        <MudTh>Actions</MudTh>
                     </HeaderContent>
                     <RowTemplate>
+                        <MudTd DataLabel="Sl">@(FilteredGroups.IndexOf(context) + 1)</MudTd>
                         <MudTd DataLabel="Group Name">@context.GroupName</MudTd>
-                        <MudTd DataLabel="Division Type">@context.DivisionType</MudTd>
-                        <MudTd DataLabel="Total Locations">@context.TotalLocations</MudTd>
-                        <MudTd DataLabel="Total Departments">@context.TotalDepartments</MudTd>
-                        <MudTd DataLabel="Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">@context.Status</span>
+                        <MudTd DataLabel="Actions">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditModal(context)" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)" />
                         </MudTd>
                     </RowTemplate>
                     <PagerContent>
                         <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
                     </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                    </NoRecordsContent>
                 </MudTable>
             </div>
         </div>
+
+        <!-- Add / Edit Modal -->
+        @if (_showFormModal)
+        {
+            <div class="fixed inset-0 bg-black/40 flex items-center justify-center z-[2000] p-4 animate-fade-in">
+                <div class="bg-white border border-zinc-200 rounded-xl shadow-2xl w-full max-w-[480px] overflow-hidden flex flex-col">
+                    <div class="p-4 px-5 border-b border-zinc-100 flex justify-between items-center bg-white">
+                        <h3 class="font-bold text-sm text-zinc-950">@(_isEditMode ? "Edit Business Group" : "New Business Group")</h3>
+                        <button type="button" class="bg-transparent border-0 text-zinc-400 text-xl cursor-pointer hover:text-black transition-colors" @onclick="CloseModal">&times;</button>
+                    </div>
+                    
+                    <EditForm Model="@_editingGroup" OnValidSubmit="SaveGroup">
+                        <DataAnnotationsValidator />
+                        
+                        <div class="p-5 flex flex-col gap-4">
+                            <div class="flex flex-col gap-1.5">
+                                <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Group Name</label>
+                                <InputText class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind-Value="_editingGroup.GroupName" placeholder="e.g. North America Group" />
+                                <ValidationMessage For="@(() => _editingGroup.GroupName)" class="text-[11px] font-semibold text-red-500 mt-1" />
+                            </div>
+                        </div>
+
+                        <div class="p-4 px-5 border-t border-zinc-100 flex justify-end gap-3 bg-zinc-50/75">
+                            <button type="button" class="py-2 px-4 border border-zinc-200 rounded-md bg-white text-zinc-700 text-xs font-semibold hover:bg-zinc-100 transition-colors cursor-pointer" @onclick="CloseModal">Cancel</button>
+                            <button type="submit" class="py-2 px-4 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer">Save Group</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        }
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />
@@ -47,18 +88,66 @@
 </AuthorizeView>
 
 @code {
-    public class BusinessGroup
+    private List<BusinessGroup> _groups = new();
+    private string _searchQuery = "";
+    private bool _showFormModal = false;
+    private bool _isEditMode = false;
+    private BusinessGroup _editingGroup = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        public string GroupName { get; set; } = string.Empty;
-        public string DivisionType { get; set; } = string.Empty;
-        public int TotalLocations { get; set; }
-        public int TotalDepartments { get; set; }
-        public string Status { get; set; } = string.Empty;
+        await LoadGroupsAsync();
     }
 
-    private List<BusinessGroup> _groups = new()
+    private async Task LoadGroupsAsync()
     {
-        new BusinessGroup { GroupName = "North America Group", DivisionType = "Domestic Division", TotalLocations = 4, TotalDepartments = 12, Status = "Active" },
-        new BusinessGroup { GroupName = "EMEA Group", DivisionType = "International Division", TotalLocations = 2, TotalDepartments = 5, Status = "Active" }
-    };
+        _groups = await ErpService.GetBusinessGroupsAsync();
+    }
+
+    private List<BusinessGroup> FilteredGroups => _groups
+        .Where(g => string.IsNullOrWhiteSpace(_searchQuery) || g.GroupName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+        .ToList();
+
+    private void OpenAddModal()
+    {
+        _editingGroup = new BusinessGroup();
+        _isEditMode = false;
+        _showFormModal = true;
+    }
+
+    private void OpenEditModal(BusinessGroup group)
+    {
+        _editingGroup = new BusinessGroup
+        {
+            Id = group.Id,
+            GroupName = group.GroupName
+        };
+        _isEditMode = true;
+        _showFormModal = true;
+    }
+
+    private void CloseModal()
+    {
+        _showFormModal = false;
+    }
+
+    private async Task SaveGroup()
+    {
+        if (_isEditMode)
+        {
+            await ErpService.UpdateBusinessGroupAsync(_editingGroup);
+        }
+        else
+        {
+            await ErpService.AddBusinessGroupAsync(_editingGroup);
+        }
+        await LoadGroupsAsync();
+        _showFormModal = false;
+    }
+
+    private async Task ConfirmDelete(int id)
+    {
+        await ErpService.DeleteBusinessGroupAsync(id);
+        await LoadGroupsAsync();
+    }
 }

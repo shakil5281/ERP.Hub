@@ -219,12 +219,10 @@
                     <HeaderContent>
                         <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.AttendanceDate)">Date</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.EmployeeId)">Employee ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Actual In</MudText></MudTh>
-                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Actual Out</MudText></MudTh>
-                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Sched In</MudText></MudTh>
-                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Sched Out</MudText></MudTh>
+                        <MudTh>Employee Name</MudTh>
+                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">In Time</MudText></MudTh>
+                        <MudTh><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Out Time</MudText></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.LateMinutes)">Late</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.EarlyExitMinutes)">Early</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.WorkedMinutes)">Worked</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.OvertimeMinutes)">OT</MudTableSortLabel></MudTh>
                         <MudTh>Status</MudTh>
@@ -232,18 +230,12 @@
                     <RowTemplate>
                         <MudTd DataLabel="Date"><MudText Typo="Typo.body2" Class="font-mono">@context.AttendanceDate.ToString("yyyy-MM-dd")</MudText></MudTd>
                         <MudTd DataLabel="Employee ID"><MudText Typo="Typo.body2" Class="fw-bold font-mono">@context.EmployeeId</MudText></MudTd>
-                        <MudTd DataLabel="Actual In"><MudText Typo="Typo.body2" Class="font-mono">@FormatTime(context.ActualInPunch)</MudText></MudTd>
-                        <MudTd DataLabel="Actual Out"><MudText Typo="Typo.body2" Class="font-mono">@FormatTime(context.ActualOutPunch)</MudText></MudTd>
-                        <MudTd DataLabel="Sched In"><MudText Typo="Typo.body2" Class="mud-secondary-text-color font-mono">@FormatTimeSpan(context.AttendanceInTime)</MudText></MudTd>
-                        <MudTd DataLabel="Sched Out"><MudText Typo="Typo.body2" Class="mud-secondary-text-color font-mono">@FormatTimeSpan(context.AttendanceOutTime)</MudText></MudTd>
+                        <MudTd DataLabel="Employee Name"><MudText Typo="Typo.body2" Class="fw-medium">@GetEmployeeName(context.EmployeeId)</MudText></MudTd>
+                        <MudTd DataLabel="In Time"><MudText Typo="Typo.body2" Class="font-mono">@FormatTime(context.ActualInPunch)</MudText></MudTd>
+                        <MudTd DataLabel="Out Time"><MudText Typo="Typo.body2" Class="font-mono">@FormatTime(context.ActualOutPunch)</MudText></MudTd>
                         <MudTd DataLabel="Late">
                             <MudText Typo="Typo.body2" Class="@(context.LateMinutes > 0 ? "text-error fw-bold" : "mud-secondary-text-color")">
                                 @(context.LateMinutes > 0 ? $"{context.LateMinutes}m" : "-")
-                            </MudText>
-                        </MudTd>
-                        <MudTd DataLabel="Early">
-                            <MudText Typo="Typo.body2" Class="@(context.EarlyExitMinutes > 0 ? "text-warning fw-bold" : "mud-secondary-text-color")">
-                                @(context.EarlyExitMinutes > 0 ? $"{context.EarlyExitMinutes}m" : "-")
                             </MudText>
                         </MudTd>
                         <MudTd DataLabel="Worked"><MudText Typo="Typo.body2">@(context.WorkedMinutes > 0 ? $"{context.WorkedMinutes / 60}h {context.WorkedMinutes % 60}m" : "-")</MudText></MudTd>
@@ -409,6 +401,12 @@
     private static string FormatTimeSpan(TimeSpan? ts)
     {
         return ts.HasValue ? DateTime.Today.Add(ts.Value).ToString("hh:mm tt") : "--:--";
+    }
+
+    private string GetEmployeeName(string employeeId)
+    {
+        var emp = _employees.FirstOrDefault(e => e.EmployeeId == employeeId);
+        return emp?.EmployeeName ?? "-";
     }
 
     private static RenderFragment StatusBadge(string status) => builder =>

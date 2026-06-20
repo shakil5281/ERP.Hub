@@ -1,0 +1,291 @@
+@page "/attendance/missing-entry"
+
+<PageTitle>ERPHub - Missing Entries</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Missing Entries</h2>
+                    <p class="text-zinc-500 text-sm mt-0.5 font-body">Review, update, and resolve incomplete punch logs (missing clock-in or clock-out scans).</p>
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-3 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-amber-500">Pending Missing Logs</div>
+                    <div class="text-xl font-extrabold text-amber-500 mt-1">@PendingCount Entries</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-emerald-600">Resolved Today</div>
+                    <div class="text-xl font-extrabold text-emerald-600 mt-1">@ResolvedCount Entries</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm text-indigo-700 bg-indigo-50/10">
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Total Discrepancies</div>
+                    <div class="text-xl font-extrabold text-indigo-700 mt-1">@_entries.Count</div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                <div class="flex gap-3 flex-1 max-w-[600px] max-sm:flex-col">
+                    <input type="text" 
+                           class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" 
+                           placeholder="Search by Employee ID or Name..." 
+                           @bind="_searchQuery" @bind:event="oninput" />
+                    
+                    <div class="w-48 max-sm:w-full">
+                        <MudSelect T="string" @bind-Value="_deptFilter" Placeholder="Department" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
+                            <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
+                            <MudSelectItem Value="@("Production")">Production</MudSelectItem>
+                            <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
+                        </MudSelect>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@FilteredRecords" Hover="true" Dense="true" Striped="false" Outlined="false" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Date</MudTh>
+                        <MudTh>Emp ID</MudTh>
+                        <MudTh>Employee Name</MudTh>
+                        <MudTh>Department</MudTh>
+                        <MudTh>Shift</MudTh>
+                        <MudTh>Check-In Time</MudTh>
+                        <MudTh>Check-Out Time</MudTh>
+                        <MudTh>Status</MudTh>
+                        <MudTh Class="text-right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Date">@context.LogDate.ToString("yyyy-MM-dd")</MudTd>
+                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
+                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
+                        <MudTd DataLabel="Department">@context.Department</MudTd>
+                        <MudTd DataLabel="Shift">@context.Shift</MudTd>
+                        <MudTd DataLabel="Check-In Time">
+                            @if (string.IsNullOrEmpty(context.CheckIn))
+                            {
+                                <span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-100 text-xs">Missing</span>
+                            }
+                            else
+                            {
+                                <span>@context.CheckIn</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Check-Out Time">
+                            @if (string.IsNullOrEmpty(context.CheckOut))
+                            {
+                                <span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-100 text-xs">Missing</span>
+                            }
+                            else
+                            {
+                                <span>@context.CheckOut</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Status">
+                            @if (context.Status == "Pending")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending Correction</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Resolved</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
+                            <MudIconButton Icon="@Icons.Material.Filled.Build" Size="@Size.Small" Color="Color.Primary" title="Resolve Incomplete Log" OnClick="() => OpenResolveDialog(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </div>
+
+        <!-- Resolve Dialog -->
+        @if (_showResolveDialog && _activeEntry != null)
+        {
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in">
+                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4">
+                    <h3 class="text-base font-bold text-zinc-950 font-heading mb-1">Resolve Missing Punch</h3>
+                    <p class="text-xs text-zinc-500 mb-4">Correct logs for @_activeEntry.Name on @_activeEntry.LogDate.ToString("yyyy-MM-dd").</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Check-In Time</label>
+                            <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeEntry.CheckIn" placeholder="e.g. 09:00 AM" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Check-Out Time</label>
+                            <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeEntry.CheckOut" placeholder="e.g. 06:00 PM" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Resolution Reason</label>
+                            <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_resolutionReason" placeholder="e.g. Employee forgot card" />
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 mt-6">
+                        <button class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="CloseResolveDialog">Cancel</button>
+                        <button class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveResolution">Approve Punch</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private IErpService ErpService { get; set; } = default!;
+    [Inject] private AttendanceService AttendanceService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _searchQuery = string.Empty;
+    private string _deptFilter = string.Empty;
+
+    private bool _showResolveDialog = false;
+    private MissingEntryUiItem? _activeEntry;
+    private string _resolutionReason = string.Empty;
+
+    private int PendingCount => _entries.Count(e => e.Status == "Pending");
+    private int ResolvedCount => _entries.Count(e => e.Status == "Resolved");
+
+    private List<MissingEntryUiItem> _entries = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var fromDate = DateTime.Today.AddDays(-30);
+        var toDate = DateTime.Today;
+
+        var dbRecords = await AttendanceService.GetAttendanceRecordsAsync(fromDate, toDate);
+        var employees = await ErpService.GetEmployeesAsync();
+        var departments = await ErpService.GetDepartmentsAsync();
+        var shifts = await ErpService.GetShiftsAsync();
+
+        var empMap = employees.GroupBy(e => e.EmployeeId).ToDictionary(g => g.Key, g => g.First());
+        var deptMap = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
+        var shiftMap = shifts.GroupBy(s => s.Id).ToDictionary(g => g.Key, g => g.First().ShiftName);
+
+        _entries = dbRecords
+            .Where(r => r.AttendanceStatus == "Missing In Punch" || r.AttendanceStatus == "Missing Out Punch" || (r.Remarks != null && r.Remarks.Contains("Resolved")))
+            .Select(r => {
+                empMap.TryGetValue(r.EmployeeId, out var emp);
+                string deptName = (emp != null && deptMap.TryGetValue(emp.DepartmentId, out var dn)) ? dn : "Production";
+                string shiftName = (emp != null && shiftMap.TryGetValue(emp.ShiftId, out var sn)) ? sn : "Day Shift";
+
+                string checkInStr = r.ActualInPunch.HasValue && r.AttendanceStatus != "Missing In Punch" ? r.ActualInPunch.Value.ToString("hh:mm tt") : "";
+                string checkOutStr = r.ActualOutPunch.HasValue && r.AttendanceStatus != "Missing Out Punch" ? r.ActualOutPunch.Value.ToString("hh:mm tt") : "";
+                string status = (r.AttendanceStatus == "Missing In Punch" || r.AttendanceStatus == "Missing Out Punch") ? "Pending" : "Resolved";
+
+                return new MissingEntryUiItem
+                {
+                    Id = r.Id,
+                    LogDate = r.AttendanceDate,
+                    EmpId = r.EmployeeId,
+                    Name = emp?.EmployeeName ?? "Unknown Employee",
+                    Department = deptName,
+                    Shift = shiftName,
+                    CheckIn = checkInStr,
+                    CheckOut = checkOutStr,
+                    Status = status,
+                    DbRecord = r
+                };
+            }).ToList();
+    }
+
+    private void OpenResolveDialog(MissingEntryUiItem entry)
+    {
+        _activeEntry = new MissingEntryUiItem
+        {
+            Id = entry.Id,
+            LogDate = entry.LogDate,
+            EmpId = entry.EmpId,
+            Name = entry.Name,
+            Department = entry.Department,
+            Shift = entry.Shift,
+            CheckIn = entry.CheckIn,
+            CheckOut = entry.CheckOut,
+            Status = entry.Status,
+            DbRecord = entry.DbRecord
+        };
+        _resolutionReason = string.Empty;
+        _showResolveDialog = true;
+    }
+
+    private void CloseResolveDialog()
+    {
+        _showResolveDialog = false;
+        _activeEntry = null;
+    }
+
+    private DateTime? ParseTime(DateTime date, string timeStr)
+    {
+        if (string.IsNullOrWhiteSpace(timeStr)) return null;
+        if (DateTime.TryParse(timeStr, out var parsed))
+        {
+            return date.Date.Add(parsed.TimeOfDay);
+        }
+        if (TimeSpan.TryParse(timeStr, out var ts))
+        {
+            return date.Date.Add(ts);
+        }
+        return null;
+    }
+
+    private async Task SaveResolution()
+    {
+        if (_activeEntry != null)
+        {
+            var inPunch = ParseTime(_activeEntry.LogDate, _activeEntry.CheckIn);
+            var outPunch = ParseTime(_activeEntry.LogDate, _activeEntry.CheckOut);
+
+            if (!inPunch.HasValue && !outPunch.HasValue)
+            {
+                Snackbar.Add("Both Check-In and Check-Out cannot be empty.", Severity.Warning);
+                return;
+            }
+
+            string reason = string.IsNullOrWhiteSpace(_resolutionReason) ? "Resolved missing entry" : _resolutionReason;
+            reason = "Resolved: " + reason;
+
+            await AttendanceService.UpdateAttendanceRecordPunchAsync(_activeEntry.Id, inPunch, outPunch, reason);
+            await LoadData();
+            Snackbar.Add($"Missing log updated and approved for {_activeEntry.Name}", Severity.Success);
+        }
+        CloseResolveDialog();
+    }
+
+    private IEnumerable<MissingEntryUiItem> FilteredRecords =>
+        _entries.Where(e =>
+            (string.IsNullOrEmpty(_deptFilter) || e.Department == _deptFilter) &&
+            (string.IsNullOrEmpty(_searchQuery) ||
+             e.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+             e.EmpId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+        );
+
+    public class MissingEntryUiItem
+    {
+        public int Id { get; set; }
+        public DateTime LogDate { get; set; }
+        public string EmpId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public string Shift { get; set; } = string.Empty;
+        public string CheckIn { get; set; } = string.Empty;
+        public string CheckOut { get; set; } = string.Empty;
+        public string Status { get; set; } = "Pending";
+        public AttendanceRecord DbRecord { get; set; } = default!;
+    }
+}

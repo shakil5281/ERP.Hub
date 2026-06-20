@@ -1,0 +1,251 @@
+@page "/attendance/id-card"
+
+<PageTitle>ERPHub - Employee ID Card</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Employee ID Cards</h2>
+                    <p class="text-zinc-500 text-sm mt-0.5 font-body">Generate, customize, and print digital identity badges for active employees.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-12 gap-6">
+                <!-- Controls Panel -->
+                <div class="col-span-4 max-xl:col-span-5 max-lg:col-span-12">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-5 shadow-sm space-y-5">
+                        <h3 class="text-sm font-bold text-zinc-950 font-heading mb-2 uppercase tracking-wider">Badge Customization</h3>
+                        
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Select Employee</label>
+                            <select class="w-full border border-zinc-200 rounded-lg p-1.5 text-xs text-zinc-900 outline-none bg-white focus:border-black" @onchange="OnEmployeeChanged">
+                                @foreach (var emp in _employees)
+                                {
+                                    <option value="@emp.EmpId">@emp.Name (@emp.EmpId)</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Card Theme Template</label>
+                            <select class="w-full border border-zinc-200 rounded-lg p-1.5 text-xs text-zinc-900 outline-none bg-white focus:border-black" @bind="_selectedTheme">
+                                <option value="Corporate Clean">Corporate Clean (Sleek Dark)</option>
+                                <option value="Tech Glassmorphic">Tech Glassmorphic (Purple Gradient)</option>
+                                <option value="Minimalist Light">Minimalist Light (Clean White)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold text-zinc-500 uppercase tracking-wider">Include Barcode</span>
+                            <MudSwitch @bind-Value="_includeBarcode" Color="Color.Primary" />
+                        </div>
+
+                        <div class="pt-4 border-t border-zinc-200 flex gap-2">
+                            <button class="flex-1 py-2 px-4 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer text-center" @onclick="DownloadPng">
+                                Download Badge
+                            </button>
+                            <button class="flex-1 py-2 px-4 bg-black hover:bg-zinc-800 text-white font-bold rounded-lg text-xs transition-colors cursor-pointer text-center" @onclick="PrintCard">
+                                Print ID Card
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Panel -->
+                <div class="col-span-8 max-xl:col-span-7 max-lg:col-span-12 flex justify-center items-start bg-zinc-50/50 border border-zinc-200 rounded-lg p-8">
+                    @if (_activeEmp != null)
+                    {
+                        <div class="flex gap-8 max-md:flex-col">
+                            <!-- Front of ID Card -->
+                            <div class="w-[280px] h-[440px] rounded-2xl shadow-xl overflow-hidden border border-zinc-200/50 flex flex-col relative transition-all duration-300" style="@GetCardStyle(true)">
+                                <!-- Top Accent Design -->
+                                <div class="h-24 relative overflow-hidden flex items-center justify-center pt-4">
+                                    <div class="absolute inset-0 opacity-20" style="background: radial-gradient(circle, #fff 10%, transparent 11%); background-size: 12px 12px;"></div>
+                                    <span class="font-heading font-black tracking-widest text-sm relative z-10 select-none @(IsLightTheme() ? "text-black" : "text-white")">ERPHUB</span>
+                                </div>
+
+                                <!-- Avatar -->
+                                <div class="flex flex-col items-center -mt-6 z-10 flex-1">
+                                    <div class="w-24 h-24 rounded-full border-4 @(IsLightTheme() ? "border-zinc-100" : "border-zinc-900/60") bg-zinc-200 overflow-hidden shadow-inner flex items-center justify-center font-bold text-2xl text-zinc-500 select-none">
+                                        @GetInitials(_activeEmp.Name)
+                                    </div>
+                                    
+                                    <div class="text-center mt-4 px-4">
+                                        <h4 class="font-extrabold text-base tracking-tight font-heading leading-tight @(IsLightTheme() ? "text-zinc-900" : "text-white")">@_activeEmp.Name</h4>
+                                        <p class="text-[11px] font-bold uppercase tracking-wider mt-1 @(IsLightTheme() ? "text-zinc-500" : "text-zinc-400")">@_activeEmp.Title</p>
+                                        <div class="inline-block mt-2 px-2 py-0.5 rounded bg-zinc-500/10 text-[9px] font-bold uppercase @(IsLightTheme() ? "text-zinc-600" : "text-zinc-300")">
+                                            @_activeEmp.Dept
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Footer Barcode & Details -->
+                                <div class="p-5 flex flex-col items-center gap-3 border-t @(IsLightTheme() ? "border-zinc-100 bg-zinc-50/55" : "border-white/5 bg-black/35")">
+                                    <div class="flex justify-between w-full text-[9px] font-mono select-none @(IsLightTheme() ? "text-zinc-400" : "text-zinc-500")">
+                                        <span>ID: @_activeEmp.EmpId</span>
+                                        <span>EXPIRES: 12/2028</span>
+                                    </div>
+                                    @if (_includeBarcode)
+                                    {
+                                        <div class="w-full h-8 flex flex-col justify-center items-center font-mono text-[8px] bg-white text-black p-1 rounded border border-zinc-200 select-none">
+                                            <!-- Barcode representation lines -->
+                                            <div class="flex items-stretch w-full justify-between h-4">
+                                                <span class="w-[2px] bg-black"></span><span class="w-[1px] bg-black"></span><span class="w-[3px] bg-black"></span><span class="w-[1px] bg-transparent"></span>
+                                                <span class="w-[1px] bg-black"></span><span class="w-[2px] bg-black"></span><span class="w-[1px] bg-transparent"></span><span class="w-[2px] bg-black"></span>
+                                                <span class="w-[3px] bg-black"></span><span class="w-[1px] bg-black"></span><span class="w-[2px] bg-transparent"></span><span class="w-[1px] bg-black"></span>
+                                                <span class="w-[1px] bg-black"></span><span class="w-[2px] bg-black"></span><span class="w-[1px] bg-black"></span><span class="w-[2px] bg-black"></span>
+                                            </div>
+                                            <span class="mt-0.5 tracking-widest font-bold">@_activeEmp.EmpId</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Back of ID Card -->
+                            <div class="w-[280px] h-[440px] rounded-2xl shadow-xl overflow-hidden border border-zinc-200/50 flex flex-col relative transition-all duration-300" style="@GetCardStyle(false)">
+                                <div class="p-6 flex-1 flex flex-col justify-between">
+                                    <div>
+                                        <h4 class="text-[10px] font-bold uppercase tracking-widest mb-3 @(IsLightTheme() ? "text-zinc-400" : "text-zinc-500")">Return Instruction</h4>
+                                        <p class="text-[10px] leading-relaxed @(IsLightTheme() ? "text-zinc-600" : "text-zinc-400")">
+                                            This card is property of ERPHUB Corp. If found, please return to nearest HR desk or mail to:
+                                            <br /><span class="font-bold @(IsLightTheme() ? "text-zinc-900" : "text-white")">100 Corporate Pkwy, Suite 400</span>
+                                        </p>
+                                    </div>
+
+                                    <div class="space-y-4">
+                                        <div>
+                                            <h4 class="text-[10px] font-bold uppercase tracking-widest mb-1 @(IsLightTheme() ? "text-zinc-400" : "text-zinc-500")">Emergency Contact</h4>
+                                            <p class="text-[10px] font-bold @(IsLightTheme() ? "text-zinc-900" : "text-white")">+1 (800) 555-0199</p>
+                                        </div>
+                                        <div class="flex flex-col items-center pt-4 border-t @(IsLightTheme() ? "border-zinc-100" : "border-white/5")">
+                                            <div class="w-32 h-6 border-b border-zinc-500/30 flex items-center justify-center font-signature text-xs @(IsLightTheme() ? "text-zinc-500" : "text-zinc-400")">
+                                                Jane Doe
+                                            </div>
+                                            <span class="text-[8px] font-bold text-zinc-500 uppercase tracking-widest mt-1">HR Director</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 text-center text-[8px] @(IsLightTheme() ? "bg-zinc-100/60 text-zinc-500" : "bg-black/35 text-zinc-600") border-t @(IsLightTheme() ? "border-zinc-100" : "border-white/5")">
+                                    ERPHUB © 2026. All rights reserved.
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-zinc-400 py-12">
+                            No employees found in the database.
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private IErpService ErpService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _selectedTheme = "Corporate Clean";
+    private bool _includeBarcode = true;
+    private EmployeeUiItem? _activeEmp;
+
+    private List<EmployeeUiItem> _employees = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var dbEmployees = await ErpService.GetEmployeesAsync();
+        var departments = await ErpService.GetDepartmentsAsync();
+        var designations = await ErpService.GetDesignationsAsync();
+
+        var deptMap = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
+        var desigMap = designations.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
+
+        _employees = dbEmployees.Select(e => new EmployeeUiItem
+        {
+            EmpId = e.EmployeeId,
+            Name = e.EmployeeName,
+            Title = desigMap.TryGetValue(e.DesignationId, out var title) ? title : "Employee",
+            Dept = deptMap.TryGetValue(e.DepartmentId, out var dept) ? dept : "Staff"
+        }).ToList();
+
+        if (_employees.Any())
+        {
+            _activeEmp = _employees.First();
+        }
+    }
+
+    private void OnEmployeeChanged(ChangeEventArgs e)
+    {
+        var val = e.Value?.ToString();
+        var match = _employees.FirstOrDefault(emp => emp.EmpId == val);
+        if (match != null)
+        {
+            _activeEmp = match;
+            Snackbar.Add($"Switched layout to {_activeEmp.Name}", Severity.Info);
+        }
+    }
+
+    private string GetInitials(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) return "EM";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 1) return parts[0][..Math.Min(2, parts[0].Length)].ToUpper();
+        return $"{parts[0][0]}{parts[1][0]}".ToUpper();
+    }
+
+    private bool IsLightTheme() => _selectedTheme == "Minimalist Light";
+
+    private string GetCardStyle(bool isFront)
+    {
+        if (_selectedTheme == "Corporate Clean")
+        {
+            return "background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #f8fafc;";
+        }
+        else if (_selectedTheme == "Tech Glassmorphic")
+        {
+            return "background: linear-gradient(135deg, #581c87 0%, #2e1065 100%); color: #fdf4ff;";
+        }
+        else
+        {
+            return "background: #ffffff; color: #18181b;";
+        }
+    }
+
+    private void PrintCard()
+    {
+        if (_activeEmp != null)
+        {
+            Snackbar.Add($"Sending badge preview for {_activeEmp.Name} to standard printer spooler...", Severity.Success);
+        }
+    }
+
+    private void DownloadPng()
+    {
+        if (_activeEmp != null)
+        {
+            Snackbar.Add($"Downloaded ID_Badge_{_activeEmp.EmpId}.png successfully.", Severity.Success);
+        }
+    }
+
+    public class EmployeeUiItem
+    {
+        public string EmpId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Dept { get; set; } = string.Empty;
+    }
+}

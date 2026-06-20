@@ -22,8 +22,12 @@ namespace ERPHub.Services
                 var userSessionResult = await _localStorage.GetAsync<UserSession>("UserSession");
                 var userSession = userSessionResult.Success ? userSessionResult.Value : null;
 
-                if (userSession == null)
+                if (userSession == null || userSession.ExpiryTime < DateTime.UtcNow)
                 {
+                    if (userSession != null)
+                    {
+                        await _localStorage.DeleteAsync("UserSession");
+                    }
                     return new AuthenticationState(_anonymous);
                 }
 
@@ -48,6 +52,7 @@ namespace ERPHub.Services
 
             if (userSession != null)
             {
+                userSession.ExpiryTime = DateTime.UtcNow.AddHours(24);
                 await _localStorage.SetAsync("UserSession", userSession);
                 claimsPrincipal = new ClaimsPrincipal(new ClaimsIdentity(new[]
                 {

@@ -1,0 +1,291 @@
+@page "/attendance/absent-status"
+
+<PageTitle>ERPHub - Absent Status</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header Block -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Absent Status</h2>
+                    <p class="text-zinc-500 text-sm mt-0.5 font-body">Monitor absenteeism, record reasons, and assign official leave categories to unnotified absences.</p>
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="grid grid-cols-4 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-rose-600">Total Absences</div>
+                    <div class="text-xl font-extrabold text-rose-600 mt-1">@TotalAbsentCount</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-zinc-600">Unexcused Absences</div>
+                    <div class="text-xl font-extrabold text-zinc-950 mt-1">@UnexcusedCount</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-emerald-600">Excused / Approved</div>
+                    <div class="text-xl font-extrabold text-emerald-600 mt-1">@ExcusedCount</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm text-indigo-700 bg-indigo-50/10">
+                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Official Duty (OD)</div>
+                    <div class="text-xl font-extrabold text-indigo-700 mt-1">@OfficialDutyCount</div>
+                </div>
+            </div>
+
+            <!-- Filters Bar -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
+                <div class="flex gap-3 flex-1 max-w-[600px] max-sm:flex-col">
+                    <input type="text" 
+                           class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" 
+                           placeholder="Search by Employee ID or Name..." 
+                           @bind="_searchQuery" @bind:event="oninput" />
+                    
+                    <div class="w-48 max-sm:w-full">
+                        <MudSelect T="string" @bind-Value="_typeFilter" Placeholder="Absence Type" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                            <MudSelectItem Value="@((string?)null)">All Categories</MudSelectItem>
+                            <MudSelectItem Value="@("Unexcused")">Unexcused</MudSelectItem>
+                            <MudSelectItem Value="@("Sick Leave")">Sick Leave</MudSelectItem>
+                            <MudSelectItem Value="@("Casual Leave")">Casual Leave</MudSelectItem>
+                            <MudSelectItem Value="@("Official Duty")">Official Duty</MudSelectItem>
+                        </MudSelect>
+                    </div>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
+                    <input type="date" class="border border-zinc-200 rounded-lg p-1.5 px-3 bg-white outline-none text-sm cursor-pointer hover:bg-zinc-50 transition-colors" value="@_absentDate.ToString("yyyy-MM-dd")" @onchange="OnDateChanged" />
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@FilteredRecords" Hover="true" Dense="true" Elevation="0">
+                    <HeaderContent>
+                        <MudTh>Emp ID</MudTh>
+                        <MudTh>Employee Name</MudTh>
+                        <MudTh>Department</MudTh>
+                        <MudTh>Shift</MudTh>
+                        <MudTh>Absence Category</MudTh>
+                        <MudTh>Excused By</MudTh>
+                        <MudTh>Remarks</MudTh>
+                        <MudTh Class="text-right">Actions</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
+                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
+                        <MudTd DataLabel="Department">@context.Department</MudTd>
+                        <MudTd DataLabel="Shift">@context.Shift</MudTd>
+                        <MudTd DataLabel="Absence Category">
+                            @if (context.Category == "Unexcused")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">Unexcused</span>
+                            }
+                            else if (context.Category == "Official Duty")
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Official Duty</span>
+                            }
+                            else
+                            {
+                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">@context.Category</span>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Excused By">@context.ExcusedBy</MudTd>
+                        <MudTd DataLabel="Remarks"><span class="text-xs text-zinc-500 italic">@context.Remarks</span></MudTd>
+                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
+                            <MudIconButton Icon="@Icons.Material.Filled.EditCalendar" Size="@Size.Small" Color="Color.Primary" title="Update Status" OnClick="() => OpenStatusDialog(context)" />
+                        </MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </div>
+        </div>
+
+        <!-- Status Dialog -->
+        @if (_showStatusDialog && _activeRecord != null)
+        {
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in">
+                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4">
+                    <h3 class="text-base font-bold text-zinc-950 font-heading mb-1">Update Absence Category</h3>
+                    <p class="text-xs text-zinc-500 mb-4">Set leave code or duty bypass details for @_activeRecord.Name.</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Absence Category</label>
+                            <select class="w-full border border-zinc-200 rounded-lg p-1.5 text-xs text-zinc-900 outline-none bg-white focus:border-black" @bind="_activeRecord.Category">
+                                <option value="Unexcused">Unexcused</option>
+                                <option value="Sick Leave">Sick Leave</option>
+                                <option value="Casual Leave">Casual Leave</option>
+                                <option value="Official Duty">Official Duty</option>
+                                <option value="Earned Leave">Earned Leave</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Remarks / Reason</label>
+                            <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeRecord.Remarks" placeholder="Medical rest certificate, official permit, etc." />
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end gap-2 mt-6">
+                        <button class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="CloseStatusDialog">Cancel</button>
+                        <button class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveStatus">Save Status</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] private IErpService ErpService { get; set; } = default!;
+    [Inject] private AttendanceService AttendanceService { get; set; } = default!;
+    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+
+    private string _searchQuery = string.Empty;
+    private string _typeFilter = string.Empty;
+    private DateTime _absentDate = DateTime.Today;
+
+    private bool _showStatusDialog = false;
+    private AbsentUiRecord? _activeRecord;
+
+    private int TotalAbsentCount => FilteredRecords.Count();
+    private int UnexcusedCount => FilteredRecords.Count(r => r.Category == "Unexcused");
+    private int ExcusedCount => FilteredRecords.Count(r => r.Category.Contains("Leave"));
+    private int OfficialDutyCount => FilteredRecords.Count(r => r.Category == "Official Duty");
+
+    private List<AbsentUiRecord> _records = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        var dbRecords = await AttendanceService.GetAttendanceRecordsAsync(_absentDate, _absentDate);
+        if (!dbRecords.Any())
+        {
+            await AttendanceService.CalculateAttendanceAsync(_absentDate, _absentDate);
+            dbRecords = await AttendanceService.GetAttendanceRecordsAsync(_absentDate, _absentDate);
+        }
+
+        var employees = await ErpService.GetEmployeesAsync();
+        var departments = await ErpService.GetDepartmentsAsync();
+        var shifts = await ErpService.GetShiftsAsync();
+
+        var empMap = employees.GroupBy(e => e.EmployeeId).ToDictionary(g => g.Key, g => g.First());
+        var deptMap = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
+        var shiftMap = shifts.GroupBy(s => s.Id).ToDictionary(g => g.Key, g => g.First().ShiftName);
+
+        _records = dbRecords
+            .Where(r => r.AttendanceStatus == "Absent" || 
+                        r.AttendanceStatus == "Leave" || 
+                        r.AttendanceStatus.Contains("Leave") || 
+                        r.AttendanceStatus == "Official Duty")
+            .Select(r => {
+                empMap.TryGetValue(r.EmployeeId, out var emp);
+                string deptName = (emp != null && deptMap.TryGetValue(emp.DepartmentId, out var dn)) ? dn : "IT";
+                string shiftName = (emp != null && shiftMap.TryGetValue(emp.ShiftId, out var sn)) ? sn : "Day Shift";
+
+                string category = r.AttendanceStatus == "Absent" ? "Unexcused" : r.AttendanceStatus;
+                var parsed = ParseDbRemarks(r.Remarks);
+
+                return new AbsentUiRecord
+                {
+                    Id = r.Id,
+                    EmpId = r.EmployeeId,
+                    Name = emp?.EmployeeName ?? "Unknown Employee",
+                    Department = deptName,
+                    Shift = shiftName,
+                    Category = category,
+                    ExcusedBy = parsed.ExcusedBy,
+                    Remarks = parsed.Remarks,
+                    DbRecord = r
+                };
+            }).ToList();
+    }
+
+    private (string Remarks, string ExcusedBy) ParseDbRemarks(string? remarks)
+    {
+        if (string.IsNullOrWhiteSpace(remarks)) return ("", "None");
+        
+        int idx = remarks.IndexOf(" (Excused By: ");
+        if (idx >= 0)
+        {
+            string cleanRemarks = remarks.Substring(0, idx);
+            string excusedBy = remarks.Substring(idx + " (Excused By: ".Length).TrimEnd(')');
+            return (cleanRemarks, excusedBy);
+        }
+        
+        return (remarks, "None");
+    }
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        if (DateTime.TryParse(e.Value?.ToString(), out var parsedDate))
+        {
+            _absentDate = parsedDate;
+            await LoadData();
+            Snackbar.Add($"Loaded absences for {_absentDate.ToString("yyyy-MM-dd")}", Severity.Info);
+        }
+    }
+
+    private void OpenStatusDialog(AbsentUiRecord record)
+    {
+        _activeRecord = new AbsentUiRecord
+        {
+            Id = record.Id,
+            EmpId = record.EmpId,
+            Name = record.Name,
+            Department = record.Department,
+            Shift = record.Shift,
+            Category = record.Category,
+            ExcusedBy = record.ExcusedBy,
+            Remarks = record.Remarks,
+            DbRecord = record.DbRecord
+        };
+        _showStatusDialog = true;
+    }
+
+    private void CloseStatusDialog()
+    {
+        _showStatusDialog = false;
+        _activeRecord = null;
+    }
+
+    private async Task SaveStatus()
+    {
+        if (_activeRecord != null)
+        {
+            string excusedBy = _activeRecord.Category != "Unexcused" ? "Jane Doe (HR)" : "";
+            string status = _activeRecord.Category == "Unexcused" ? "Absent" : _activeRecord.Category;
+
+            await AttendanceService.UpdateAbsentStatusAsync(_activeRecord.Id, status, _activeRecord.Remarks, excusedBy);
+            await LoadData();
+            Snackbar.Add($"Absence record updated for {_activeRecord.Name}.", Severity.Success);
+        }
+        CloseStatusDialog();
+    }
+
+    private IEnumerable<AbsentUiRecord> FilteredRecords =>
+        _records.Where(r =>
+            (string.IsNullOrEmpty(_typeFilter) || r.Category == _typeFilter) &&
+            (string.IsNullOrEmpty(_searchQuery) ||
+             r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+             r.EmpId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+        );
+
+    public class AbsentUiRecord
+    {
+        public int Id { get; set; }
+        public string EmpId { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Department { get; set; } = string.Empty;
+        public string Shift { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string ExcusedBy { get; set; } = string.Empty;
+        public string Remarks { get; set; } = string.Empty;
+        public AttendanceRecord DbRecord { get; set; } = default!;
+    }
+}

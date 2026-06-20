@@ -39,6 +39,7 @@ builder.Services.AddDbContextFactory<ErpDbContext>(options =>
 // Register our custom ERP Service as Scoped (since database contexts are scoped)
 builder.Services.AddScoped<IErpService, ErpService>();
 builder.Services.AddScoped<AttendanceService>();
+builder.Services.AddScoped<JobCardService>();
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddSingleton<NotificationService>();
 
