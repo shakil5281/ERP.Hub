@@ -1,0 +1,323 @@
+@page "/leave/apply"
+@using ERPHub.Models
+@using LeaveApp = ERPHub.Models.LeaveApplication
+@using LeaveTypeModel = ERPHub.Models.LeaveType
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+<PageTitle>ERPHub - Apply for Leave</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in max-w-4xl mx-auto">
+            <!-- Header -->
+            <div class="flex items-center gap-4 mb-6">
+                <button type="button" class="p-2 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer text-zinc-500 hover:text-black" @onclick='() => NavManager.NavigateTo("/leave/application")'>
+                    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                </button>
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Apply for Leave</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Search for an employee and submit a new leave request.</p>
+                </div>
+            </div>
+
+            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden mb-6">
+                <div class="p-6">
+                    <h3 class="text-sm font-bold text-zinc-800 font-heading border-b border-zinc-100 pb-3 mb-5">1. Employee Details</h3>
+                    
+                    <div class="mb-6 max-w-md">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Employee ID Search</label>
+                        <div class="flex gap-2">
+                            <input type="text" class="flex-1 border border-zinc-200 rounded-lg p-2.5 text-sm outline-none focus:border-black font-mono uppercase" @bind="_applyEmpId" placeholder="e.g. EMP-0042" @onkeyup="HandleKeyUp" />
+                            <button type="button" class="px-5 py-2.5 bg-black text-white rounded-lg text-sm font-bold hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-2" @onclick="SearchEmployee" disabled="@_isSearching">
+                                @if (_isSearching)
+                                {
+                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="w-4 h-4" />
+                                }
+                                else
+                                {
+                                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                                }
+                                Search
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (_selectedEmployee != null)
+                    {
+                        <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-4 animate-fade-in mb-2">
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Name</div>
+                                    <div class="text-sm font-bold text-zinc-900">@_selectedEmployee.EmployeeName</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Company Name</div>
+                                    <div class="text-sm font-semibold text-zinc-700">@(_companies.FirstOrDefault(c => c.Id == _selectedEmployee.CompanyId)?.CompanyNameEn ?? "—")</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Department</div>
+                                    <div class="text-sm font-semibold text-zinc-700">@(_selectedEmployee.Department?.NameEn ?? "—")</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Designation</div>
+                                    <div class="text-sm font-semibold text-zinc-700">@(_selectedEmployee.Designation?.NameEn ?? "—")</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Line / Area</div>
+                                    <div class="text-sm font-semibold text-zinc-700">@(_selectedEmployee.Line?.NameEn ?? "—")</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Address</div>
+                                    <div class="text-sm font-semibold text-zinc-700">@(_companies.FirstOrDefault(c => c.Id == _selectedEmployee.CompanyId)?.AddressEn ?? "—")</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Joining Date</div>
+                                    <div class="text-sm font-semibold text-zinc-700">@_selectedEmployee.JoiningDate.ToString("dd MMM yyyy")</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Status</div>
+                                    <div class="text-sm font-bold text-emerald-600">@_selectedEmployee.EmployeeStatus</div>
+                                </div>
+                                <div>
+                                    <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Current Date</div>
+                                    <div class="text-sm font-semibold text-zinc-700">@DateTime.Today.ToString("dd MMM yyyy")</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (_searchAttempted)
+                    {
+                        <div class="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm font-semibold flex items-center gap-2 mb-2">
+                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                            Employee not found. Please verify the ID.
+                        </div>
+                    }
+                </div>
+
+                @if (_selectedEmployee != null)
+                {
+                    <div class="p-6 border-t border-zinc-100 bg-white animate-fade-in">
+                        <h3 class="text-sm font-bold text-zinc-800 font-heading border-b border-zinc-100 pb-3 mb-5">2. Leave Details</h3>
+                        <div class="space-y-5">
+                            <div>
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Leave Type</label>
+                                <div class="max-w-md">
+                                    <MudSelect T="string" Placeholder="Select leave type..." Variant="Variant.Outlined" Margin="Margin.Dense" ValueChanged="OnLeaveTypeChangedMud">
+                                        @foreach (var lt in _leaveTypes.Where(t => t.IsActive))
+                                        {
+                                            <MudSelectItem Value="@($"{lt.Id}|{lt.Name}")">@lt.Name (@lt.MaxDaysPerYear Days/Yr)</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Start Date</label>
+                                    <MudDatePicker Variant="Variant.Outlined" Margin="Margin.Dense" Date="_applyStart" DateChanged="OnStartDateChangedMud" />
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">End Date</label>
+                                    <MudDatePicker Variant="Variant.Outlined" Margin="Margin.Dense" Date="_applyEnd" DateChanged="OnEndDateChangedMud" />
+                                </div>
+                            </div>
+                            
+                            <div class="bg-indigo-50 border border-indigo-100 rounded-lg px-4 py-3 text-sm font-semibold text-indigo-700 max-w-xl flex justify-between items-center">
+                                <span>Total Leave Duration:</span>
+                                <span class="font-extrabold text-lg bg-white px-3 py-0.5 rounded shadow-sm">@_applyTotalDays Day(s)</span>
+                            </div>
+                            
+                            <div class="max-w-2xl">
+                                <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Reason for Leave</label>
+                                <textarea rows="3" class="w-full border border-zinc-200 rounded-lg p-3 text-sm outline-none focus:border-black resize-none" @bind="_applyReason" placeholder="Clearly state the reason for the leave request..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-5 border-t border-zinc-100 bg-zinc-50 flex justify-end gap-3 animate-fade-in">
+                        <button type="button" class="px-5 py-2.5 bg-white border border-zinc-200 rounded-lg text-sm font-bold text-zinc-700 hover:bg-zinc-100 transition-colors cursor-pointer" @onclick='() => NavManager.NavigateTo("/leave/application")'>Cancel</button>
+                        <button type="button" class="px-5 py-2.5 bg-black text-white rounded-lg text-sm font-bold hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-2" @onclick="SubmitLeave" disabled="@_isSaving">
+                            @if (_isSaving)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="w-4 h-4" />
+                            }
+                            Submit Leave Application
+                        </button>
+                    </div>
+                }
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<LeaveTypeModel> _leaveTypes = new();
+    private List<Company> _companies = new();
+    
+    private string _applyEmpId = "";
+    private Employee? _selectedEmployee = null;
+    private bool _isSearching = false;
+    private bool _searchAttempted = false;
+
+    private int? _applyLeaveTypeId = null;
+    private string _applyLeaveTypeName = "";
+    private DateTime? _applyStart = DateTime.Today;
+    private DateTime? _applyEnd = DateTime.Today;
+    private int _applyTotalDays = 1;
+    private string _applyReason = "";
+    private bool _isSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLeaveTypes();
+        await LoadCompanies();
+    }
+
+    private async Task LoadLeaveTypes()
+    {
+        try { _leaveTypes = await Http.GetFromJsonAsync<List<LeaveTypeModel>>($"{NavManager.BaseUri}api/leavetypes") ?? new(); }
+        catch { }
+    }
+
+    private async Task LoadCompanies()
+    {
+        try { _companies = await Http.GetFromJsonAsync<List<Company>>($"{NavManager.BaseUri}api/companies") ?? new(); }
+        catch { }
+    }
+
+    private async Task HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SearchEmployee();
+        }
+    }
+
+    private async Task SearchEmployee()
+    {
+        if (string.IsNullOrWhiteSpace(_applyEmpId)) return;
+        
+        _isSearching = true;
+        _searchAttempted = true;
+        _selectedEmployee = null;
+        StateHasChanged();
+        
+        try
+        {
+            var emps = await Http.GetFromJsonAsync<List<Employee>>($"{NavManager.BaseUri}api/employees");
+            if (emps != null)
+            {
+                var emp = emps.FirstOrDefault(e => e.EmployeeId.Equals(_applyEmpId.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (emp != null)
+                {
+                    // Fetch the full employee object to get navigation properties (Department, Designation, etc.)
+                    _selectedEmployee = await Http.GetFromJsonAsync<Employee>($"{NavManager.BaseUri}api/employees/{emp.Id}");
+                    Snackbar.Add($"Found employee: {_selectedEmployee?.EmployeeName}", Severity.Success);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Search error: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isSearching = false;
+            StateHasChanged();
+        }
+    }
+
+    private void OnLeaveTypeChangedMud(string val)
+    {
+        if (string.IsNullOrEmpty(val))
+        {
+            _applyLeaveTypeId = null;
+            _applyLeaveTypeName = "";
+            return;
+        }
+        var parts = val.Split('|');
+        if (parts.Length == 2 && int.TryParse(parts[0], out var id))
+        {
+            _applyLeaveTypeId = id;
+            _applyLeaveTypeName = parts[1];
+        }
+    }
+
+    private void OnStartDateChangedMud(DateTime? date)
+    {
+        _applyStart = date;
+        RecalcDays();
+    }
+
+    private void OnEndDateChangedMud(DateTime? date)
+    {
+        _applyEnd = date;
+        RecalcDays();
+    }
+
+    private void RecalcDays()
+    {
+        if (_applyStart.HasValue && _applyEnd.HasValue)
+        {
+            _applyTotalDays = Math.Max(1, (_applyEnd.Value - _applyStart.Value).Days + 1);
+        }
+        else
+        {
+            _applyTotalDays = 0;
+        }
+    }
+
+    private async Task SubmitLeave()
+    {
+        if (_selectedEmployee == null || string.IsNullOrWhiteSpace(_applyLeaveTypeName))
+        {
+            Snackbar.Add("Please complete all required fields.", Severity.Warning);
+            return;
+        }
+
+        _isSaving = true;
+        StateHasChanged();
+
+        try
+        {
+            var payload = new LeaveApp
+            {
+                EmployeeId = _selectedEmployee.EmployeeId, 
+                EmployeeName = _selectedEmployee.EmployeeName,
+                DepartmentId = _selectedEmployee.DepartmentId, 
+                DesignationId = _selectedEmployee.DesignationId,
+                LeaveTypeId = _applyLeaveTypeId, 
+                LeaveType = _applyLeaveTypeName,
+                LeaveDate = _applyStart ?? DateTime.Today, 
+                EndDate = _applyEnd ?? DateTime.Today,
+                TotalDays = _applyTotalDays, 
+                Reason = _applyReason,
+                Status = "Pending"
+            };
+
+            var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/leaveapplications", payload);
+            if (resp.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Leave application submitted successfully.", Severity.Success);
+                await Task.Delay(1000);
+                NavManager.NavigateTo("/leave/application");
+            }
+            else
+            {
+                Snackbar.Add($"Submit failed: {await resp.Content.ReadAsStringAsync()}", Severity.Error);
+            }
+        }
+        catch (Exception ex) 
+        { 
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error); 
+        }
+        finally 
+        { 
+            _isSaving = false;
+            StateHasChanged();
+        }
+    }
+}

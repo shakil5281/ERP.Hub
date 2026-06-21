@@ -114,7 +114,7 @@ public partial class Tasks
         {
             await ErpService.AddTaskAsync(_editingTask);
         }
-        
+
         await LoadTasks();
         _showFormModal = false;
     }

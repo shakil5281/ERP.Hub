@@ -42,6 +42,8 @@ builder.Services.AddScoped<AttendanceService>();
 builder.Services.AddScoped<JobCardService>();
 builder.Services.AddScoped<ToastService>();
 builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddScoped<IExportService, ExportService>();
+builder.Services.AddScoped<IExportService, ExportService>();
 
 var app = builder.Build();
 
@@ -77,11 +79,10 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
 app.UseStatusCodePagesWithRedirects("/notfound");
-
-app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

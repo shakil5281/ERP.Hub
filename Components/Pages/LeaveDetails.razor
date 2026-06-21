@@ -1,63 +1,222 @@
 @page "/leave/details"
+@using ERPHub.Models
+@using LeaveApp = ERPHub.Models.LeaveApplication
+@using LeaveTypeModel = ERPHub.Models.LeaveType
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
 
-<PageTitle>ERPHub - Leave Ledger Details</PageTitle>
+<PageTitle>ERPHub - Leave Balance Ledger</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header Block -->
+            <!-- Header -->
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Leave Balance Ledger</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Detailed breakdown of individual employee leave balances, taken history, and accrual audits.</p>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">View allocated vs. consumed leave days per type, with balance utilization for each employee.</p>
+                </div>
+                <div class="flex gap-2">
+                    <select class="border border-zinc-200 rounded-lg px-3 py-1.5 text-xs text-zinc-700 bg-white outline-none focus:border-black" @onchange="OnDeptChanged">
+                        <option value="0">All Departments</option>
+                        @foreach (var d in _departments)
+                        {
+                            <option value="@d.Id">@d.NameEn</option>
+                        }
+                    </select>
                 </div>
             </div>
 
-            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_ledgers" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Category)">Leave Category</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Allocated)">Allocated Days</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Consumed)">Consumed Days</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.Balance)">Balance Remaining</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<LeaveLedger, object>(x=>x.AccrualRate)">Accrual Rate</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Leave Category">@context.Category</MudTd>
-                        <MudTd DataLabel="Allocated Days">@context.Allocated</MudTd>
-                        <MudTd DataLabel="Consumed Days">@context.Consumed</MudTd>
-                        <MudTd DataLabel="Balance Remaining">@context.Balance</MudTd>
-                        <MudTd DataLabel="Accrual Rate">@context.AccrualRate</MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
-            </div>
+            @if (_isLoading)
+            {
+                <div class="flex justify-center items-center py-20">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                </div>
+            }
+            else
+            {
+                <!-- Leave Type Balance Summary Cards -->
+                <div class="grid gap-4 mb-6 max-sm:grid-cols-1" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                    @foreach (var lt in _leaveTypes)
+                    {
+                        var consumed = _filteredApps
+                            .Where(a => a.LeaveType == lt.Name && a.Status == "Approved")
+                            .Sum(a => a.TotalDays);
+                        var remaining = Math.Max(0, lt.MaxDaysPerYear - consumed);
+                        var pct = lt.MaxDaysPerYear > 0 ? (int)((double)consumed / lt.MaxDaysPerYear * 100) : 0;
+                        <div class="bg-white border border-zinc-200 rounded-xl p-4 shadow-sm">
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="w-2.5 h-2.5 rounded-full" style="background-color:@lt.Color"></span>
+                                <span class="text-xs font-bold text-zinc-700 font-heading">@lt.Name</span>
+                            </div>
+                            <div class="flex justify-between text-[10px] text-zinc-400 mb-1 font-heading">
+                                <span>CONSUMED</span>
+                                <span>MAX @lt.MaxDaysPerYear DAYS</span>
+                            </div>
+                            <div class="w-full h-2 bg-zinc-100 rounded-full overflow-hidden mb-2">
+                                <div class="h-full rounded-full transition-all" style="width:@(pct)%; background-color:@lt.Color"></div>
+                            </div>
+                            <div class="flex justify-between">
+                                <div class="text-center">
+                                    <div class="text-lg font-extrabold font-heading" style="color:@lt.Color">@consumed</div>
+                                    <div class="text-[9px] text-zinc-400 uppercase tracking-wider">Used</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-extrabold text-zinc-800 font-heading">@remaining</div>
+                                    <div class="text-[9px] text-zinc-400 uppercase tracking-wider">Remaining</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-lg font-extrabold @(pct >= 80 ? "text-rose-600" : pct >= 50 ? "text-amber-600" : "text-emerald-600") font-heading">@pct%</div>
+                                    <div class="text-[9px] text-zinc-400 uppercase tracking-wider">Used</div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <!-- Employee Leave Ledger Table -->
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                    <MudTable Items="@_ledgerRows" Hover="true" Dense="true" SortLabel="Sort By" Elevation="0" Filter="new Func<LedgerRow, bool>(FilterLedger)">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Employee Leave Balance</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_search" Placeholder="Search employee..."
+                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                                          IconSize="Size.Small" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mt-0" />
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LedgerRow, object>(x => x.EmployeeName)">Employee</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LedgerRow, object>(x => x.Department)">Department</MudTableSortLabel></MudTh>
+                            @foreach (var lt in _leaveTypes)
+                            {
+                                <MudTh Style="text-align:center">
+                                    <span class="text-[10px] font-bold" style="color:@lt.Color">@lt.Code</span>
+                                </MudTh>
+                            }
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LedgerRow, object>(x => x.TotalConsumed)">Total</MudTableSortLabel></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Employee">
+                                <div class="flex flex-col">
+                                    <span class="fw-semibold text-zinc-900 text-sm">@context.EmployeeName</span>
+                                    <span class="text-zinc-400 text-[10px] font-mono">@context.EmployeeId</span>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Department"><span class="text-xs text-zinc-600">@context.Department</span></MudTd>
+                            @foreach (var lt in _leaveTypes)
+                            {
+                                var days = context.Consumed.TryGetValue(lt.Name, out var d) ? d : 0;
+                                var max = lt.MaxDaysPerYear;
+                                <MudTd Style="text-align:center">
+                                    @if (days > 0)
+                                    {
+                                        <div class="flex flex-col items-center gap-0.5">
+                                            <span class="text-xs font-bold" style="color:@lt.Color">@days</span>
+                                            <span class="text-[9px] text-zinc-300">/ @max</span>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-zinc-200 text-xs">—</span>
+                                    }
+                                </MudTd>
+                            }
+                            <MudTd Style="text-align:center">
+                                <span class="text-sm font-extrabold @(context.TotalConsumed > 15 ? "text-rose-600" : "text-zinc-800")">@context.TotalConsumed</span>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent><MudTablePager PageSizeOptions="new int[] { 15, 25, 50 }" /></PagerContent>
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No records found.</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
+            }
         </div>
     </Authorized>
-    <NotAuthorized>
-        <RedirectToLogin />
-    </NotAuthorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
 </AuthorizeView>
 
 @code {
-    public class LeaveLedger
+    private List<LeaveApp> _applications = new();
+    private List<LeaveApp> _filteredApps = new();
+    private List<LeaveTypeModel> _leaveTypes = new();
+    private List<Department> _departments = new();
+    private List<LedgerRow> _ledgerRows = new();
+    private bool _isLoading = true;
+    private int _deptFilter = 0;
+    private string _search = "";
+
+    public class LedgerRow
     {
-        public string Category { get; set; } = string.Empty;
-        public int Allocated { get; set; }
-        public int Consumed { get; set; }
-        public int Balance { get; set; }
-        public string AccrualRate { get; set; } = string.Empty;
+        public string EmployeeId { get; set; } = "";
+        public string EmployeeName { get; set; } = "";
+        public string Department { get; set; } = "";
+        public Dictionary<string, int> Consumed { get; set; } = new();
+        public int TotalConsumed => Consumed.Values.Sum();
     }
 
-    private List<LeaveLedger> _ledgers = new()
+    protected override async Task OnInitializedAsync()
     {
-        new LeaveLedger { Category = "Annual Leave", Allocated = 15, Consumed = 3, Balance = 12, AccrualRate = "1.25 Days / Month" },
-        new LeaveLedger { Category = "Medical Leave", Allocated = 10, Consumed = 2, Balance = 8, AccrualRate = "Yearly Lump-Sum" },
-        new LeaveLedger { Category = "Casual Leave", Allocated = 5, Consumed = 0, Balance = 5, AccrualRate = "Yearly Lump-Sum" }
-    };
+        await Task.WhenAll(LoadLeaveTypes(), LoadDepartments());
+        await LoadApplications();
+    }
+
+    private async Task LoadLeaveTypes()
+    {
+        try { _leaveTypes = await Http.GetFromJsonAsync<List<LeaveTypeModel>>($"{NavManager.BaseUri}api/leavetypes") ?? new(); }
+        catch { }
+    }
+
+    private async Task LoadDepartments()
+    {
+        try { _departments = await Http.GetFromJsonAsync<List<Department>>($"{NavManager.BaseUri}api/departments") ?? new(); }
+        catch { }
+    }
+
+    private async Task LoadApplications()
+    {
+        _isLoading = true;
+        try
+        {
+            _applications = await Http.GetFromJsonAsync<List<LeaveApp>>($"{NavManager.BaseUri}api/leaveapplications") ?? new();
+            ApplyAndBuildLedger();
+        }
+        catch (Exception ex) { Snackbar.Add($"Error: {ex.Message}", Severity.Error); }
+        finally { _isLoading = false; }
+    }
+
+    private void OnDeptChanged(ChangeEventArgs e)
+    {
+        int.TryParse(e.Value?.ToString(), out _deptFilter);
+        ApplyAndBuildLedger();
+    }
+
+    private void ApplyAndBuildLedger()
+    {
+        _filteredApps = _deptFilter == 0
+            ? _applications
+            : _applications.Where(a => a.DepartmentId == _deptFilter).ToList();
+
+        var approved = _filteredApps.Where(a => a.Status == "Approved").ToList();
+        var grouped = approved.GroupBy(a => a.EmployeeId);
+        _ledgerRows = grouped.Select(g =>
+        {
+            var first = g.First();
+            return new LedgerRow
+            {
+                EmployeeId = g.Key,
+                EmployeeName = first.EmployeeName,
+                Department = first.Department?.NameEn ?? "-",
+                Consumed = g.GroupBy(a => a.LeaveType)
+                            .ToDictionary(x => x.Key, x => x.Sum(a => a.TotalDays))
+            };
+        }).OrderBy(r => r.EmployeeName).ToList();
+    }
+
+    private bool FilterLedger(LedgerRow row) =>
+        string.IsNullOrWhiteSpace(_search) ||
+        row.EmployeeName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+        row.EmployeeId.Contains(_search, StringComparison.OrdinalIgnoreCase);
 }

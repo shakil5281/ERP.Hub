@@ -1,194 +1,319 @@
 @page "/leave/application"
-@using ERPHub.Data
-@using Microsoft.EntityFrameworkCore
-@inject IDbContextFactory<ErpDbContext> DbFactory
+@using ERPHub.Models
+@using LeaveApp = ERPHub.Models.LeaveApplication
+@using LeaveTypeModel = ERPHub.Models.LeaveType
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
 <PageTitle>ERPHub - Leave Applications</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header Block -->
+            <!-- Header -->
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Leave Applications</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Submit new time-off requests and track the approval status of current applications.</p>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Submit, track, and manage employee leave requests with full approval workflow.</p>
                 </div>
+                <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick='() => NavManager.NavigateTo("/leave/apply")'>
+                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
+                    Apply Leave
+                </button>
             </div>
 
-            <!-- Main Layout: Form Left, History Right -->
-            <div class="grid grid-cols-3 gap-6 mb-6 max-xl:grid-cols-1">
-                <!-- Submission Form -->
-                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-sm col-span-1">
-                    <h3 class="text-sm font-bold text-zinc-900 mb-5 border-b border-zinc-100 pb-2 font-heading">Submit Leave Request</h3>
-                    
-                    <form class="flex flex-col gap-4">
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Leave Category</label>
-                            <MudSelect T="string" @bind-Value="_leaveType" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("annual")">Annual Leave</MudSelectItem>
-                                <MudSelectItem Value="@("medical")">Medical Leave</MudSelectItem>
-                                <MudSelectItem Value="@("casual")">Casual Leave</MudSelectItem>
-                            </MudSelect>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="flex flex-col gap-1.5">
-                                <MudDatePicker Date="@_startDate"
-                                               DateChanged="@(d => { if (d.HasValue) _startDate = d.Value; })"
-                                               Label="Start Date"
-                                               Editable="true"
-                                               Placeholder="Select Date"
-                                               DateFormat="yyyy-MM-dd"
-                                               Variant="Variant.Outlined"
-                                               Margin="Margin.Dense" />
-                            </div>
-                            <div class="flex flex-col gap-1.5">
-                                <MudDatePicker Date="@_endDate"
-                                               DateChanged="@(d => { if (d.HasValue) _endDate = d.Value; })"
-                                               Label="End Date"
-                                               Editable="true"
-                                               Placeholder="Select Date"
-                                               DateFormat="yyyy-MM-dd"
-                                               Variant="Variant.Outlined"
-                                               Margin="Margin.Dense" />
-                            </div>
-                        </div>
-                        <div class="flex flex-col gap-1.5">
-                            <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Reason / Remarks</label>
-                            <MudTextField T="string" @bind-Value="_reason" Variant="Variant.Outlined" dense="true" Lines="3" Margin="Margin.Dense" placeholder="Briefly explain the reason for time-off..."></MudTextField>
-                        </div>
-                        <button type="button" class="w-full bg-black text-white text-xs font-semibold py-2.5 rounded-lg hover:bg-zinc-800 transition-colors cursor-pointer text-center" @onclick="SubmitLeave">
-                            Submit Request
-                        </button>
-                    </form>
-
-                    @if (!string.IsNullOrEmpty(_statusMessage))
-                    {
-                        <div class="mt-3 text-xs font-semibold @(_statusMessage.Contains("submitted", StringComparison.OrdinalIgnoreCase) ? "text-green-600" : "text-red-600")">@_statusMessage</div>
-                    }
+            @if (_isLoading)
+            {
+                <div class="flex justify-center items-center py-20">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                </div>
+            }
+            else
+            {
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-4 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #6366f1">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Total Applications</div>
+                        <div class="text-xl font-extrabold text-zinc-950 mt-1 font-heading">@_applications.Count Cases</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #f59e0b">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Pending Approval</div>
+                        <div class="text-xl font-extrabold text-amber-600 mt-1 font-heading">@_applications.Count(a => a.Status == "Pending") Pending</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #10b981">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Approved</div>
+                        <div class="text-xl font-extrabold text-emerald-600 mt-1 font-heading">@_applications.Count(a => a.Status == "Approved") Approved</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #ef4444">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Rejected</div>
+                        <div class="text-xl font-extrabold text-rose-600 mt-1 font-heading">@_applications.Count(a => a.Status == "Rejected") Rejected</div>
+                    </div>
                 </div>
 
-                <!-- Application History -->
-                <div class="col-span-2 max-xl:col-span-1">
-                    <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                        <MudTable Items="@_applications" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                            <HeaderContent>
-                                <MudTh><MudTableSortLabel SortBy="new Func<LeaveRequest, object>(x=>x.Type)">Type</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<LeaveRequest, object>(x=>x.StartDate)">Dates</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<LeaveRequest, object>(x=>x.TotalDays)">Days</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<LeaveRequest, object>(x=>x.Reason)">Reason</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<LeaveRequest, object>(x=>x.Approver)">Approver</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<LeaveRequest, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Type">@context.Type</MudTd>
-                                <MudTd DataLabel="Dates">
-                                    <div>@context.StartDate</div>
-                                    <div class="text-[10px] text-zinc-400 mt-0.5">to @context.EndDate</div>
-                                </MudTd>
-                                <MudTd DataLabel="Days">@context.TotalDays</MudTd>
-                                <MudTd DataLabel="Reason">@context.Reason</MudTd>
-                                <MudTd DataLabel="Approver">@context.Approver</MudTd>
-                                <MudTd DataLabel="Status">
-                                    <span class="@($"inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold {context.BadgeClass}")">@context.Status</span>
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                            </PagerContent>
+                <!-- Filters -->
+                <div class="bg-white border border-zinc-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-zinc-100 flex justify-between items-center cursor-pointer select-none hover:bg-zinc-50 transition-colors" @onclick="() => _filterOpen = !_filterOpen">
+                        <div class="flex items-center gap-2.5">
+                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small" Class="text-zinc-400" />
+                            <span class="text-sm font-semibold text-zinc-800 font-heading">Filters</span>
+                            @if (_statusFilter != "All" || _typeFilter != "All" || _monthFilter > 0)
+                            {
+                                <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">Active</span>
+                            }
+                        </div>
+                        <MudIcon Icon="@(_filterOpen ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="text-zinc-400" />
+                    </div>
+                    <MudCollapse Expanded="_filterOpen">
+                        <div class="p-5 bg-zinc-50/50">
+                            <div class="grid grid-cols-4 gap-4 max-sm:grid-cols-1">
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Status</label>
+                                    <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @onchange="OnStatusFilterChanged">
+                                        <option value="All">All Statuses</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Leave Type</label>
+                                    <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @onchange="OnTypeFilterChanged">
+                                        <option value="All">All Types</option>
+                                        @foreach (var lt in _leaveTypes)
+                                        {
+                                            <option value="@lt.Name">@lt.Name</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Month</label>
+                                    <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @onchange="OnMonthFilterChanged">
+                                        <option value="0">All Months</option>
+                                        @for (int m = 1; m <= 12; m++)
+                                        {
+                                            var month = m;
+                                            <option value="@month">@(new DateTime(2000, month, 1).ToString("MMMM"))</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="flex items-end">
+                                    <button type="button" class="px-3 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 cursor-pointer" @onclick="ResetFilters">
+                                        Reset Filters
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </MudCollapse>
+                </div>
+
+                <!-- Applications Table -->
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                    <MudTable Items="@_filtered" Hover="true" Dense="true" SortLabel="Sort By" Elevation="0" Filter="new Func<LeaveApp, bool>(SearchFunc)">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Applications List</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_search" Placeholder="Search employee, type..."
+                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
+                                          IconSize="Size.Small" Variant="Variant.Outlined" Margin="Margin.Dense"
+                                          Clearable="true" Class="mt-0" />
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.EmployeeName)">Employee</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.Department != null ? x.Department.NameEn : string.Empty)">Department</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.LeaveType)">Leave Type</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.LeaveDate)">From</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.EndDate)">To</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.TotalDays)">Days</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center">Actions</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Employee">
+                                <div class="flex flex-col">
+                                    <span class="fw-semibold text-zinc-900 text-sm">@context.EmployeeName</span>
+                                    <span class="text-zinc-400 text-[10px] font-mono">@context.EmployeeId</span>
+                                </div>
+                            </MudTd>
+                            <MudTd DataLabel="Department">
+                                <span class="text-xs text-zinc-600">@(context.Department?.NameEn ?? "-")</span>
+                            </MudTd>
+                            <MudTd DataLabel="Leave Type">
+                                @{
+                                    var ltype = _leaveTypes.FirstOrDefault(t => t.Name == context.LeaveType);
+                                    var ltColor = ltype?.Color ?? "#6366f1";
+                                }
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                                      style="background-color:@(ltColor + "15"); color:@ltColor; border-color:@(ltColor + "40")">
+                                    @context.LeaveType
+                                </span>
+                            </MudTd>
+                            <MudTd Style="text-align:center"><span class="font-mono text-xs text-zinc-600">@context.LeaveDate.ToString("dd MMM yy")</span></MudTd>
+                            <MudTd Style="text-align:center"><span class="font-mono text-xs text-zinc-600">@context.EndDate.ToString("dd MMM yy")</span></MudTd>
+                            <MudTd Style="text-align:center"><span class="text-sm font-bold text-zinc-800">@context.TotalDays</span></MudTd>
+                            <MudTd Style="text-align:center">
+                                @{
+                                    var sc = context.Status switch {
+                                        "Approved" => "bg-emerald-50 text-emerald-700 border border-emerald-100",
+                                        "Pending"  => "bg-amber-50 text-amber-700 border border-amber-100",
+                                        "Rejected" => "bg-red-50 text-red-700 border border-red-100",
+                                        _ => "bg-zinc-100 text-zinc-500"
+                                    };
+                                }
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @sc">@context.Status</span>
+                            </MudTd>
+                            <MudTd Style="text-align:center">
+                                <div class="flex items-center justify-center gap-1">
+                                    @if (context.Status == "Pending")
+                                    {
+                                        <button type="button" class="p-1.5 rounded-md hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 transition-colors cursor-pointer"
+                                                title="Approve" @onclick="() => QuickApprove(context)">
+                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                                        </button>
+                                        <button type="button" class="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                                                title="Reject" @onclick="() => OpenRejectDialog(context)">
+                                            <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Small" />
+                                        </button>
+                                    }
+                                    <button type="button" class="px-2 py-1 rounded-md bg-zinc-900 text-white hover:bg-zinc-700 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1"
+                                            title="Download PDF Form" @onclick="() => ExportPdf(context)">
+                                        <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" /> PDF
+                                    </button>
+                                    <button type="button" class="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                                            title="Delete" @onclick="() => DeleteApplication(context)">
+                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
+                                    </button>
+                                </div>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent><MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" /></PagerContent>
                         <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No applications found.</MudText>
                         </NoRecordsContent>
-                        </MudTable>
+                    </MudTable>
+                </div>
+            }
+        </div>
+
+        <!-- Reject Dialog -->
+        @if (_showRejectDialog && _rejectTarget != null)
+        {
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in" @onclick="() => _showRejectDialog = false">
+                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4" @onclick:stopPropagation="true">
+                    <h3 class="text-base font-bold text-rose-700 font-heading mb-1">Reject Application</h3>
+                    <p class="text-xs text-zinc-400 mb-4">Rejecting leave for <strong>@_rejectTarget.EmployeeName</strong>. Please state the reason.</p>
+                    <textarea rows="3" class="w-full border border-zinc-200 rounded-lg p-2 text-sm outline-none focus:border-red-400 mb-4" @bind="_rejectReason" placeholder="Rejection reason..."></textarea>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 cursor-pointer" @onclick="() => _showRejectDialog = false">Cancel</button>
+                        <button type="button" class="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 cursor-pointer" @onclick="ConfirmReject">Confirm Reject</button>
                     </div>
                 </div>
             </div>
-        </div>
+        }
     </Authorized>
-    <NotAuthorized>
-        <RedirectToLogin />
-    </NotAuthorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
 </AuthorizeView>
 
 @code {
-    private string _leaveType = "annual";
-    private DateTime _startDate = DateTime.Today;
-    private DateTime _endDate = DateTime.Today.AddDays(1);
-    private string _reason = string.Empty;
-    private string _statusMessage = string.Empty;
+    private List<LeaveApp> _applications = new();
+    private List<LeaveApp> _filtered = new();
+    private List<LeaveTypeModel> _leaveTypes = new();
+    private List<Department> _departments = new();
+    private bool _isLoading = true;
+    private bool _filterOpen = false;
+    private string _search = "";
+    private string _statusFilter = "All";
+    private string _typeFilter = "All";
+    private int _monthFilter = 0;
 
-    public class LeaveRequest
+    // Reject
+    private bool _showRejectDialog = false;
+    private LeaveApp? _rejectTarget;
+    private string _rejectReason = "";
+
+    protected override async Task OnInitializedAsync()
     {
-        public string Type { get; set; } = string.Empty;
-        public string StartDate { get; set; } = string.Empty;
-        public string EndDate { get; set; } = string.Empty;
-        public int TotalDays { get; set; }
-        public string Reason { get; set; } = string.Empty;
-        public string Approver { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string BadgeClass { get; set; } = string.Empty;
+        await Task.WhenAll(LoadLeaveTypes(), LoadDepartments());
+        await LoadData();
     }
 
-    private List<LeaveRequest> _applications = new()
+    private async Task LoadLeaveTypes()
     {
-        new LeaveRequest { Type = "Annual Leave", StartDate = "2026-07-01", EndDate = "2026-07-05", TotalDays = 5, Reason = "Family vacation", Approver = "John Smith (HR)", Status = "Pending", BadgeClass = "bg-amber-50 text-amber-700 border border-amber-100" },
-        new LeaveRequest { Type = "Medical Leave", StartDate = "2026-05-12", EndDate = "2026-05-13", TotalDays = 2, Reason = "Dental extraction checkup", Approver = "System Auto-Approval", Status = "Approved", BadgeClass = "bg-green-50 text-green-700 border border-green-100" }
-    };
+        try { _leaveTypes = await Http.GetFromJsonAsync<List<LeaveTypeModel>>($"{NavManager.BaseUri}api/leavetypes") ?? new(); }
+        catch { }
+    }
 
-    private async Task SubmitLeave()
+    private async Task LoadDepartments()
     {
-        if (string.IsNullOrWhiteSpace(_leaveType) || string.IsNullOrWhiteSpace(_reason))
-        {
-            _statusMessage = "Please fill in all required fields.";
-            return;
-        }
+        try { _departments = await Http.GetFromJsonAsync<List<Department>>($"{NavManager.BaseUri}api/departments") ?? new(); }
+        catch { }
+    }
 
+    private async Task LoadData()
+    {
+        _isLoading = true;
         try
         {
-            var startStr = _startDate.ToString("yyyy-MM-dd");
-            var endStr = _endDate.ToString("yyyy-MM-dd");
-            var totalDays = (_endDate - _startDate).Days + 1;
-
-            await using var db = await DbFactory.CreateDbContextAsync();
-            db.LeaveApplications.Add(new ERPHub.Models.LeaveApplication
-            {
-                EmployeeId = "1",
-                EmployeeName = "Current User",
-                LeaveDate = _startDate,
-                LeaveType = _leaveType,
-                Reason = _reason,
-                Status = "Pending"
-            });
-            await db.SaveChangesAsync();
-
-            _applications.Insert(0, new LeaveRequest
-            {
-                Type = _leaveType switch
-                {
-                    "annual" => "Annual Leave",
-                    "medical" => "Medical Leave",
-                    "casual" => "Casual Leave",
-                    _ => _leaveType
-                },
-                StartDate = startStr,
-                EndDate = endStr,
-                TotalDays = totalDays,
-                Reason = _reason,
-                Approver = "Pending",
-                Status = "Pending",
-                BadgeClass = "bg-amber-50 text-amber-700 border border-amber-100"
-            });
-
-            _leaveType = "annual";
-            _startDate = DateTime.Today;
-            _endDate = DateTime.Today.AddDays(1);
-            _reason = string.Empty;
-            _statusMessage = "Leave request submitted successfully!";
+            _applications = await Http.GetFromJsonAsync<List<LeaveApp>>($"{NavManager.BaseUri}api/leaveapplications") ?? new();
+            ApplyFilters();
         }
-        catch (Exception ex)
-        {
-            _statusMessage = $"Error submitting request: {ex.Message}";
-        }
+        catch (Exception ex) { Snackbar.Add($"Load error: {ex.Message}", Severity.Error); }
+        finally { _isLoading = false; }
     }
 
+    private void ApplyFilters()
+    {
+        _filtered = _applications.Where(a =>
+            (_statusFilter == "All" || a.Status == _statusFilter) &&
+            (_typeFilter == "All" || a.LeaveType == _typeFilter) &&
+            (_monthFilter == 0 || a.LeaveDate.Month == _monthFilter)
+        ).ToList();
+    }
+
+    private void OnStatusFilterChanged(ChangeEventArgs e) { _statusFilter = e.Value?.ToString() ?? "All"; ApplyFilters(); }
+    private void OnTypeFilterChanged(ChangeEventArgs e) { _typeFilter = e.Value?.ToString() ?? "All"; ApplyFilters(); }
+    private void OnMonthFilterChanged(ChangeEventArgs e) { int.TryParse(e.Value?.ToString(), out _monthFilter); ApplyFilters(); }
+    private void ResetFilters() { _statusFilter = "All"; _typeFilter = "All"; _monthFilter = 0; ApplyFilters(); }
+
+    private bool SearchFunc(LeaveApp a) =>
+        string.IsNullOrWhiteSpace(_search) ||
+        a.EmployeeName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+        a.EmployeeId.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+        a.LeaveType.Contains(_search, StringComparison.OrdinalIgnoreCase);
+
+    private async Task QuickApprove(LeaveApp app)
+    {
+        var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/leaveapplications/{app.Id}/approve",
+            new { ApprovedBy = "HR Manager" });
+        if (resp.IsSuccessStatusCode) { Snackbar.Add($"Approved leave for {app.EmployeeName}.", Severity.Success); await LoadData(); }
+        else Snackbar.Add("Approve failed.", Severity.Error);
+    }
+
+    private void OpenRejectDialog(LeaveApp app) { _rejectTarget = app; _rejectReason = ""; _showRejectDialog = true; }
+
+    private async Task ConfirmReject()
+    {
+        if (_rejectTarget == null) return;
+        var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/leaveapplications/{_rejectTarget.Id}/reject",
+            new { RejectedBy = "HR Manager", Reason = _rejectReason });
+        if (resp.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"Rejected leave for {_rejectTarget.EmployeeName}.", Severity.Info);
+            _showRejectDialog = false;
+            await LoadData();
+        }
+        else Snackbar.Add("Reject failed.", Severity.Error);
+    }
+
+    private async Task DeleteApplication(LeaveApp app)
+    {
+        var resp = await Http.DeleteAsync($"{NavManager.BaseUri}api/leaveapplications/{app.Id}");
+        if (resp.IsSuccessStatusCode) { Snackbar.Add("Application deleted.", Severity.Info); await LoadData(); }
+    }
+
+    private void ExportPdf(LeaveApp app)
+    {
+        NavManager.NavigateTo($"{NavManager.BaseUri}api/leaveapplications/{app.Id}/pdf", forceLoad: true);
+    }
 }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using OfficeOpenXml;
 using ERPHub.Data;
 using ERPHub.Models;
 
@@ -26,7 +27,7 @@ namespace ERPHub.Services
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
-        // --- Business Groups Operations ---
+        // --- Groups Operations ---
         public async Task<List<BusinessGroup>> GetBusinessGroupsAsync()
         {
             return await _context.BusinessGroups.OrderByDescending(g => g.Id).ToListAsync();
@@ -465,10 +466,10 @@ namespace ERPHub.Services
             if (existing != null)
             {
                 existing.ShiftName = shift.ShiftName;
-                existing.InTime    = shift.InTime;
-                existing.OutTime   = shift.OutTime;
-                existing.LateTime  = shift.LateTime;
-                existing.OffDay    = shift.OffDay;
+                existing.InTime = shift.InTime;
+                existing.OutTime = shift.OutTime;
+                existing.LateTime = shift.LateTime;
+                existing.OffDay = shift.OffDay;
                 await _context.SaveChangesAsync();
             }
         }
@@ -570,6 +571,594 @@ namespace ERPHub.Services
                 _context.Employees.Remove(existing);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        public async Task<ImportResultDto> ImportEmployeesFromExcelAsync(Stream fileStream)
+        {
+            var result = new ImportResultDto();
+            try
+            {
+                using var package = new ExcelPackage(fileStream);
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet == null)
+                {
+                    result.Success = false;
+                    result.Errors.Add("Excel file is empty (no worksheets found).");
+                    return result;
+                }
+
+                int rowCount = worksheet.Dimension?.End.Row ?? 0;
+                int colCount = worksheet.Dimension?.End.Column ?? 0;
+
+                if (rowCount < 2)
+                {
+                    result.Success = false;
+                    result.Errors.Add("Excel sheet must contain a header row and at least one data row.");
+                    return result;
+                }
+
+                // Map headers
+                var headerMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                for (int col = 1; col <= colCount; col++)
+                {
+                    var headerText = worksheet.Cells[1, col].Text?.Trim();
+                    if (!string.IsNullOrEmpty(headerText))
+                    {
+                        headerMap[headerText] = col;
+                    }
+                }
+
+                // Validate headers
+                var requiredHeaders = new[] { "Employee ID", "Employee Name", "Punch Number", "Mobile No", "Company", "Department", "Section", "Designation", "Line", "Shift" };
+                var missingHeaders = new List<string>();
+                foreach (var req in requiredHeaders)
+                {
+                    if (!headerMap.ContainsKey(req))
+                    {
+                        missingHeaders.Add(req);
+                    }
+                }
+
+                if (missingHeaders.Any())
+                {
+                    result.Success = false;
+                    result.Errors.Add($"Missing required headers in Excel file: {string.Join(", ", missingHeaders)}");
+                    return result;
+                }
+
+                // Load all lookups to match by name
+                var dbCompanies = await _context.Companies.ToListAsync();
+                var dbDepartments = await _context.Departments.ToListAsync();
+                var dbSections = await _context.Sections.ToListAsync();
+                var dbDesignations = await _context.Designations.ToListAsync();
+                var dbLines = await _context.Lines.ToListAsync();
+                var dbShifts = await _context.Shifts.ToListAsync();
+
+                // Load all existing employees to check duplicates (EmployeeId and PunchNumber)
+                var existingEmployees = await _context.Employees.ToListAsync();
+
+                var newEmployees = new List<Employee>();
+                var updatedEmployees = new List<Employee>();
+
+                // Keep track of Employee IDs and Punch Numbers processed in this file to prevent internal duplicates
+                var fileEmployeeIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var filePunchNumbers = new HashSet<int>();
+
+                string GetValue(int row, string headerName)
+                {
+                    if (headerMap.TryGetValue(headerName, out int col))
+                    {
+                        return worksheet.Cells[row, col].Text?.Trim() ?? string.Empty;
+                    }
+                    return string.Empty;
+                }
+
+                for (int row = 2; row <= rowCount; row++)
+                {
+                    // Check if row is empty
+                    bool isRowEmpty = true;
+                    for (int col = 1; col <= colCount; col++)
+                    {
+                        if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
+                        {
+                            isRowEmpty = false;
+                            break;
+                        }
+                    }
+                    if (isRowEmpty) continue;
+
+                    result.TotalRows++;
+
+                    var empId = GetValue(row, "Employee ID");
+                    var name = GetValue(row, "Employee Name");
+                    var punchStr = GetValue(row, "Punch Number");
+                    var mobile = GetValue(row, "Mobile No");
+                    var email = GetValue(row, "Email");
+                    var companyName = GetValue(row, "Company");
+                    var deptName = GetValue(row, "Department");
+                    var secName = GetValue(row, "Section");
+                    var desName = GetValue(row, "Designation");
+                    var lineName = GetValue(row, "Line");
+                    var shiftName = GetValue(row, "Shift");
+                    var joiningDateStr = GetValue(row, "Joining Date");
+                    var basicSalaryStr = GetValue(row, "Basic Salary");
+                    var grossSalaryStr = GetValue(row, "Gross Salary");
+                    var gender = GetValue(row, "Gender");
+                    var dobStr = GetValue(row, "Date of Birth");
+                    var status = GetValue(row, "Employee Status");
+                    var empType = GetValue(row, "Employee Type");
+                    var otStatusStr = GetValue(row, "Overtime Status");
+
+                    var rowErrors = new List<string>();
+
+                    // 1. Basic validation
+                    if (string.IsNullOrEmpty(empId))
+                        rowErrors.Add("Employee ID is required.");
+                    if (string.IsNullOrEmpty(name))
+                        rowErrors.Add("Employee Name is required.");
+                    if (string.IsNullOrEmpty(mobile))
+                        rowErrors.Add("Mobile No is required.");
+
+                    // 2. Punch number validation
+                    int punchNum = 0;
+                    if (!string.IsNullOrEmpty(punchStr))
+                    {
+                        if (!int.TryParse(punchStr, out punchNum) || punchNum <= 0)
+                        {
+                            rowErrors.Add("Punch Number must be a valid positive integer.");
+                        }
+                    }
+                    else
+                    {
+                        rowErrors.Add("Punch Number is required.");
+                    }
+
+                    // 3. Resolve Company
+                    var company = dbCompanies.FirstOrDefault(c => c.CompanyNameEn.Trim().Equals(companyName, StringComparison.OrdinalIgnoreCase));
+                    if (company == null)
+                        rowErrors.Add($"Company '{companyName}' not found.");
+
+                    // 4. Resolve Department
+                    var department = dbDepartments.FirstOrDefault(d => d.NameEn.Trim().Equals(deptName, StringComparison.OrdinalIgnoreCase));
+                    if (department == null)
+                        rowErrors.Add($"Department '{deptName}' not found.");
+
+                    // 5. Resolve Section
+                    var section = dbSections.FirstOrDefault(s => s.NameEn.Trim().Equals(secName, StringComparison.OrdinalIgnoreCase));
+                    if (section == null)
+                        rowErrors.Add($"Section '{secName}' not found.");
+
+                    // 6. Resolve Designation
+                    var designation = dbDesignations.FirstOrDefault(d => d.NameEn.Trim().Equals(desName, StringComparison.OrdinalIgnoreCase));
+                    if (designation == null)
+                        rowErrors.Add($"Designation '{desName}' not found.");
+
+                    // 7. Resolve Line
+                    var line = dbLines.FirstOrDefault(l => l.NameEn.Trim().Equals(lineName, StringComparison.OrdinalIgnoreCase));
+                    if (line == null)
+                        rowErrors.Add($"Line '{lineName}' not found.");
+
+                    // 8. Resolve Shift
+                    var shift = dbShifts.FirstOrDefault(s => s.ShiftName.Trim().Equals(shiftName, StringComparison.OrdinalIgnoreCase));
+                    if (shift == null)
+                        rowErrors.Add($"Shift '{shiftName}' not found.");
+
+                    // Date parsing
+                    var joiningDate = DateTime.Today;
+                    if (!string.IsNullOrEmpty(joiningDateStr))
+                    {
+                        if (DateTime.TryParse(joiningDateStr, out DateTime jd))
+                            joiningDate = jd;
+                        else
+                            rowErrors.Add($"Invalid Joining Date format '{joiningDateStr}'. Use YYYY-MM-DD.");
+                    }
+
+                    // Decimal salaries parsing
+                    decimal basicSalary = 0;
+                    if (!string.IsNullOrEmpty(basicSalaryStr))
+                    {
+                        if (!decimal.TryParse(basicSalaryStr, out basicSalary) || basicSalary < 0)
+                            rowErrors.Add($"Invalid Basic Salary '{basicSalaryStr}'.");
+                    }
+
+                    decimal grossSalary = 0;
+                    if (!string.IsNullOrEmpty(grossSalaryStr))
+                    {
+                        if (!decimal.TryParse(grossSalaryStr, out grossSalary) || grossSalary < 0)
+                            rowErrors.Add($"Invalid Gross Salary '{grossSalaryStr}'.");
+                    }
+
+                    bool overTimeStatus = false;
+                    if (!string.IsNullOrEmpty(otStatusStr))
+                    {
+                        if (otStatusStr.Equals("yes", StringComparison.OrdinalIgnoreCase) || 
+                            otStatusStr.Equals("true", StringComparison.OrdinalIgnoreCase) || 
+                            otStatusStr.Equals("1"))
+                        {
+                            overTimeStatus = true;
+                        }
+                    }
+
+                    // Duplicate ID check in same file
+                    if (!string.IsNullOrEmpty(empId))
+                    {
+                        if (!fileEmployeeIds.Add(empId))
+                        {
+                            rowErrors.Add($"Duplicate Employee ID '{empId}' found in the Excel file.");
+                        }
+                    }
+
+                    // Duplicate Punch check in same file
+                    if (punchNum > 0)
+                    {
+                        if (!filePunchNumbers.Add(punchNum))
+                        {
+                            rowErrors.Add($"Duplicate Punch Number '{punchNum}' found in the Excel file.");
+                        }
+                    }
+
+                    // Check duplicate punch number in Database (assigned to someone else)
+                    if (punchNum > 0)
+                    {
+                        var dbDupPunch = existingEmployees.FirstOrDefault(e => e.PunchNumber == punchNum && !e.EmployeeId.Equals(empId, StringComparison.OrdinalIgnoreCase));
+                        if (dbDupPunch != null)
+                        {
+                            rowErrors.Add($"Punch Number '{punchNum}' is already assigned to another employee: {dbDupPunch.EmployeeName} ({dbDupPunch.EmployeeId}).");
+                        }
+                    }
+
+                    if (rowErrors.Any())
+                    {
+                        result.Errors.AddRange(rowErrors.Select(err => $"Row {row}: {err}"));
+                        result.ErrorCount++;
+                        continue;
+                    }
+
+                    // Build / update employee object
+                    var existing = existingEmployees.FirstOrDefault(e => e.EmployeeId.Equals(empId, StringComparison.OrdinalIgnoreCase));
+                    if (existing != null)
+                    {
+                        // Update existing
+                        existing.EmployeeName = name;
+                        existing.PunchNumber = punchNum;
+                        existing.MobileNo = mobile;
+                        existing.Email = email;
+                        existing.CompanyId = company!.Id;
+                        existing.DepartmentId = department!.Id;
+                        existing.SectionId = section!.Id;
+                        existing.DesignationId = designation!.Id;
+                        existing.LineId = line!.Id;
+                        existing.ShiftId = shift!.Id;
+                        existing.JoiningDate = joiningDate;
+                        existing.BasicSalary = basicSalary;
+                        existing.GrossSalary = grossSalary;
+                        existing.Gender = gender;
+                        existing.DateOfBirth = dobStr;
+                        existing.EmployeeStatus = string.IsNullOrEmpty(status) ? "Regular" : status;
+                        existing.EmployeeType = empType;
+                        existing.OverTimeStatus = overTimeStatus;
+
+                        updatedEmployees.Add(existing);
+                    }
+                    else
+                    {
+                        // Create new
+                        var emp = new Employee
+                        {
+                            EmployeeId = empId,
+                            EmployeeName = name,
+                            PunchNumber = punchNum,
+                            MobileNo = mobile,
+                            Email = email,
+                            CompanyId = company!.Id,
+                            DepartmentId = department!.Id,
+                            SectionId = section!.Id,
+                            DesignationId = designation!.Id,
+                            LineId = line!.Id,
+                            ShiftId = shift!.Id,
+                            JoiningDate = joiningDate,
+                            BasicSalary = basicSalary,
+                            GrossSalary = grossSalary,
+                            Gender = gender,
+                            DateOfBirth = dobStr,
+                            EmployeeStatus = string.IsNullOrEmpty(status) ? "Regular" : status,
+                            EmployeeType = empType,
+                            OverTimeStatus = overTimeStatus
+                        };
+
+                        newEmployees.Add(emp);
+                    }
+
+                    result.SuccessCount++;
+                }
+
+                if (result.ErrorCount > 0)
+                {
+                    result.Success = false;
+                    return result;
+                }
+
+                // Start transaction to save all changes safely
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    if (newEmployees.Any())
+                    {
+                        await _context.Employees.AddRangeAsync(newEmployees);
+                    }
+
+                    if (updatedEmployees.Any())
+                    {
+                        _context.Employees.UpdateRange(updatedEmployees);
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    result.Success = true;
+                }
+                catch (Exception dbEx)
+                {
+                    await transaction.RollbackAsync();
+                    result.Success = false;
+                    result.Errors.Add($"Database save error: {dbEx.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Errors.Add($"System parsing error: {ex.Message}");
+            }
+
+            return result;
+        }
+
+        public async Task<ImportResultDto> ImportOrganogramFromExcelAsync(Stream fileStream)
+        {
+            var result = new ImportResultDto();
+            try
+            {
+                using var package = new ExcelPackage(fileStream);
+                var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+                if (worksheet == null)
+                {
+                    result.Success = false;
+                    result.Errors.Add("Excel file is empty (no worksheets found).");
+                    return result;
+                }
+
+                int rowCount = worksheet.Dimension?.End.Row ?? 0;
+                int colCount = worksheet.Dimension?.End.Column ?? 0;
+
+                if (rowCount < 2)
+                {
+                    result.Success = false;
+                    result.Errors.Add("Excel sheet must contain a header row and at least one data row.");
+                    return result;
+                }
+
+                // Map headers
+                var headerMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                for (int col = 1; col <= colCount; col++)
+                {
+                    var headerText = worksheet.Cells[1, col].Text?.Trim();
+                    if (!string.IsNullOrEmpty(headerText))
+                    {
+                        headerMap[headerText] = col;
+                    }
+                }
+
+                // Validate headers
+                var requiredHeaders = new[] { "Department (EN)" };
+                var missingHeaders = new List<string>();
+                foreach (var req in requiredHeaders)
+                {
+                    if (!headerMap.ContainsKey(req))
+                    {
+                        missingHeaders.Add(req);
+                    }
+                }
+
+                if (missingHeaders.Any())
+                {
+                    result.Success = false;
+                    result.Errors.Add($"Missing required headers in Excel file: {string.Join(", ", missingHeaders)}");
+                    return result;
+                }
+
+                // Start transaction to save all changes safely and generate IDs incrementally
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    // Load existing lookups
+                    var dbDepartments = await _context.Departments.ToListAsync();
+                    var dbSections = await _context.Sections.ToListAsync();
+                    var dbDesignations = await _context.Designations.ToListAsync();
+                    var dbLines = await _context.Lines.ToListAsync();
+
+                    var tempDepartments = new Dictionary<string, Department>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var d in dbDepartments)
+                    {
+                        tempDepartments[d.NameEn] = d;
+                    }
+
+                    var tempSections = new Dictionary<string, Section>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var s in dbSections)
+                    {
+                        var key = $"{s.DepartmentNameEn}|{s.NameEn}";
+                        tempSections[key] = s;
+                    }
+
+                    var tempDesignations = new Dictionary<string, Designation>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var d in dbDesignations)
+                    {
+                        var sectionObj = dbSections.FirstOrDefault(s => s.Id == d.SectionId);
+                        var deptName = sectionObj?.DepartmentNameEn ?? string.Empty;
+                        var key = $"{deptName}|{d.SectionNameEn}|{d.NameEn}";
+                        tempDesignations[key] = d;
+                    }
+
+                    var tempLines = new Dictionary<string, Line>(StringComparer.OrdinalIgnoreCase);
+                    foreach (var l in dbLines)
+                    {
+                        var sectionObj = dbSections.FirstOrDefault(s => s.Id == l.SectionId);
+                        var deptName = sectionObj?.DepartmentNameEn ?? string.Empty;
+                        var key = $"{deptName}|{l.SectionNameEn}|{l.NameEn}";
+                        tempLines[key] = l;
+                    }
+
+                    string GetValue(int row, string headerName)
+                    {
+                        if (headerMap.TryGetValue(headerName, out int col))
+                        {
+                            return worksheet.Cells[row, col].Text?.Trim() ?? string.Empty;
+                        }
+                        return string.Empty;
+                    }
+
+                    for (int row = 2; row <= rowCount; row++)
+                    {
+                        // Check if row is empty
+                        bool isRowEmpty = true;
+                        for (int col = 1; col <= colCount; col++)
+                        {
+                            if (!string.IsNullOrWhiteSpace(worksheet.Cells[row, col].Text))
+                            {
+                                isRowEmpty = false;
+                                break;
+                            }
+                        }
+                        if (isRowEmpty) continue;
+
+                        result.TotalRows++;
+
+                        var deptEn = GetValue(row, "Department (EN)");
+                        var deptBn = GetValue(row, "Department (BN)");
+                        var secEn = GetValue(row, "Section (EN)");
+                        var secBn = GetValue(row, "Section (BN)");
+                        var desigEn = GetValue(row, "Designation (EN)");
+                        var desigBn = GetValue(row, "Designation (BN)");
+                        var lineEn = GetValue(row, "Line (EN)");
+                        var lineBn = GetValue(row, "Line (BN)");
+
+                        var rowErrors = new List<string>();
+
+                        // Validate row rules
+                        if (string.IsNullOrEmpty(deptEn))
+                        {
+                            rowErrors.Add("Department (EN) name is required.");
+                        }
+
+                        if (string.IsNullOrEmpty(secEn) && (!string.IsNullOrEmpty(desigEn) || !string.IsNullOrEmpty(lineEn)))
+                        {
+                            rowErrors.Add("Section (EN) is required when defining a Designation or Line.");
+                        }
+
+                        if (rowErrors.Any())
+                        {
+                            result.Errors.AddRange(rowErrors.Select(err => $"Row {row}: {err}"));
+                            result.ErrorCount++;
+                            continue;
+                        }
+
+                        // 1. Resolve Department
+                        if (!tempDepartments.TryGetValue(deptEn, out var dept))
+                        {
+                            dept = new Department
+                            {
+                                NameEn = deptEn,
+                                NameBn = string.IsNullOrEmpty(deptBn) ? deptEn : deptBn
+                            };
+                            await _context.Departments.AddAsync(dept);
+                            await _context.SaveChangesAsync();
+                            tempDepartments[deptEn] = dept;
+                        }
+
+                        // 2. Resolve Section (if provided)
+                        Section? section = null;
+                        if (!string.IsNullOrEmpty(secEn))
+                        {
+                            var secKey = $"{dept.NameEn}|{secEn}";
+                            if (!tempSections.TryGetValue(secKey, out section))
+                            {
+                                section = new Section
+                                {
+                                    NameEn = secEn,
+                                    NameBn = string.IsNullOrEmpty(secBn) ? secEn : secBn,
+                                    DepartmentId = dept.Id,
+                                    DepartmentNameEn = dept.NameEn
+                                };
+                                await _context.Sections.AddAsync(section);
+                                await _context.SaveChangesAsync();
+                                tempSections[secKey] = section;
+                            }
+                        }
+
+                        // 3. Resolve Designation (if provided)
+                        if (!string.IsNullOrEmpty(desigEn) && section != null)
+                        {
+                            var desigKey = $"{dept.NameEn}|{section.NameEn}|{desigEn}";
+                            if (!tempDesignations.TryGetValue(desigKey, out var desig))
+                            {
+                                desig = new Designation
+                                {
+                                    NameEn = desigEn,
+                                    NameBn = string.IsNullOrEmpty(desigBn) ? desigEn : desigBn,
+                                    SectionId = section.Id,
+                                    SectionNameEn = section.NameEn
+                                };
+                                await _context.Designations.AddAsync(desig);
+                                await _context.SaveChangesAsync();
+                                tempDesignations[desigKey] = desig;
+                            }
+                        }
+
+                        // 4. Resolve Line (if provided)
+                        if (!string.IsNullOrEmpty(lineEn) && section != null)
+                        {
+                            var lineKey = $"{dept.NameEn}|{section.NameEn}|{lineEn}";
+                            if (!tempLines.TryGetValue(lineKey, out var line))
+                            {
+                                line = new Line
+                                {
+                                    NameEn = lineEn,
+                                    NameBn = string.IsNullOrEmpty(lineBn) ? lineEn : lineBn,
+                                    SectionId = section.Id,
+                                    SectionNameEn = section.NameEn
+                                };
+                                await _context.Lines.AddAsync(line);
+                                await _context.SaveChangesAsync();
+                                tempLines[lineKey] = line;
+                            }
+                        }
+
+                        result.SuccessCount++;
+                    }
+
+                    if (result.ErrorCount > 0)
+                    {
+                        await transaction.RollbackAsync();
+                        result.Success = false;
+                        return result;
+                    }
+
+                    await transaction.CommitAsync();
+                    result.Success = true;
+                }
+                catch (Exception dbEx)
+                {
+                    await transaction.RollbackAsync();
+                    result.Success = false;
+                    result.Errors.Add($"Database save error: {dbEx.Message}");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Errors.Add($"System parsing error: {ex.Message}");
+            }
+
+            return result;
         }
 
         // --- Lookups Operations ---
@@ -1113,6 +1702,34 @@ namespace ERPHub.Services
         // Manpower
         public async Task<List<Manpower>> GetManpowersAsync()
         {
+            var count = await _context.Manpowers.CountAsync();
+            if (count == 0)
+            {
+                var employees = await _context.Employees.Where(e => e.EmployeeStatus == "Regular").ToListAsync();
+                var groups = employees.GroupBy(e => new { e.DepartmentId, e.SectionId, e.DesignationId }).ToList();
+                int idx = 1;
+                foreach (var g in groups)
+                {
+                    int headcount = g.Count();
+                    int extra = (idx % 3) == 0 ? 0 : (idx % 3);
+                    int target = headcount + extra;
+                    var mp = new Manpower
+                    {
+                        DepartmentId = g.Key.DepartmentId,
+                        SectionId = g.Key.SectionId,
+                        DesignationId = g.Key.DesignationId,
+                        CurrentHeadcount = headcount,
+                        TargetCapacity = target,
+                        Vacancies = target - headcount,
+                        Remarks = "Auto-seeded based on employee distribution",
+                        LastUpdated = DateTime.Now
+                    };
+                    await _context.Manpowers.AddAsync(mp);
+                    idx++;
+                }
+                await _context.SaveChangesAsync();
+            }
+
             return await _context.Manpowers
                 .Include(m => m.Department)
                 .Include(m => m.Section)
@@ -1190,6 +1807,63 @@ namespace ERPHub.Services
         // Manpower Requirements
         public async Task<List<ManpowerRequirement>> GetManpowerRequirementsAsync()
         {
+            var count = await _context.ManpowerRequirements.CountAsync();
+            if (count == 0)
+            {
+                var departments = await _context.Departments.Take(3).ToListAsync();
+                var designations = await _context.Designations.Take(3).ToListAsync();
+                if (departments.Count > 0 && designations.Count > 0)
+                {
+                    var req1 = new ManpowerRequirement
+                    {
+                        RoleTitle = "Senior Software Architect",
+                        DepartmentId = departments[0].Id,
+                        DesignationId = designations[0].Id,
+                        HeadcountNeeded = 2,
+                        TargetDate = DateTime.Today.AddDays(30),
+                        Priority = "High",
+                        Status = "Approved",
+                        Description = "We are looking for a Senior Software Architect to lead the transition of our ERP systems into Blazor native components.",
+                        Requirements = "8+ years in C#/.NET, strong database normalization skills, and clean architecture expertise.",
+                        CreatedAt = DateTime.Now.AddDays(-5),
+                        CreatedBy = "HR Manager"
+                    };
+
+                    var req2 = new ManpowerRequirement
+                    {
+                        RoleTitle = "Production Lead Supervisor",
+                        DepartmentId = departments.Count > 1 ? departments[1].Id : departments[0].Id,
+                        DesignationId = designations.Count > 1 ? designations[1].Id : designations[0].Id,
+                        HeadcountNeeded = 5,
+                        TargetDate = DateTime.Today.AddDays(45),
+                        Priority = "Medium",
+                        Status = "Recruiting",
+                        Description = "Urgent requirement for a shift lead to manage machinery throughput and safety protocols.",
+                        Requirements = "Prior supervisory experience, familiar with shop floor scheduling systems.",
+                        CreatedAt = DateTime.Now.AddDays(-3),
+                        CreatedBy = "HR Manager"
+                    };
+
+                    var req3 = new ManpowerRequirement
+                    {
+                        RoleTitle = "Technical Recruiter",
+                        DepartmentId = departments.Count > 2 ? departments[2].Id : departments[0].Id,
+                        DesignationId = designations.Count > 2 ? designations[2].Id : designations[0].Id,
+                        HeadcountNeeded = 1,
+                        TargetDate = DateTime.Today.AddDays(15),
+                        Priority = "Low",
+                        Status = "Pending",
+                        Description = "Responsible for hiring technical engineers, developers, and administrators.",
+                        Requirements = "Strong communication, experience in C# tech sourcing.",
+                        CreatedAt = DateTime.Now.AddDays(-1),
+                        CreatedBy = "HR Manager"
+                    };
+
+                    await _context.ManpowerRequirements.AddRangeAsync(req1, req2, req3);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             return await _context.ManpowerRequirements
                 .Include(m => m.Department)
                 .Include(m => m.Section)
@@ -1248,6 +1922,95 @@ namespace ERPHub.Services
         // Separations
         public async Task<List<Separation>> GetSeparationsAsync()
         {
+            var count = await _context.Separations.CountAsync();
+            if (count == 0)
+            {
+                var departments = await _context.Departments.Take(4).ToListAsync();
+                var sections = await _context.Sections.Take(4).ToListAsync();
+                var designations = await _context.Designations.Take(4).ToListAsync();
+
+                if (departments.Count > 0)
+                {
+                    var seeds = new List<Separation>
+                    {
+                        new Separation
+                        {
+                            EmployeeId = "EMP-0042",
+                            EmployeeName = "Karim Uddin",
+                            DepartmentId = departments[0].Id,
+                            SectionId = sections.Count > 0 ? sections[0].Id : (int?)null,
+                            DesignationId = designations.Count > 0 ? designations[0].Id : (int?)null,
+                            SeparationType = "Resignation",
+                            ResignDate = DateTime.Today.AddDays(-20),
+                            LastWorkingDay = DateTime.Today.AddDays(10),
+                            ExitInterviewDate = DateTime.Today.AddDays(5),
+                            Reason = "Pursuing higher education opportunities abroad.",
+                            HandoverNotes = "Handover project docs to team lead before last day.",
+                            Status = "Notice Period",
+                            ClearanceProgress = 50,
+                            CreatedAt = DateTime.Now.AddDays(-20),
+                            ApprovedBy = "HR Manager"
+                        },
+                        new Separation
+                        {
+                            EmployeeId = "EMP-0118",
+                            EmployeeName = "Nazma Begum",
+                            DepartmentId = departments.Count > 1 ? departments[1].Id : departments[0].Id,
+                            SectionId = sections.Count > 1 ? sections[1].Id : (int?)null,
+                            DesignationId = designations.Count > 1 ? designations[1].Id : (int?)null,
+                            SeparationType = "Retirement",
+                            ResignDate = DateTime.Today.AddDays(-60),
+                            LastWorkingDay = DateTime.Today.AddDays(-30),
+                            ExitInterviewDate = DateTime.Today.AddDays(-32),
+                            Reason = "Completed 25 years of service and eligible for full retirement benefit.",
+                            HandoverNotes = "All records transferred to deputy manager.",
+                            Status = "Settled",
+                            ClearanceProgress = 100,
+                            CreatedAt = DateTime.Now.AddDays(-60),
+                            ApprovedBy = "HR Director",
+                            ApprovedDate = DateTime.Now.AddDays(-55)
+                        },
+                        new Separation
+                        {
+                            EmployeeId = "EMP-0271",
+                            EmployeeName = "Rafiqul Islam",
+                            DepartmentId = departments.Count > 2 ? departments[2].Id : departments[0].Id,
+                            SectionId = sections.Count > 2 ? sections[2].Id : (int?)null,
+                            DesignationId = designations.Count > 2 ? designations[2].Id : (int?)null,
+                            SeparationType = "Termination",
+                            ResignDate = DateTime.Today.AddDays(-10),
+                            LastWorkingDay = DateTime.Today.AddDays(-10),
+                            Reason = "Repeated policy violations and misconduct.",
+                            HandoverNotes = "Access revoked immediately. IT assets collected.",
+                            Status = "Terminated",
+                            ClearanceProgress = 75,
+                            CreatedAt = DateTime.Now.AddDays(-10),
+                            ApprovedBy = "HR Manager",
+                            ApprovedDate = DateTime.Now.AddDays(-10)
+                        },
+                        new Separation
+                        {
+                            EmployeeId = "EMP-0389",
+                            EmployeeName = "Sonia Akter",
+                            DepartmentId = departments.Count > 3 ? departments[3].Id : departments[0].Id,
+                            SectionId = sections.Count > 3 ? sections[3].Id : (int?)null,
+                            DesignationId = designations.Count > 3 ? designations[3].Id : (int?)null,
+                            SeparationType = "Voluntary Exit",
+                            ResignDate = DateTime.Today.AddDays(-5),
+                            LastWorkingDay = DateTime.Today.AddDays(25),
+                            Reason = "Family relocation to another city.",
+                            HandoverNotes = "Currently completing task handover to senior colleague.",
+                            Status = "Initiated",
+                            ClearanceProgress = 10,
+                            CreatedAt = DateTime.Now.AddDays(-5),
+                        }
+                    };
+
+                    await _context.Separations.AddRangeAsync(seeds);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             return await _context.Separations
                 .Include(s => s.Department)
                 .Include(s => s.Section)
@@ -1306,6 +2069,153 @@ namespace ERPHub.Services
                 _context.Separations.Remove(existing);
                 await _context.SaveChangesAsync();
             }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Leave Types
+        // ─────────────────────────────────────────────────────────────────────
+
+        public async Task<List<LeaveType>> GetLeaveTypesAsync()
+        {
+            var count = await _context.LeaveTypes.CountAsync();
+            if (count == 0)
+            {
+                var seeds = new List<LeaveType>
+                {
+                    new LeaveType { Name = "Annual Leave",    Code = "AL",  MaxDaysPerYear = 15, IsPaid = true,  AccrualType = "Monthly", IsActive = true, Color = "#6366f1" },
+                    new LeaveType { Name = "Medical Leave",   Code = "ML",  MaxDaysPerYear = 10, IsPaid = true,  AccrualType = "Yearly",  IsActive = true, Color = "#ef4444" },
+                    new LeaveType { Name = "Casual Leave",    Code = "CL",  MaxDaysPerYear = 5,  IsPaid = true,  AccrualType = "Yearly",  IsActive = true, Color = "#f59e0b" },
+                    new LeaveType { Name = "Maternity Leave", Code = "MAT", MaxDaysPerYear = 90, IsPaid = true,  AccrualType = "OnRequest", IsActive = true, Color = "#ec4899", RequiresMedicalCertificate = true },
+                    new LeaveType { Name = "Unpaid Leave",    Code = "UL",  MaxDaysPerYear = 30, IsPaid = false, AccrualType = "OnRequest", IsActive = true, Color = "#71717a" }
+                };
+                await _context.LeaveTypes.AddRangeAsync(seeds);
+                await _context.SaveChangesAsync();
+            }
+            return await _context.LeaveTypes.OrderBy(lt => lt.Name).ToListAsync();
+        }
+
+        public async Task<LeaveType?> GetLeaveTypeByIdAsync(int id)
+            => await _context.LeaveTypes.FindAsync(id);
+
+        public async Task AddLeaveTypeAsync(LeaveType leaveType)
+        {
+            leaveType.Id = 0;
+            leaveType.CreatedAt = DateTime.Now;
+            await _context.LeaveTypes.AddAsync(leaveType);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateLeaveTypeAsync(LeaveType leaveType)
+        {
+            var existing = await _context.LeaveTypes.FindAsync(leaveType.Id);
+            if (existing != null)
+            {
+                existing.Name = leaveType.Name;
+                existing.Code = leaveType.Code;
+                existing.MaxDaysPerYear = leaveType.MaxDaysPerYear;
+                existing.IsPaid = leaveType.IsPaid;
+                existing.AccrualType = leaveType.AccrualType;
+                existing.IsActive = leaveType.IsActive;
+                existing.Color = leaveType.Color;
+                existing.RequiresMedicalCertificate = leaveType.RequiresMedicalCertificate;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteLeaveTypeAsync(int id)
+        {
+            var existing = await _context.LeaveTypes.FindAsync(id);
+            if (existing != null) { _context.LeaveTypes.Remove(existing); await _context.SaveChangesAsync(); }
+        }
+
+        // ─────────────────────────────────────────────────────────────────────
+        // Leave Applications
+        // ─────────────────────────────────────────────────────────────────────
+
+        public async Task<List<LeaveApplication>> GetLeaveApplicationsAsync(int? month = null, int? year = null, string? status = null)
+        {
+
+            var query = _context.LeaveApplications
+                .Include(la => la.Department)
+                .Include(la => la.Designation)
+                .Include(la => la.LeaveTypeNav)
+                .AsQueryable();
+
+            if (month.HasValue) query = query.Where(la => la.LeaveDate.Month == month.Value);
+            if (year.HasValue)  query = query.Where(la => la.LeaveDate.Year  == year.Value);
+            if (!string.IsNullOrEmpty(status) && status != "All")
+                query = query.Where(la => la.Status == status);
+
+            return await query.OrderByDescending(la => la.CreatedAt).ToListAsync();
+        }
+
+        public async Task<LeaveApplication?> GetLeaveApplicationByIdAsync(int id)
+            => await _context.LeaveApplications
+                .Include(la => la.Department)
+                .Include(la => la.Designation)
+                .Include(la => la.LeaveTypeNav)
+                .FirstOrDefaultAsync(la => la.Id == id);
+
+        public async Task AddLeaveApplicationAsync(LeaveApplication application)
+        {
+            application.Id = 0;
+            application.CreatedAt = DateTime.Now;
+            application.Status = "Pending";
+            await _context.LeaveApplications.AddAsync(application);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task UpdateLeaveApplicationAsync(LeaveApplication application)
+        {
+            var existing = await _context.LeaveApplications.FindAsync(application.Id);
+            if (existing != null)
+            {
+                existing.EmployeeId    = application.EmployeeId;
+                existing.EmployeeName  = application.EmployeeName;
+                existing.DepartmentId  = application.DepartmentId;
+                existing.DesignationId = application.DesignationId;
+                existing.LeaveTypeId   = application.LeaveTypeId;
+                existing.LeaveType     = application.LeaveType;
+                existing.LeaveDate     = application.LeaveDate;
+                existing.EndDate       = application.EndDate;
+                existing.TotalDays     = application.TotalDays;
+                existing.Reason        = application.Reason;
+                existing.UpdatedAt     = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task ApproveLeaveApplicationAsync(int id, string approvedBy)
+        {
+            var existing = await _context.LeaveApplications.FindAsync(id);
+            if (existing != null)
+            {
+                existing.Status      = "Approved";
+                existing.ApprovedBy  = approvedBy;
+                existing.ApprovedDate = DateTime.Now;
+                existing.UpdatedAt   = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task RejectLeaveApplicationAsync(int id, string rejectedBy, string reason)
+        {
+            var existing = await _context.LeaveApplications.FindAsync(id);
+            if (existing != null)
+            {
+                existing.Status         = "Rejected";
+                existing.ApprovedBy     = rejectedBy;
+                existing.RejectedReason = reason;
+                existing.ApprovedDate   = DateTime.Now;
+                existing.UpdatedAt      = DateTime.Now;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task DeleteLeaveApplicationAsync(int id)
+        {
+            var existing = await _context.LeaveApplications.FindAsync(id);
+            if (existing != null) { _context.LeaveApplications.Remove(existing); await _context.SaveChangesAsync(); }
         }
     }
 }

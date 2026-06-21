@@ -35,7 +35,7 @@ namespace ERPHub.Services
         Task SeedDemoCompaniesAsync();
         Task RemoveDemoCompaniesAsync();
 
-        // Business Groups
+        // Groups
         Task<List<BusinessGroup>> GetBusinessGroupsAsync();
         Task<BusinessGroup?> GetBusinessGroupByIdAsync(int id);
         Task AddBusinessGroupAsync(BusinessGroup group);
@@ -64,6 +64,8 @@ namespace ERPHub.Services
         Task AddEmployeeAsync(Employee employee);
         Task UpdateEmployeeAsync(Employee employee);
         Task DeleteEmployeeAsync(int id);
+        Task<ImportResultDto> ImportEmployeesFromExcelAsync(System.IO.Stream fileStream);
+        Task<ImportResultDto> ImportOrganogramFromExcelAsync(System.IO.Stream fileStream);
 
         // Lookups
         Task<List<Department>> GetDepartmentsAsync();
@@ -117,5 +119,21 @@ namespace ERPHub.Services
         Task AddSeparationAsync(Separation separation);
         Task UpdateSeparationAsync(Separation separation);
         Task DeleteSeparationAsync(int id);
+
+        // Leave Types
+        Task<List<LeaveType>> GetLeaveTypesAsync();
+        Task<LeaveType?> GetLeaveTypeByIdAsync(int id);
+        Task AddLeaveTypeAsync(LeaveType leaveType);
+        Task UpdateLeaveTypeAsync(LeaveType leaveType);
+        Task DeleteLeaveTypeAsync(int id);
+
+        // Leave Applications
+        Task<List<LeaveApplication>> GetLeaveApplicationsAsync(int? month = null, int? year = null, string? status = null);
+        Task<LeaveApplication?> GetLeaveApplicationByIdAsync(int id);
+        Task AddLeaveApplicationAsync(LeaveApplication application);
+        Task UpdateLeaveApplicationAsync(LeaveApplication application);
+        Task ApproveLeaveApplicationAsync(int id, string approvedBy);
+        Task RejectLeaveApplicationAsync(int id, string rejectedBy, string reason);
+        Task DeleteLeaveApplicationAsync(int id);
     }
 }

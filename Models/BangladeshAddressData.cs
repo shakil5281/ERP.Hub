@@ -1,31 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace ERPHub.Models
+namespace ERPHub.Models;
+
+public static class BangladeshAddressData
 {
-    public class AddressDivision
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-    }
-
-    public class AddressDistrict
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public int DivisionId { get; set; }
-    }
-
-    public class AddressUpazila
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public int DistrictId { get; set; }
-    }
-
-    public static class BangladeshAddressData
-    {
-        public static List<AddressDivision> Divisions => new()
+    public static List<AddressDivision> Divisions => new()
         {
             new() { Id = 1, Name = "Barishal" },
             new() { Id = 2, Name = "Chattogram" },
@@ -37,7 +17,7 @@ namespace ERPHub.Models
             new() { Id = 8, Name = "Sylhet" }
         };
 
-        public static List<AddressDistrict> Districts => new()
+    public static List<AddressDistrict> Districts => new()
         {
             // Barishal Division
             new() { Id = 1, Name = "Barguna", DivisionId = 1 },
@@ -120,7 +100,7 @@ namespace ERPHub.Models
             new() { Id = 64, Name = "Sylhet", DivisionId = 8 }
         };
 
-        public static List<AddressUpazila> Upazilas => new()
+    public static List<AddressUpazila> Upazilas => new()
         {
             // Barguna
             new() { Id = 1, Name = "Amtali", DistrictId = 1 },
@@ -715,10 +695,9 @@ namespace ERPHub.Models
             new() { Id = 464, Name = "Sylhet Sadar", DistrictId = 64 }
         };
 
-        public static List<AddressDistrict> GetDistrictsByDivision(int divisionId)
-            => Districts.Where(d => d.DivisionId == divisionId).OrderBy(d => d.Name).ToList();
+    public static List<AddressDistrict> GetDistrictsByDivision(int divisionId)
+        => Districts.Where(d => d.DivisionId == divisionId).OrderBy(d => d.Name).ToList();
 
-        public static List<AddressUpazila> GetUpazilasByDistrict(int districtId)
-            => Upazilas.Where(u => u.DistrictId == districtId).OrderBy(u => u.Name).ToList();
-    }
+    public static List<AddressUpazila> GetUpazilasByDistrict(int districtId)
+        => Upazilas.Where(u => u.DistrictId == districtId).OrderBy(u => u.Name).ToList();
 }

@@ -1,0 +1,382 @@
+@page "/leave/monthly-report"
+@using ERPHub.Models
+@using LeaveApp = ERPHub.Models.LeaveApplication
+@using LeaveTypeModel = ERPHub.Models.LeaveType
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>ERPHub - Monthly Leave Report</PageTitle>
+
+<style>
+    @@media print {
+        body > * { display: none !important; }
+        #monthly-leave-print { display: block !important; }
+        @@page { margin: 12mm; size: A4 landscape; }
+    }
+    #monthly-leave-print { display: none; }
+</style>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Monthly Leave Report</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Consolidated leave usage by department and employee for a selected month.</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md border border-zinc-200 text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer text-xs" @onclick="LoadReport">
+                        <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" Class="mr-1" />
+                        Generate
+                    </button>
+                    <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick="ExportPdf">
+                        <MudIcon Icon="@Icons.Material.Filled.PictureAsPdf" Size="Size.Small" Class="mr-1" />
+                        Export PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Period Selector -->
+            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm mb-6 p-5">
+                <div class="grid grid-cols-3 gap-4 max-sm:grid-cols-1">
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Year</label>
+                        <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @onchange="OnYearChanged">
+                            @for (int y = DateTime.Now.Year; y >= DateTime.Now.Year - 3; y--)
+                            {
+                                var year = y;
+                                <option value="@year" selected="@(_selectedYear == year)">@year</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Month</label>
+                        <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @onchange="OnMonthChanged">
+                            @for (int m = 1; m <= 12; m++)
+                            {
+                                var month = m;
+                                <option value="@month" selected="@(_selectedMonth == month)">@(new DateTime(2000, month, 1).ToString("MMMM"))</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Department</label>
+                        <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @onchange="OnDeptChanged">
+                            <option value="0">All Departments</option>
+                            @foreach (var d in _departments)
+                            {
+                                <option value="@d.Id">@d.NameEn</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="flex justify-center items-center py-20">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                </div>
+            }
+            else if (_reportApps.Count == 0)
+            {
+                <div class="bg-white border border-zinc-200 rounded-xl p-16 text-center shadow-sm">
+                    <MudIcon Icon="@Icons.Material.Filled.EventBusy" Size="Size.Large" Class="text-zinc-300 mb-3" />
+                    <div class="text-zinc-500 text-sm font-semibold font-body mt-2">No Leave Applications Found</div>
+                    <div class="text-zinc-400 text-xs mt-1">No applications for @(new DateTime(2000, _selectedMonth, 1).ToString("MMMM")) @_selectedYear.</div>
+                </div>
+            }
+            else
+            {
+                <!-- Summary KPI Cards -->
+                <div class="grid grid-cols-4 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #6366f1">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Total Applications</div>
+                        <div class="text-xl font-extrabold text-zinc-950 mt-1 font-heading">@_reportApps.Count</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #10b981">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Total Leave Days</div>
+                        <div class="text-xl font-extrabold text-emerald-600 mt-1 font-heading">@_reportApps.Where(a => a.Status == "Approved").Sum(a => a.TotalDays)</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #f59e0b">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Employees on Leave</div>
+                        <div class="text-xl font-extrabold text-amber-600 mt-1 font-heading">@_reportApps.Select(a => a.EmployeeId).Distinct().Count()</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #ef4444">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Pending Approvals</div>
+                        <div class="text-xl font-extrabold text-rose-600 mt-1 font-heading">@_reportApps.Count(a => a.Status == "Pending")</div>
+                    </div>
+                </div>
+
+                <!-- Department-wise Leave Type Breakdown -->
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden mb-6">
+                    <div class="px-5 py-3.5 border-b border-zinc-100">
+                        <span class="text-sm font-bold text-zinc-800 font-heading">Department-wise Leave Summary</span>
+                        <span class="ml-2 text-xs text-zinc-400">Approved days only</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-zinc-50 border-b border-zinc-100">
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider w-40">Department</th>
+                                    @foreach (var lt in _leaveTypes)
+                                    {
+                                        <th class="text-center px-3 py-3 font-bold uppercase tracking-wider" style="color:@lt.Color; white-space:nowrap">@lt.Code</th>
+                                    }
+                                    <th class="text-center px-3 py-3 font-bold text-zinc-700 uppercase tracking-wider">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in _deptRows)
+                                {
+                                    <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                        <td class="px-4 py-3 font-semibold text-zinc-800">@row.DeptName</td>
+                                        @foreach (var lt in _leaveTypes)
+                                        {
+                                            var days = row.TypeDays.TryGetValue(lt.Name, out var d) ? d : 0;
+                                            <td class="text-center px-3 py-3">
+                                                @if (days > 0)
+                                                {
+                                                    <span class="font-bold" style="color:@lt.Color">@days</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-zinc-200">—</span>
+                                                }
+                                            </td>
+                                        }
+                                        <td class="text-center px-3 py-3 font-extrabold text-zinc-900">@row.Total</td>
+                                    </tr>
+                                }
+                                <!-- Totals Row -->
+                                <tr class="bg-zinc-50 font-bold border-t-2 border-zinc-200">
+                                    <td class="px-4 py-3 text-zinc-700 font-extrabold">TOTAL</td>
+                                    @foreach (var lt in _leaveTypes)
+                                    {
+                                        var total = _deptRows.Sum(r => r.TypeDays.TryGetValue(lt.Name, out var d) ? d : 0);
+                                        <td class="text-center px-3 py-3 font-extrabold" style="color:@lt.Color">@(total > 0 ? total.ToString() : "—")</td>
+                                    }
+                                    <td class="text-center px-3 py-3 font-extrabold text-zinc-900">@_deptRows.Sum(r => r.Total)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Employee Detail Table -->
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="px-5 py-3.5 border-b border-zinc-100">
+                        <span class="text-sm font-bold text-zinc-800 font-heading">Employee Leave Details</span>
+                    </div>
+                    <MudTable Items="@_reportApps" Hover="true" Dense="true" SortLabel="Sort By" Elevation="0">
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.EmployeeName)">Employee</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.Department != null ? x.Department.NameEn : string.Empty)">Department</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.LeaveType)">Leave Type</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.LeaveDate)">From</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.EndDate)">To</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.TotalDays)">Days</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>
+                                <div class="text-sm font-semibold text-zinc-800">@context.EmployeeName</div>
+                                <div class="text-[10px] text-zinc-400 font-mono">@context.EmployeeId</div>
+                            </MudTd>
+                            <MudTd><span class="text-xs text-zinc-600">@(context.Department?.NameEn ?? "-")</span></MudTd>
+                            <MudTd>
+                                @{
+                                    var lt = _leaveTypes.FirstOrDefault(t => t.Name == context.LeaveType);
+                                    var lc = lt?.Color ?? "#6366f1";
+                                }
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                                      style="background-color:@(lc + "15"); color:@lc; border-color:@(lc + "40")">
+                                    @context.LeaveType
+                                </span>
+                            </MudTd>
+                            <MudTd Style="text-align:center"><span class="font-mono text-xs text-zinc-600">@context.LeaveDate.ToString("dd MMM")</span></MudTd>
+                            <MudTd Style="text-align:center"><span class="font-mono text-xs text-zinc-600">@context.EndDate.ToString("dd MMM")</span></MudTd>
+                            <MudTd Style="text-align:center"><span class="text-sm font-bold text-zinc-800">@context.TotalDays</span></MudTd>
+                            <MudTd Style="text-align:center">
+                                @{
+                                    var sc = context.Status switch {
+                                        "Approved" => "bg-emerald-50 text-emerald-700 border border-emerald-100",
+                                        "Pending"  => "bg-amber-50 text-amber-700 border border-amber-100",
+                                        "Rejected" => "bg-red-50 text-red-700 border border-red-100",
+                                        _ => "bg-zinc-100 text-zinc-500"
+                                    };
+                                }
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @sc">@context.Status</span>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent><MudTablePager PageSizeOptions="new int[] { 15, 25, 50 }" /></PagerContent>
+                    </MudTable>
+                </div>
+            }
+        </div>
+
+        <!-- Hidden Print Area -->
+        <div id="monthly-leave-print" style="font-family:Arial,sans-serif; padding:15px; color:#000; font-size:11px;">
+            <div style="text-align:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
+                <h1 style="font-size:18px; margin:0; font-weight:900;">ERP HUB</h1>
+                <h2 style="font-size:13px; margin:4px 0 0;">MONTHLY LEAVE REPORT — @(new DateTime(2000, _selectedMonth, 1).ToString("MMMM").ToUpper()) @_selectedYear</h2>
+                <p style="font-size:10px; color:#555; margin:4px 0 0;">Generated: @DateTime.Now.ToString("dd MMM yyyy HH:mm")</p>
+            </div>
+
+            <!-- Summary -->
+            <table style="width:100%; margin-bottom:15px; border-collapse:collapse;">
+                <tr>
+                    <td style="padding:4px 8px; font-weight:700; border:1px solid #ccc; background:#f5f5f5; width:25%;">Total Applications</td>
+                    <td style="padding:4px 8px; border:1px solid #ccc;">@_reportApps.Count</td>
+                    <td style="padding:4px 8px; font-weight:700; border:1px solid #ccc; background:#f5f5f5; width:25%;">Total Leave Days (Approved)</td>
+                    <td style="padding:4px 8px; border:1px solid #ccc;">@_reportApps.Where(a => a.Status == "Approved").Sum(a => a.TotalDays)</td>
+                </tr>
+                <tr>
+                    <td style="padding:4px 8px; font-weight:700; border:1px solid #ccc; background:#f5f5f5;">Employees on Leave</td>
+                    <td style="padding:4px 8px; border:1px solid #ccc;">@_reportApps.Select(a => a.EmployeeId).Distinct().Count()</td>
+                    <td style="padding:4px 8px; font-weight:700; border:1px solid #ccc; background:#f5f5f5;">Pending</td>
+                    <td style="padding:4px 8px; border:1px solid #ccc;">@_reportApps.Count(a => a.Status == "Pending")</td>
+                </tr>
+            </table>
+
+            <!-- Dept Summary -->
+            <h3 style="font-size:12px; font-weight:700; margin:12px 0 6px;">Department-wise Summary</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:10px; margin-bottom:15px;">
+                <thead>
+                    <tr style="background:#f0f0f0;">
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:left; font-weight:700;">Department</th>
+                        @foreach (var lt in _leaveTypes)
+                        {
+                            <th style="padding:5px 8px; border:1px solid #ccc; text-align:center; font-weight:700;">@lt.Code</th>
+                        }
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:center; font-weight:700;">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in _deptRows)
+                    {
+                        <tr>
+                            <td style="padding:5px 8px; border:1px solid #ccc; font-weight:600;">@row.DeptName</td>
+                            @foreach (var lt in _leaveTypes)
+                            {
+                                var days = row.TypeDays.TryGetValue(lt.Name, out var d) ? d : 0;
+                                <td style="padding:5px 8px; border:1px solid #ccc; text-align:center;">@(days > 0 ? days.ToString() : "—")</td>
+                            }
+                            <td style="padding:5px 8px; border:1px solid #ccc; text-align:center; font-weight:700;">@row.Total</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <!-- Employee Detail -->
+            <h3 style="font-size:12px; font-weight:700; margin:12px 0 6px;">Employee Leave Details</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:10px;">
+                <thead>
+                    <tr style="background:#f0f0f0;">
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:left;">Employee</th>
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:left;">Department</th>
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:left;">Leave Type</th>
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:center;">From</th>
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:center;">To</th>
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:center;">Days</th>
+                        <th style="padding:5px 8px; border:1px solid #ccc; text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var app in _reportApps)
+                    {
+                        <tr>
+                            <td style="padding:5px 8px; border:1px solid #ccc;">@app.EmployeeName (@app.EmployeeId)</td>
+                            <td style="padding:5px 8px; border:1px solid #ccc;">@(app.Department?.NameEn ?? "-")</td>
+                            <td style="padding:5px 8px; border:1px solid #ccc;">@app.LeaveType</td>
+                            <td style="padding:5px 8px; border:1px solid #ccc; text-align:center;">@app.LeaveDate.ToString("dd MMM")</td>
+                            <td style="padding:5px 8px; border:1px solid #ccc; text-align:center;">@app.EndDate.ToString("dd MMM")</td>
+                            <td style="padding:5px 8px; border:1px solid #ccc; text-align:center; font-weight:700;">@app.TotalDays</td>
+                            <td style="padding:5px 8px; border:1px solid #ccc; text-align:center;">@app.Status</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            <p style="text-align:center; font-size:9px; color:#999; margin-top:20px;">ERPHub — Confidential Leave Report</p>
+        </div>
+    </Authorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<LeaveApp> _reportApps = new();
+    private List<LeaveTypeModel> _leaveTypes = new();
+    private List<Department> _departments = new();
+    private List<DeptReportRow> _deptRows = new();
+    private bool _isLoading = false;
+    private int _selectedYear = DateTime.Now.Year;
+    private int _selectedMonth = DateTime.Now.Month;
+    private int _deptFilter = 0;
+
+    public class DeptReportRow
+    {
+        public string DeptName { get; set; } = "";
+        public Dictionary<string, int> TypeDays { get; set; } = new();
+        public int Total => TypeDays.Values.Sum();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Task.WhenAll(LoadLeaveTypes(), LoadDepartments());
+        await LoadReport();
+    }
+
+    private async Task LoadLeaveTypes()
+    {
+        try { _leaveTypes = await Http.GetFromJsonAsync<List<LeaveTypeModel>>($"{NavManager.BaseUri}api/leavetypes") ?? new(); }
+        catch { }
+    }
+
+    private async Task LoadDepartments()
+    {
+        try { _departments = await Http.GetFromJsonAsync<List<Department>>($"{NavManager.BaseUri}api/departments") ?? new(); }
+        catch { }
+    }
+
+    private void OnYearChanged(ChangeEventArgs e) { if (int.TryParse(e.Value?.ToString(), out var y)) _selectedYear = y; }
+    private void OnMonthChanged(ChangeEventArgs e) { if (int.TryParse(e.Value?.ToString(), out var m)) _selectedMonth = m; }
+    private void OnDeptChanged(ChangeEventArgs e) { int.TryParse(e.Value?.ToString(), out _deptFilter); }
+
+    private async Task LoadReport()
+    {
+        _isLoading = true;
+        try
+        {
+            var url = $"{NavManager.BaseUri}api/leaveapplications?month={_selectedMonth}&year={_selectedYear}";
+            var all = await Http.GetFromJsonAsync<List<LeaveApp>>(url) ?? new();
+            _reportApps = _deptFilter == 0 ? all : all.Where(a => a.DepartmentId == _deptFilter).ToList();
+            BuildDeptRows();
+        }
+        catch (Exception ex) { Snackbar.Add($"Error: {ex.Message}", Severity.Error); }
+        finally { _isLoading = false; }
+    }
+
+    private void BuildDeptRows()
+    {
+        var approved = _reportApps.Where(a => a.Status == "Approved").ToList();
+        _deptRows = approved
+            .GroupBy(a => a.Department?.NameEn ?? "Unknown")
+            .Select(g => new DeptReportRow
+            {
+                DeptName = g.Key,
+                TypeDays = g.GroupBy(a => a.LeaveType).ToDictionary(x => x.Key, x => x.Sum(a => a.TotalDays))
+            })
+            .OrderBy(r => r.DeptName)
+            .ToList();
+    }
+
+    private async Task ExportPdf()
+    {
+        StateHasChanged();
+        await Task.Delay(150);
+        await JS.InvokeVoidAsync("window.print");
+    }
+}

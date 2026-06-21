@@ -95,7 +95,8 @@
                                                               Margin="Margin.Dense" />
                                             </MudItem>
                                             <MudItem xs="12" sm="6">
-                                                <MudDatePicker @bind-Date="_dob"
+                                                <MudDatePicker Date="_dob"
+                                                               DateChanged="OnDobChanged"
                                                                Label="Date of Birth"
                                                                Editable="true"
                                                                Placeholder="Select Date"

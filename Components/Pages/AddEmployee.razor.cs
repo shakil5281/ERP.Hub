@@ -19,32 +19,32 @@ public partial class AddEmployee
     [Inject]
     private NavigationManager NavManager { get; set; } = default!;
 
-    private Employee _employee = new();
-    private bool _isSaving = false;
-    private int _activeTabIndex = 0;
+    private readonly Employee _employee = new();
+    private bool _isSaving;
+    private int _activeTabIndex;
 
-    private bool _showToast = false;
+    private bool _showToast;
     private string _toastMessage = string.Empty;
-    private bool _showErrorToast = false;
+    private bool _showErrorToast;
     private string _errorMessage = string.Empty;
 
-    private List<Department> _departments = new();
-    private List<Section> _allSections = new();
-    private List<Designation> _allDesignations = new();
-    private List<Line> _allLines = new();
-    private List<ERPHub.Models.Shift> _shifts = new();
-    private List<Company> _companies = new();
+    private List<Department> _departments = [];
+    private List<Section> _allSections = [];
+    private List<Designation> _allDesignations = [];
+    private List<Line> _allLines = [];
+    private List<ERPHub.Models.Shift> _shifts = [];
+    private List<Company> _companies = [];
 
     private string _gender = string.Empty;
     private DateTime? _dob;
     private DateTime? _joiningDate = DateTime.Today;
     private string _spouseName = string.Empty;
-    private int _childrenCount = 0;
+    private int _childrenCount;
     private string _accountType = string.Empty;
     private string _accountNumber = string.Empty;
     private string _accountPlaceholder = "Select account type first";
     private int _accountMaxLength = 17;
-    private bool _accountNumberError = false;
+    private bool _accountNumberError;
     private string _accountNumberErrorText = string.Empty;
 
     private decimal _grossSalary;
@@ -55,22 +55,22 @@ public partial class AddEmployee
     private decimal _totalSalary;
 
     // Address fields
-    private List<AddressDivision> _divisions = BangladeshAddressData.Divisions;
+    private readonly List<AddressDivision> _divisions = ERPHub.Models.BangladeshAddressData.Divisions;
     private int _presentDivisionId;
     private int _presentDistrictId;
     private int _permanentDivisionId;
     private int _permanentDistrictId;
-    private bool _sameAsPresent = false;
+    private bool _sameAsPresent;
 
-    private List<AddressDistrict> _presentFilteredDistricts => _presentDivisionId == 0 ? new() :
-        BangladeshAddressData.GetDistrictsByDivision(_presentDivisionId);
-    private List<AddressUpazila> _presentFilteredUpazilas => _presentDistrictId == 0 ? new() :
-        BangladeshAddressData.GetUpazilasByDistrict(_presentDistrictId);
+    private List<AddressDistrict> _presentFilteredDistricts => _presentDivisionId == 0 ? [] :
+        ERPHub.Models.BangladeshAddressData.GetDistrictsByDivision(_presentDivisionId);
+    private List<AddressUpazila> _presentFilteredUpazilas => _presentDistrictId == 0 ? [] :
+        ERPHub.Models.BangladeshAddressData.GetUpazilasByDistrict(_presentDistrictId);
 
-    private List<AddressDistrict> _permanentFilteredDistricts => _permanentDivisionId == 0 ? new() :
-        BangladeshAddressData.GetDistrictsByDivision(_permanentDivisionId);
-    private List<AddressUpazila> _permanentFilteredUpazilas => _permanentDistrictId == 0 ? new() :
-        BangladeshAddressData.GetUpazilasByDistrict(_permanentDistrictId);
+    private List<AddressDistrict> _permanentFilteredDistricts => _permanentDivisionId == 0 ? [] :
+        ERPHub.Models.BangladeshAddressData.GetDistrictsByDivision(_permanentDivisionId);
+    private List<AddressUpazila> _permanentFilteredUpazilas => _permanentDistrictId == 0 ? [] :
+        ERPHub.Models.BangladeshAddressData.GetUpazilasByDistrict(_permanentDistrictId);
 
     private void OnGrossSalaryChanged(decimal gross)
     {
@@ -88,13 +88,13 @@ public partial class AddEmployee
     private string? _photoPreview;
     private string? _signaturePreview;
 
-    private List<Section> _filteredSections => _employee.DepartmentId == 0 ? new() :
+    private List<Section> _filteredSections => _employee.DepartmentId == 0 ? [] :
         _allSections.Where(s => s.DepartmentId == _employee.DepartmentId).ToList();
 
-    private List<Designation> _filteredDesignations => _employee.SectionId == 0 ? new() :
+    private List<Designation> _filteredDesignations => _employee.SectionId == 0 ? [] :
         _allDesignations.Where(d => d.SectionId == _employee.SectionId).ToList();
 
-    private List<Line> _filteredLines => _employee.SectionId == 0 ? new() :
+    private List<Line> _filteredLines => _employee.SectionId == 0 ? [] :
         _allLines.Where(l => l.SectionId == _employee.SectionId).ToList();
 
     protected override async Task OnInitializedAsync()
@@ -109,12 +109,12 @@ public partial class AddEmployee
     {
         try
         {
-            _departments = await Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments") ?? new();
-            _allSections = await Http.GetFromJsonAsync<List<Section>>($"{baseUri}api/sections") ?? new();
-            _allDesignations = await Http.GetFromJsonAsync<List<Designation>>($"{baseUri}api/designations") ?? new();
-            _allLines = await Http.GetFromJsonAsync<List<Line>>($"{baseUri}api/lines") ?? new();
-            _shifts = await Http.GetFromJsonAsync<List<ERPHub.Models.Shift>>($"{baseUri}api/shifts") ?? new();
-            _companies = await Http.GetFromJsonAsync<List<Company>>($"{baseUri}api/companies") ?? new();
+            _departments = await Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments") ?? [];
+            _allSections = await Http.GetFromJsonAsync<List<Section>>($"{baseUri}api/sections") ?? [];
+            _allDesignations = await Http.GetFromJsonAsync<List<Designation>>($"{baseUri}api/designations") ?? [];
+            _allLines = await Http.GetFromJsonAsync<List<Line>>($"{baseUri}api/lines") ?? [];
+            _shifts = await Http.GetFromJsonAsync<List<ERPHub.Models.Shift>>($"{baseUri}api/shifts") ?? [];
+            _companies = await Http.GetFromJsonAsync<List<Company>>($"{baseUri}api/companies") ?? [];
         }
         catch (Exception ex)
         {
@@ -142,6 +142,14 @@ public partial class AddEmployee
         _joiningDate = date;
         _employee.JoiningDate = date ?? DateTime.Today;
     }
+
+    private void OnDobChanged(DateTime? date) => _dob = date;
+
+    private void OnGenderChanged(string value) => _gender = value;
+
+    private void OnSpouseNameChanged(string value) => _spouseName = value;
+
+    private void OnChildrenCountChanged(int value) => _childrenCount = value;
 
     private void OnAccountTypeChanged(string value)
     {

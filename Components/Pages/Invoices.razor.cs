@@ -12,7 +12,7 @@ public partial class Invoices
 {
     [Inject] private IErpService ErpService { get; set; } = default!;
 
-    private List<Invoice> _invoicesList = new();
+    private List<Invoice> _invoicesList = [];
     private Invoice _newInvoice = new();
 
     protected override async Task OnInitializedAsync()

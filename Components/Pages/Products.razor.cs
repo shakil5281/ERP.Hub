@@ -14,10 +14,10 @@ public partial class Products
 
     private List<Product> _products = new();
     private List<string> _categories = new() { "Hardware", "Office Equipment", "Accessories", "Software License", "Services" };
-    
+
     private string _searchQuery = string.Empty;
     private string _categoryFilter = string.Empty;
-    
+
     private bool _showFormModal = false;
     private bool _isEditMode = false;
     private Product _editingProduct = new();
@@ -33,8 +33,8 @@ public partial class Products
     }
 
     private IEnumerable<Product> FilteredProducts => _products
-        .Where(p => (string.IsNullOrWhiteSpace(_searchQuery) || 
-                     p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
+        .Where(p => (string.IsNullOrWhiteSpace(_searchQuery) ||
+                     p.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
                      p.Sku.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)) &&
                     (string.IsNullOrWhiteSpace(_categoryFilter) || p.Category == _categoryFilter));
 
@@ -77,7 +77,7 @@ public partial class Products
         {
             await ErpService.AddProductAsync(_editingProduct);
         }
-        
+
         await LoadProducts();
         _showFormModal = false;
     }

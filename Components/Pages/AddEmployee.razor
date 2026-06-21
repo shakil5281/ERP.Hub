@@ -37,14 +37,14 @@
                                                           Placeholder="e.g. EMP-001"
                                                           Required="true"
                                                           RequiredError="Employee ID is required."
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudNumericField @bind-Value="_employee.PunchNumber"
                                                              Label="Punch Number"
                                                              Placeholder="e.g. 1001"
-                                                             Variant="Variant.Text"
+                                                             Variant="Variant.Outlined"
                                                              Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12">
@@ -53,14 +53,14 @@
                                                           Placeholder="e.g. Jane Doe"
                                                           Required="true"
                                                           RequiredError="Full Name is required."
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudTextField @bind-Value="_employee.NID"
                                                           Label="National ID (NID)"
                                                           Placeholder="e.g. 1234567890"
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
@@ -69,31 +69,33 @@
                                                           Placeholder="e.g. +880 1711-000000"
                                                           Required="true"
                                                           RequiredError="Mobile Number is required."
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudTextField @bind-Value="_employee.Email"
                                                           Label="Email Address"
                                                           Placeholder="e.g. jane.doe@company.com"
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
-                                            <MudDatePicker @bind-Date="_dob"
+                                            <MudDatePicker Date="_dob"
+                                                           DateChanged="OnDobChanged"
                                                            Label="Date of Birth"
                                                            Editable="true"
                                                            Placeholder="Select Date"
                                                            DateFormat="dd/MM/yyyy"
-                                                           Variant="Variant.Text"
+                                                           Variant="Variant.Outlined"
                                                            Margin="Margin.Dense"
                                                            Adornment="Adornment.End"
                                                            AdornmentIcon="@Icons.Material.Filled.CalendarToday" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
-                                            <MudSelect T="string" @bind-Value="_gender"
+                                            <MudSelect T="string" Value="_gender"
+                                                       ValueChanged="@( (string v) => OnGenderChanged(v) )"
                                                        Label="Gender"
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="@("Male")" />
                                                 <MudSelectItem Value="@("Female")" />
@@ -112,28 +114,30 @@
                                             <MudTextField @bind-Value="_employee.FatherName"
                                                           Label="Father's Name"
                                                           Placeholder="e.g. John Doe"
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
                                             <MudTextField @bind-Value="_employee.MotherName"
                                                           Label="Mother's Name"
                                                           Placeholder="e.g. Mary Doe"
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="_spouseName"
+                                            <MudTextField Value="_spouseName"
+                                                          ValueChanged="@( (string? v) => OnSpouseNameChanged(v ?? string.Empty) )"
                                                           Label="Spouse Name"
                                                           Placeholder="e.g. Sarah Doe"
-                                                          Variant="Variant.Text"
+                                                          Variant="Variant.Outlined"
                                                           Margin="Margin.Dense" />
                                         </MudItem>
                                         <MudItem xs="12" sm="6">
-                                            <MudNumericField @bind-Value="_childrenCount"
+                                            <MudNumericField Value="_childrenCount"
+                                                             ValueChanged="@( (int? v) => OnChildrenCountChanged(v ?? 0) )"
                                                              Label="Number of Children"
                                                              Min="0"
-                                                             Variant="Variant.Text"
+                                                             Variant="Variant.Outlined"
                                                              Margin="Margin.Dense" />
                                         </MudItem>
                                     </MudGrid>
@@ -149,7 +153,7 @@
                                                        Label="Company Name"
                                                        Required="true"
                                                        RequiredError="Company is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="0">Select Company</MudSelectItem>
                                                 @foreach (var comp in _companies)
@@ -164,7 +168,7 @@
                                                        Label="Department"
                                                        Required="true"
                                                        RequiredError="Department is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="0">Select Department</MudSelectItem>
                                                 @foreach (var dept in _departments)
@@ -179,7 +183,7 @@
                                                        Label="Section"
                                                        Required="true"
                                                        RequiredError="Section is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="0">Select Section</MudSelectItem>
                                                 @foreach (var sec in _filteredSections)
@@ -193,7 +197,7 @@
                                                        Label="Designation"
                                                        Required="true"
                                                        RequiredError="Designation is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="0">Select Designation</MudSelectItem>
                                                 @foreach (var desig in _filteredDesignations)
@@ -207,7 +211,7 @@
                                                        Label="Line"
                                                        Required="true"
                                                        RequiredError="Line is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="0">Select Line</MudSelectItem>
                                                 @foreach (var line in _filteredLines)
@@ -221,7 +225,7 @@
                                                        Label="Shift"
                                                        Required="true"
                                                        RequiredError="Shift is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="0">Select Shift</MudSelectItem>
                                                 @foreach (var shift in _shifts)
@@ -237,7 +241,7 @@
                                                            Editable="true"
                                                            Placeholder="Select Date"
                                                            DateFormat="dd/MM/yyyy"
-                                                           Variant="Variant.Text"
+                                                           Variant="Variant.Outlined"
                                                            Margin="Margin.Dense"
                                                            Adornment="Adornment.End"
                                                            AdornmentIcon="@Icons.Material.Filled.CalendarToday" />
@@ -247,7 +251,7 @@
                                                        Label="Employee Status"
                                                        Required="true"
                                                        RequiredError="Employee Status is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="@("Regular")" />
                                                 <MudSelectItem Value="@("Resign")" />
@@ -266,7 +270,7 @@
                                                        Label="Employee Type"
                                                        Required="true"
                                                        RequiredError="Employee Type is required."
-                                                       Variant="Variant.Text"
+                                                       Variant="Variant.Outlined"
                                                        Margin="Margin.Dense">
                                                 <MudSelectItem Value="@("Permanent")" />
                                                 <MudSelectItem Value="@("Contract")" />
@@ -298,7 +302,7 @@
                                                                  Placeholder="0.00"
                                                                  Adornment="Adornment.Start"
                                                                  AdornmentText="৳"
-                                                                 Variant="Variant.Text"
+                                                                 Variant="Variant.Outlined"
                                                                  Margin="Margin.Dense"
                                                                  ValueChanged="@( (decimal v) => OnGrossSalaryChanged(v) )" />
                                             </MudItem>
@@ -308,7 +312,7 @@
                                                                  Placeholder="0.00"
                                                                  Adornment="Adornment.Start"
                                                                  AdornmentText="৳"
-                                                                 Variant="Variant.Text"
+                                                                 Variant="Variant.Outlined"
                                                                  Margin="Margin.Dense"
                                                                  Disabled="true" />
                                             </MudItem>
@@ -318,7 +322,7 @@
                                                                  Placeholder="0.00"
                                                                  Adornment="Adornment.Start"
                                                                  AdornmentText="৳"
-                                                                 Variant="Variant.Text"
+                                                                 Variant="Variant.Outlined"
                                                                  Margin="Margin.Dense"
                                                                  Disabled="true" />
                                             </MudItem>
@@ -328,7 +332,7 @@
                                                                  Placeholder="0.00"
                                                                  Adornment="Adornment.Start"
                                                                  AdornmentText="৳"
-                                                                 Variant="Variant.Text"
+                                                                 Variant="Variant.Outlined"
                                                                  Margin="Margin.Dense"
                                                                  Disabled="true" />
                                             </MudItem>
@@ -338,7 +342,7 @@
                                                                  Placeholder="0.00"
                                                                  Adornment="Adornment.Start"
                                                                  AdornmentText="৳"
-                                                                 Variant="Variant.Text"
+                                                                 Variant="Variant.Outlined"
                                                                  Margin="Margin.Dense"
                                                                  Disabled="true" />
                                             </MudItem>
@@ -348,7 +352,7 @@
                                                                  Placeholder="0.00"
                                                                  Adornment="Adornment.Start"
                                                                  AdornmentText="৳"
-                                                                 Variant="Variant.Text"
+                                                                 Variant="Variant.Outlined"
                                                                  Margin="Margin.Dense"
                                                                  Disabled="true" />
                                             </MudItem>
@@ -376,7 +380,7 @@
                                                 <MudSelect T="string" Value="_accountType"
                                                            ValueChanged="@( (string v) => OnAccountTypeChanged(v) )"
                                                            Label="Account Type"
-                                                           Variant="Variant.Text"
+                                                           Variant="Variant.Outlined"
                                                            Margin="Margin.Dense">
                                                     <MudSelectItem Value="@("mCash")" />
                                                     <MudSelectItem Value="@("Card")" />
@@ -388,7 +392,7 @@
                                                               Label="Account Number"
                                                               Placeholder="@_accountPlaceholder"
                                                               MaxLength="@_accountMaxLength"
-                                                              Variant="Variant.Text"
+                                                              Variant="Variant.Outlined"
                                                               Margin="Margin.Dense"
                                                               Error="@_accountNumberError"
                                                               ErrorText="@_accountNumberErrorText" />
@@ -417,14 +421,14 @@
                                                 <MudTextField @bind-Value="_employee.PresentVillage"
                                                               Label="Village / Neighborhood"
                                                               Placeholder="e.g. Vill: Genda"
-                                                              Variant="Variant.Text"
+                                                              Variant="Variant.Outlined"
                                                               Margin="Margin.Dense" />
                                             </MudItem>
                                             <MudItem xs="12" sm="6">
                                                 <MudTextField @bind-Value="_employee.PresentPostOffice"
                                                               Label="Post Office (P.O.)"
                                                               Placeholder="e.g. GPO"
-                                                              Variant="Variant.Text"
+                                                              Variant="Variant.Outlined"
                                                               Margin="Margin.Dense" />
                                             </MudItem>
                                             <MudItem xs="12" sm="6">
@@ -433,7 +437,7 @@
                                                            Label="Division"
                                                            Required="true"
                                                            RequiredError="Division is required."
-                                                           Variant="Variant.Text"
+                                                           Variant="Variant.Outlined"
                                                            Margin="Margin.Dense">
                                                     <MudSelectItem Value="0">Select Division</MudSelectItem>
                                                     @foreach (var div in _divisions)
@@ -448,7 +452,7 @@
                                                            Label="District (Zila)"
                                                            Required="true"
                                                            RequiredError="District is required."
-                                                           Variant="Variant.Text"
+                                                           Variant="Variant.Outlined"
                                                            Margin="Margin.Dense"
                                                            Disabled="@(_presentDivisionId == 0)">
                                                     <MudSelectItem Value="0">Select District</MudSelectItem>
@@ -463,7 +467,7 @@
                                                            Label="Sub-district (Upazila/Thana)"
                                                            Required="true"
                                                            RequiredError="Upazila is required."
-                                                           Variant="Variant.Text"
+                                                           Variant="Variant.Outlined"
                                                            Margin="Margin.Dense"
                                                            Disabled="@(_presentDistrictId == 0)">
                                                     <MudSelectItem Value="0">Select Upazila</MudSelectItem>
@@ -478,7 +482,7 @@
                                                               Label="Postal Code"
                                                               Placeholder="e.g. 1234"
                                                               MaxLength="4"
-                                                              Variant="Variant.Text"
+                                                              Variant="Variant.Outlined"
                                                               Margin="Margin.Dense" />
                                             </MudItem>
                                         </MudGrid>
@@ -508,14 +512,14 @@
                                                     <MudTextField @bind-Value="_employee.PermanentVillage"
                                                                   Label="Village / Neighborhood"
                                                                   Placeholder="e.g. Vill: Genda"
-                                                                  Variant="Variant.Text"
+                                                                  Variant="Variant.Outlined"
                                                                   Margin="Margin.Dense" />
                                                 </MudItem>
                                                 <MudItem xs="12" sm="6">
                                                     <MudTextField @bind-Value="_employee.PermanentPostOffice"
                                                                   Label="Post Office (P.O.)"
                                                                   Placeholder="e.g. GPO"
-                                                                  Variant="Variant.Text"
+                                                                  Variant="Variant.Outlined"
                                                                   Margin="Margin.Dense" />
                                                 </MudItem>
                                                 <MudItem xs="12" sm="6">
@@ -524,7 +528,7 @@
                                                                Label="Division"
                                                                Required="true"
                                                                RequiredError="Division is required."
-                                                               Variant="Variant.Text"
+                                                               Variant="Variant.Outlined"
                                                                Margin="Margin.Dense">
                                                         <MudSelectItem Value="0">Select Division</MudSelectItem>
                                                         @foreach (var div in _divisions)
@@ -539,7 +543,7 @@
                                                                Label="District (Zila)"
                                                                Required="true"
                                                                RequiredError="District is required."
-                                                               Variant="Variant.Text"
+                                                               Variant="Variant.Outlined"
                                                                Margin="Margin.Dense"
                                                                Disabled="@(_permanentDivisionId == 0)">
                                                         <MudSelectItem Value="0">Select District</MudSelectItem>
@@ -554,7 +558,7 @@
                                                                Label="Sub-district (Upazila/Thana)"
                                                                Required="true"
                                                                RequiredError="Upazila is required."
-                                                               Variant="Variant.Text"
+                                                               Variant="Variant.Outlined"
                                                                Margin="Margin.Dense"
                                                                Disabled="@(_permanentDistrictId == 0)">
                                                         <MudSelectItem Value="0">Select Upazila</MudSelectItem>
@@ -569,7 +573,7 @@
                                                                   Label="Postal Code"
                                                                   Placeholder="e.g. 1234"
                                                                   MaxLength="4"
-                                                                  Variant="Variant.Text"
+                                                                  Variant="Variant.Outlined"
                                                                   Margin="Margin.Dense" />
                                                 </MudItem>
                                             </MudGrid>

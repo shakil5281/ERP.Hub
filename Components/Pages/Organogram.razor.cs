@@ -124,7 +124,7 @@ public partial class Organogram
 
             DbContext.Departments.Remove(entity);
             await DbContext.SaveChangesAsync();
-            
+
             await LoadDepartments();
             await LoadSections();
             await LoadDesignations();
@@ -209,7 +209,7 @@ public partial class Organogram
 
             DbContext.Sections.Remove(entity);
             await DbContext.SaveChangesAsync();
-            
+
             await LoadSections();
             await LoadDesignations();
             await LoadLines();

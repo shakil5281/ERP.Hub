@@ -176,7 +176,7 @@ public partial class Companies
         _showToast = true;
         _showErrorToast = false;
         StateHasChanged();
-        
+
         Task.Delay(3000).ContinueWith(_ =>
         {
             _showToast = false;
@@ -190,7 +190,7 @@ public partial class Companies
         _showErrorToast = true;
         _showToast = false;
         StateHasChanged();
-        
+
         Task.Delay(3000).ContinueWith(_ =>
         {
             _showErrorToast = false;

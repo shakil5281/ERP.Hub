@@ -19,8 +19,13 @@
                 <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Advanced Filters</div>
                 <div class="grid grid-cols-4 gap-3 max-xl:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1">
                     <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Employee ID</label>
-                        <input type="text" class="w-full border border-zinc-200 rounded-md px-2.5 py-1.5 text-xs text-zinc-700 outline-none focus:ring-1 focus:ring-black focus:border-black" @bind="_employeeId" placeholder="Leave empty for all employees" />
+                        <MudTextField T="string"
+                                      @bind-Value="_employeeId"
+                                      Label="Employee ID"
+                                      Variant="Variant.Outlined"
+                                      Placeholder="Leave empty for all employees"
+                                      Margin="Margin.Dense"
+                                      Immediate="true" />
                     </div>
                     <div>
                         <MudDatePicker Date="@_fromDate"
@@ -43,7 +48,6 @@
                                        Margin="Margin.Dense" />
                     </div>
                     <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Company</label>
                         <MudSelect T="int" @bind-Value="_companyId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
                             <MudSelectItem Value="0">All Companies</MudSelectItem>
                             @foreach (var c in _companies)
@@ -114,6 +118,12 @@
                     <button type="button" class="px-4 py-2 border border-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors" @onclick="ClearFilters">Clear</button>
                     @if (_page != null)
                     {
+                        <button type="button" class="px-4 py-2 border border-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors" @onclick="ExportToExcel" disabled="@_isExporting">
+                            Excel
+                        </button>
+                        <button type="button" class="px-4 py-2 bg-zinc-900 text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors" @onclick="ExportToPdf" disabled="@_isExporting">
+                            PDF
+                        </button>
                         <button type="button" class="px-4 py-2 border border-zinc-200 text-xs font-semibold rounded-lg hover:bg-zinc-50 transition-colors" @onclick="PrintReport">Print</button>
                     }
                 </div>
@@ -277,6 +287,7 @@
     private int _shiftId;
 
     private bool _isLoading;
+    private bool _isExporting;
     private string? _errorMessage;
     private JobCardReportPageDto? _page;
     private int _currentIndex;
@@ -380,6 +391,92 @@
     {
         await Task.Yield();
         await JSRuntime.InvokeVoidAsync("print");
+    }
+
+    private async Task ExportToExcel()
+    {
+        if (_page == null || _isExporting) return;
+        _isExporting = true;
+        StateHasChanged();
+
+        try
+        {
+            var query = $"fromDate={_fromDate:yyyy-MM-dd}&toDate={_toDate:yyyy-MM-dd}&index={_currentIndex}";
+            if (!string.IsNullOrWhiteSpace(_employeeId))
+                query += $"&employeeId={Uri.EscapeDataString(_employeeId.Trim())}";
+            if (_companyId > 0) query += $"&companyId={_companyId}";
+            if (_departmentId > 0) query += $"&departmentId={_departmentId}";
+            if (_sectionId > 0) query += $"&sectionId={_sectionId}";
+            if (_designationId > 0) query += $"&designationId={_designationId}";
+            if (_lineId > 0) query += $"&lineId={_lineId}";
+            if (_shiftId > 0) query += $"&shiftId={_shiftId}";
+
+            var response = await Http.GetAsync($"{NavManager.BaseUri}api/jobcards/export/excel?{query}");
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                var fileName = $"JobCard_{_page.Report.EmployeeId}_{_fromDate:yyyyMMdd}_{_toDate:yyyyMMdd}.xlsx";
+                await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                Snackbar.Add("Excel exported successfully", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Export failed: server returned error", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ExportToPdf()
+    {
+        if (_page == null || _isExporting) return;
+        _isExporting = true;
+        StateHasChanged();
+
+        try
+        {
+            var query = $"fromDate={_fromDate:yyyy-MM-dd}&toDate={_toDate:yyyy-MM-dd}&index={_currentIndex}";
+            if (!string.IsNullOrWhiteSpace(_employeeId))
+                query += $"&employeeId={Uri.EscapeDataString(_employeeId.Trim())}";
+            if (_companyId > 0) query += $"&companyId={_companyId}";
+            if (_departmentId > 0) query += $"&departmentId={_departmentId}";
+            if (_sectionId > 0) query += $"&sectionId={_sectionId}";
+            if (_designationId > 0) query += $"&designationId={_designationId}";
+            if (_lineId > 0) query += $"&lineId={_lineId}";
+            if (_shiftId > 0) query += $"&shiftId={_shiftId}";
+
+            var response = await Http.GetAsync($"{NavManager.BaseUri}api/jobcards/export/pdf?{query}");
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                var fileName = $"JobCard_{_page.Report.EmployeeId}_{_fromDate:yyyyMMdd}_{_toDate:yyyyMMdd}.pdf";
+                await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/pdf");
+                Snackbar.Add("PDF exported successfully", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Export failed: server returned error", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExporting = false;
+            StateHasChanged();
+        }
     }
 
     [Inject] private IJSRuntime JSRuntime { get; set; } = default!;

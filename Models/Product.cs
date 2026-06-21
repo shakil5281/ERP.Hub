@@ -24,7 +24,7 @@ namespace ERPHub.Models
         public int Stock { get; set; }
 
         public string Description { get; set; } = string.Empty;
-        
+
         public DateTime LastUpdated { get; set; } = DateTime.Now;
     }
 }

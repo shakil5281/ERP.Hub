@@ -318,10 +318,40 @@ namespace ERPHub.Services
 
                 var deptRecords = records.Where(r => empIds.Contains(r.EmployeeId)).ToList();
                 var headcount = empIds.Count;
-                var present = deptRecords.Count(r => r.AttendanceStatus is "Present" or "Present + Overtime");
-                var absent = deptRecords.Count(r => r.AttendanceStatus == "Absent");
-                var late = deptRecords.Count(r => r.AttendanceStatus is "Late" or "Early Exit");
-                var leave = deptRecords.Count(r => r.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off");
+
+                int present = 0;
+                int absent = 0;
+                int late = 0;
+                int leave = 0;
+
+                foreach (var empId in empIds)
+                {
+                    var r = deptRecords.FirstOrDefault(rec => rec.EmployeeId == empId);
+                    if (r != null)
+                    {
+                        if (r.AttendanceStatus is "Present" or "Present + Overtime" or "Late" or "Early Exit" or "Half Day" or "Holiday Worked" or "Weekly Off Worked" or "Missing In Punch" or "Missing Out Punch")
+                        {
+                            present++;
+                        }
+                        if (r.AttendanceStatus is "Late" or "Early Exit")
+                        {
+                            late++;
+                        }
+                        if (r.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
+                        {
+                            leave++;
+                        }
+                        if (r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus))
+                        {
+                            absent++;
+                        }
+                    }
+                    else
+                    {
+                        absent++;
+                    }
+                }
+
                 var presentRate = headcount > 0 ? Math.Round((double)present / headcount * 100, 1) : 0;
                 var avgHours = deptRecords.Count > 0
                     ? Math.Round(deptRecords.Average(r => r.WorkedMinutes) / 60.0, 1)
@@ -397,7 +427,7 @@ namespace ERPHub.Services
                 if (outPunch.HasValue)
                 {
                     if (lastPunch < shiftOutTime)
-                      {
+                    {
                         earlyExitMinutes = (int)(shiftOutTime - lastPunch).TotalMinutes;
                         if (earlyExitMinutes < 0) earlyExitMinutes = 0;
                         status = "Early Exit";

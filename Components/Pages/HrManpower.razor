@@ -1,4 +1,10 @@
 @page "/hr/manpower"
+@using ERPHub.Models
+@using ERPHub.Services
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
 
 <PageTitle>ERPHub - Manpower Dashboard</PageTitle>
 
@@ -9,34 +15,170 @@
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Manpower Dashboard</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Track team size capacities, departmental headcounts, and organizational vacancies.</p>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Track department headcounts, section allocations, and target capacities dynamically.</p>
+                </div>
+                <div>
+                    <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick="RecalculateManpower" disabled="@_isRecalculating">
+                        @if (_isRecalculating)
+                        {
+                            <svg class="w-3.5 h-3.5 animate-spin mr-1.5" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
+                        }
+                        else
+                        {
+                            <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" Class="mr-1" />
+                        }
+                        Recalculate Stats
+                    </button>
                 </div>
             </div>
 
-            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_manpowerStats" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.Department)">Department</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.ActiveHeadcount)">Active Headcount</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.Vacancies)">Vacancies</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.TargetCapacity)">Target Capacity</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ManpowerStat, object>(x=>x.Utilization)">Utilization</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Department">@context.Department</MudTd>
-                        <MudTd DataLabel="Active Headcount">@context.ActiveHeadcount</MudTd>
-                        <MudTd DataLabel="Vacancies">@context.Vacancies</MudTd>
-                        <MudTd DataLabel="Target Capacity">@context.TargetCapacity</MudTd>
-                        <MudTd DataLabel="Utilization">@context.Utilization</MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
-            </div>
+            @if (_isLoading)
+            {
+                <div class="flex justify-center items-center py-16">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                </div>
+            }
+            else
+            {
+                <!-- Dashboard Metrics Cards -->
+                <div class="grid grid-cols-4 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left: 4px solid #6366f1;">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Active Headcount</div>
+                        <div class="text-xl font-extrabold text-zinc-950 mt-1 font-heading">@TotalHeadcount Employees</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left: 4px solid #10b981;">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Target Capacity</div>
+                        <div class="text-xl font-extrabold text-zinc-950 mt-1 font-heading">@TotalCapacity Slots</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left: 4px solid #ef4444;">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Total Vacancies</div>
+                        <div class="text-xl font-extrabold text-rose-600 mt-1 font-heading">@TotalVacancies Openings</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left: 4px solid #f59e0b;">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Average Utilization</div>
+                        <div class="text-xl font-extrabold text-amber-600 mt-1 font-heading">@AverageUtilization.ToString("F1")%</div>
+                    </div>
+                </div>
+
+                <!-- Advanced Filter Section -->
+                <div class="bg-white border border-zinc-200 rounded-xl shadow-sm mb-6 overflow-hidden">
+                    <div class="px-5 py-4 border-b border-zinc-100 flex justify-between items-center cursor-pointer select-none hover:bg-zinc-50 transition-colors" @onclick="ToggleFilterCollapse">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-4.5 h-4.5 text-zinc-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                            </svg>
+                            <span class="text-sm font-semibold text-zinc-800 font-heading">Advanced Filters</span>
+                            @if (HasActiveFilters)
+                            {
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100 animate-pulse-slow">
+                                    Active Filters
+                                </span>
+                            }
+                        </div>
+                        <svg class="w-4 h-4 text-zinc-400 transition-transform duration-200 @(_isFilterCollapsed ? "" : "transform rotate-180")" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </div>
+
+                    <MudCollapse Expanded="!_isFilterCollapsed">
+                        <div class="p-5 bg-zinc-50/50">
+                            <MudGrid Spacing="3">
+                                <!-- Department Dropdown -->
+                                <MudItem xs="12" sm="4">
+                                    <MudSelect T="int" Value="_departmentIdFilter" ValueChanged="OnDepartmentFilterChanged" Label="Department" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
+                                        <MudSelectItem Value="0">All Departments</MudSelectItem>
+                                        @foreach (var d in _departments)
+                                        {
+                                            <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <!-- Section Dropdown -->
+                                <MudItem xs="12" sm="4">
+                                    <MudSelect T="int" Value="_sectionIdFilter" ValueChanged="OnSectionFilterChanged" Label="Section" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Disabled="@(_filteredSections.Count == 0)">
+                                        <MudSelectItem Value="0">All Sections</MudSelectItem>
+                                        @foreach (var s in _filteredSections)
+                                        {
+                                            <MudSelectItem Value="@s.Id">@s.NameEn</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <!-- Designation Dropdown -->
+                                <MudItem xs="12" sm="4">
+                                    <MudSelect T="int" Value="_designationIdFilter" ValueChanged="OnDesignationFilterChanged" Label="Designation" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Disabled="@(_filteredDesignations.Count == 0)">
+                                        <MudSelectItem Value="0">All Designations</MudSelectItem>
+                                        @foreach (var ds in _filteredDesignations)
+                                        {
+                                            <MudSelectItem Value="@ds.Id">@ds.NameEn</MudSelectItem>
+                                        }
+                                    </MudSelect>
+                                </MudItem>
+
+                                <!-- Buttons -->
+                                <MudItem xs="12" Class="flex justify-end gap-2.5 pt-2">
+                                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="ResetFilters" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh">Reset</MudButton>
+                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Size="Size.Small" StartIcon="@Icons.Material.Filled.FilterList">Apply Filters</MudButton>
+                                </MudItem>
+                            </MudGrid>
+                        </div>
+                    </MudCollapse>
+                </div>
+
+                <!-- Manpowers Data Table -->
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                    <MudTable Items="@_filteredManpowers" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0" Filter="new Func<Manpower, bool>(FilterFunc)">
+                        <ToolBarContent>
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Department Capacities</MudText>
+                            <MudSpacer />
+                            <MudTextField @bind-Value="_searchString"
+                                          Placeholder="Search department, section, designation..."
+                                          Adornment="Adornment.Start"
+                                          AdornmentIcon="@Icons.Material.Filled.Search"
+                                          IconSize="Size.Small"
+                                          Class="mt-0"
+                                          Variant="Variant.Outlined"
+                                          Margin="Margin.Dense"
+                                          Clearable="true" />
+                        </ToolBarContent>
+                        <HeaderContent>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Manpower, object>(x => x.Department?.NameEn ?? string.Empty)">Department</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Manpower, object>(x => x.Section?.NameEn ?? string.Empty)">Section</MudTableSortLabel></MudTh>
+                            <MudTh><MudTableSortLabel SortBy="new Func<Manpower, object>(x => x.Designation?.NameEn ?? string.Empty)">Designation</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<Manpower, object>(x => x.CurrentHeadcount)">Active Headcount</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<Manpower, object>(x => x.Vacancies)">Vacancies</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<Manpower, object>(x => x.TargetCapacity)">Target Capacity</MudTableSortLabel></MudTh>
+                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<Manpower, object>(x => x.TargetCapacity > 0 ? (x.CurrentHeadcount * 100.0 / x.TargetCapacity) : 0)">Utilization</MudTableSortLabel></MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Department"><span class="fw-semibold text-zinc-800">@(context.Department?.NameEn ?? "-")</span></MudTd>
+                            <MudTd DataLabel="Section">@(context.Section?.NameEn ?? "All Sections")</MudTd>
+                            <MudTd DataLabel="Designation">@(context.Designation?.NameEn ?? "All Designations")</MudTd>
+                            <MudTd Style="text-align: center;" DataLabel="Active Headcount"><span class="font-mono">@context.CurrentHeadcount</span></MudTd>
+                            <MudTd Style="text-align: center;" DataLabel="Vacancies">
+                                <span class="font-mono @(context.Vacancies > 0 ? "text-rose-600 fw-bold" : "text-zinc-400")">
+                                    @context.Vacancies
+                                </span>
+                            </MudTd>
+                            <MudTd Style="text-align: center;" DataLabel="Target Capacity"><span class="font-mono">@context.TargetCapacity</span></MudTd>
+                            <MudTd Style="text-align: center;" DataLabel="Utilization">
+                                @{
+                                    var util = context.TargetCapacity > 0 ? (context.CurrentHeadcount * 100.0 / context.TargetCapacity) : 0;
+                                    var colorClass = util >= 90 ? "text-success fw-bold" : util >= 70 ? "text-warning fw-bold" : "text-error fw-bold";
+                                }
+                                <span class="font-mono @colorClass">@util.ToString("F1")%</span>
+                            </MudTd>
+                        </RowTemplate>
+                        <PagerContent>
+                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                        </PagerContent>
+                        <NoRecordsContent>
+                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8 font-body">No matching records found</MudText>
+                        </NoRecordsContent>
+                    </MudTable>
+                </div>
+            }
         </div>
     </Authorized>
     <NotAuthorized>
@@ -45,20 +187,208 @@
 </AuthorizeView>
 
 @code {
-    public class ManpowerStat
+    private List<Manpower> _manpowers = new();
+    private List<Manpower> _filteredManpowers = new();
+    private List<Department> _departments = new();
+    private List<Section> _sections = new();
+    private List<Section> _filteredSections = new();
+    private List<Designation> _designations = new();
+    private List<Designation> _filteredDesignations = new();
+
+    private bool _isLoading = true;
+    private bool _isRecalculating = false;
+    private bool _isFilterCollapsed = true;
+    private string _searchString = "";
+
+    // Filters
+    private int _departmentIdFilter = 0;
+    private int _sectionIdFilter = 0;
+    private int _designationIdFilter = 0;
+
+    private bool HasActiveFilters => _departmentIdFilter > 0 || _sectionIdFilter > 0 || _designationIdFilter > 0;
+
+    // Metrics calculations
+    private int TotalHeadcount => _filteredManpowers.Sum(m => m.CurrentHeadcount);
+    private int TotalCapacity => _filteredManpowers.Sum(m => m.TargetCapacity);
+    private int TotalVacancies => _filteredManpowers.Sum(m => m.Vacancies);
+    private double AverageUtilization => TotalCapacity > 0 ? (TotalHeadcount * 100.0 / TotalCapacity) : 0;
+
+    protected override async Task OnInitializedAsync()
     {
-        public string Department { get; set; } = string.Empty;
-        public int ActiveHeadcount { get; set; }
-        public int Vacancies { get; set; }
-        public int TargetCapacity { get; set; }
-        public string Utilization { get; set; } = string.Empty;
+        await LoadLookupData();
+        await LoadData();
     }
 
-    private List<ManpowerStat> _manpowerStats = new()
+    private void ToggleFilterCollapse()
     {
-        new ManpowerStat { Department = "Engineering & Development", ActiveHeadcount = 54, Vacancies = 4, TargetCapacity = 58, Utilization = "93.1%" },
-        new ManpowerStat { Department = "Customer Success & Operations", ActiveHeadcount = 36, Vacancies = 2, TargetCapacity = 38, Utilization = "94.7%" },
-        new ManpowerStat { Department = "Sales & Marketing", ActiveHeadcount = 28, Vacancies = 2, TargetCapacity = 30, Utilization = "93.3%" },
-        new ManpowerStat { Department = "Finance & HR Admin", ActiveHeadcount = 24, Vacancies = 0, TargetCapacity = 24, Utilization = "100.0%" }
-    };
+        _isFilterCollapsed = !_isFilterCollapsed;
+    }
+
+    private async Task LoadLookupData()
+    {
+        try
+        {
+            var baseUri = NavManager.BaseUri;
+            var departmentsTask = Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments");
+            var sectionsTask = Http.GetFromJsonAsync<List<Section>>($"{baseUri}api/sections");
+            var designationsTask = Http.GetFromJsonAsync<List<Designation>>($"{baseUri}api/designations");
+
+            await Task.WhenAll(departmentsTask, sectionsTask, designationsTask);
+
+            _departments = await departmentsTask ?? new();
+            _sections = await sectionsTask ?? new();
+            _designations = await designationsTask ?? new();
+
+            _filteredSections = _sections;
+            _filteredDesignations = _designations;
+        }
+        catch
+        {
+            // Fail silently - filters will remain empty
+        }
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            var baseUri = NavManager.BaseUri;
+            _manpowers = await Http.GetFromJsonAsync<List<Manpower>>($"{baseUri}api/manpower") ?? new();
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            _manpowers = new();
+            _filteredManpowers = new();
+            Snackbar.Add($"Failed to load manpower statistics: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        _filteredManpowers = _manpowers.Where(m =>
+            (_departmentIdFilter == 0 || m.DepartmentId == _departmentIdFilter) &&
+            (_sectionIdFilter == 0 || m.SectionId == _sectionIdFilter) &&
+            (_designationIdFilter == 0 || m.DesignationId == _designationIdFilter)
+        ).ToList();
+    }
+
+    private void ResetFilters()
+    {
+        _departmentIdFilter = 0;
+        _sectionIdFilter = 0;
+        _designationIdFilter = 0;
+        _filteredSections = _sections;
+        _filteredDesignations = _designations;
+        ApplyFilters();
+    }
+
+    private void OnDepartmentFilterChanged(int deptId)
+    {
+        _departmentIdFilter = deptId;
+        _sectionIdFilter = 0;
+        _designationIdFilter = 0;
+
+        if (deptId == 0)
+        {
+            _filteredSections = _sections;
+            _filteredDesignations = _designations;
+        }
+        else
+        {
+            _filteredSections = _sections.Where(s => s.DepartmentId == deptId).ToList();
+            var sectionIds = _filteredSections.Select(s => s.Id).ToHashSet();
+            _filteredDesignations = _designations.Where(d => sectionIds.Contains(d.SectionId)).ToList();
+        }
+        ApplyFilters();
+    }
+
+    private void OnSectionFilterChanged(int sectionId)
+    {
+        _sectionIdFilter = sectionId;
+        _designationIdFilter = 0;
+
+        if (sectionId == 0)
+        {
+            if (_departmentIdFilter == 0)
+            {
+                _filteredDesignations = _designations;
+            }
+            else
+            {
+                var sectionIds = _sections.Where(s => s.DepartmentId == _departmentIdFilter).Select(s => s.Id).ToHashSet();
+                _filteredDesignations = _designations.Where(d => sectionIds.Contains(d.SectionId)).ToList();
+            }
+        }
+        else
+        {
+            _filteredDesignations = _designations.Where(d => d.SectionId == sectionId).ToList();
+        }
+        ApplyFilters();
+    }
+
+    private void OnDesignationFilterChanged(int desigId)
+    {
+        _designationIdFilter = desigId;
+        ApplyFilters();
+    }
+
+    private bool FilterFunc(Manpower element)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (element.Department?.NameEn != null && element.Department.NameEn.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (element.Section?.NameEn != null && element.Section.NameEn.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (element.Designation?.NameEn != null && element.Designation.NameEn.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (element.Remarks != null && element.Remarks.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    private async Task RecalculateManpower()
+    {
+        _isRecalculating = true;
+        StateHasChanged();
+
+        try
+        {
+            var baseUri = NavManager.BaseUri;
+            var response = await Http.PostAsync($"{baseUri}api/manpower/recalculate", null);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Manpower recalculated and updated with active employees.", Severity.Success);
+                await LoadData();
+            }
+            else
+            {
+                var msg = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Recalculation failed: {msg}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Recalculation failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isRecalculating = false;
+            StateHasChanged();
+        }
+    }
 }

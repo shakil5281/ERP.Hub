@@ -25,7 +25,7 @@ public partial class Home
         _pendingTasks = await ErpService.GetPendingTasksCountAsync();
         _paidInvoices = await ErpService.GetPaidInvoicesCountAsync();
         _invoices = await ErpService.GetInvoicesAsync();
-        
+
         LoadActivities();
     }
 

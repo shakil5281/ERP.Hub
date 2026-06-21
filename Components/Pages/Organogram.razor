@@ -5,11 +5,15 @@
 <AuthorizeView Context="authContext">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header -->
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Company Organogram</h2>
                     <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage departments, sections, designations, and production lines.</p>
+                </div>
+                <div>
+                    <NavLink href="/hr/import-organogram" type="button" class="inline-flex items-center py-1.5 px-3 rounded-md border border-zinc-300 text-zinc-700 bg-white font-semibold hover:bg-zinc-50 transition-colors cursor-pointer">
+                        Import Excel
+                    </NavLink>
                 </div>
             </div>
 

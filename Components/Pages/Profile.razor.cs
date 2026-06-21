@@ -32,7 +32,7 @@ public partial class Profile
     private bool _showToast;
     private string _toastMessage = string.Empty;
 
-    private List<ActivityItem> _activities = new();
+    private List<ActivityItem> _activities = [];
 
     private bool _hasChanges => _editFullName != (_profileUser?.FullName ?? string.Empty);
 

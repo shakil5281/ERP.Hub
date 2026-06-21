@@ -1,0 +1,241 @@
+@page "/hr/import-employees"
+@using ERPHub.Models
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+@inject IJSRuntime JSRuntime
+
+<PageTitle>ERPHub - Bulk Employee Import</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in max-w-4xl mx-auto">
+            <!-- Header Block -->
+            <div class="flex items-center gap-3 mb-6">
+                <button type="button" @onclick="NavigateBack" class="p-2 border border-zinc-200 rounded-lg hover:bg-zinc-50 text-zinc-600 transition-colors cursor-pointer flex items-center justify-center">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                    </svg>
+                </button>
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Bulk Employee Import</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Upload an Excel spreadsheet (.xlsx) to import or update multiple employee records at once.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-6 max-md:grid-cols-1">
+                <!-- Instructions Panel -->
+                <div class="col-span-1 bg-white border border-zinc-200 rounded-lg p-5">
+                    <h3 class="text-xs font-bold text-zinc-800 uppercase tracking-wider mb-3">Import Guidelines</h3>
+                    <ul class="text-xs text-zinc-500 list-disc list-inside space-y-2 font-body">
+                        <li>The spreadsheet must be in <span class="font-bold text-zinc-900">.xlsx</span> format.</li>
+                        <li>The first row must contain matching column header names.</li>
+                        <li>Required fields: <strong>Employee ID, Employee Name, Punch Number, Mobile No, Company, Department, Section, Designation, Line, Shift</strong>.</li>
+                        <li>Values like Company, Department, Section, etc. must match existing record names exactly (case-insensitive).</li>
+                        <li>If the Employee ID exists, it updates the record. Otherwise, it inserts a new employee.</li>
+                        <li><strong>Transactional:</strong> If any validation fails, the entire upload is rolled back.</li>
+                    </ul>
+                    
+                    <div class="mt-6 pt-4 border-t border-zinc-100 flex flex-col gap-2">
+                        <button type="button" @onclick="DownloadTemplate" class="w-full inline-flex items-center justify-center gap-2 py-2 px-3 border border-zinc-200 rounded-md text-zinc-700 bg-white font-semibold hover:bg-zinc-50 transition-colors text-xs cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            Download Excel Template
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Upload Panel -->
+                <div class="col-span-2 flex flex-col gap-6 max-md:col-span-1">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-6">
+                        <div class="border-2 border-dashed border-zinc-300 rounded-xl p-8 text-center hover:border-zinc-400 transition-colors relative flex flex-col items-center justify-center select-none bg-zinc-50/50">
+                            <svg class="w-10 h-10 text-zinc-400 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m-9 1V4a2 2 0 012-2h6l2 2h6a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                            </svg>
+
+                            @if (_selectedFile == null)
+                            {
+                                <span class="text-xs font-semibold text-zinc-700 mb-1">Select your spreadsheet file</span>
+                                <span class="text-[10px] text-zinc-400 mb-4">Excel files (.xlsx) up to 5MB</span>
+                            }
+                            else
+                            {
+                                <span class="text-xs font-bold text-zinc-900 mb-0.5">@_selectedFile.Name</span>
+                                <span class="text-[10px] text-zinc-500 mb-4">@FormatSize(_selectedFile.Size)</span>
+                            }
+
+                            <label class="inline-flex items-center gap-1.5 py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs">
+                                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                                </svg>
+                                @(_selectedFile == null ? "Select Spreadsheet" : "Change Spreadsheet")
+                                <InputFile OnChange="OnFolderFileSelected" Accept=".xlsx" class="hidden" />
+                            </label>
+                        </div>
+
+                        <div class="flex justify-end gap-2.5 mt-5">
+                            <button type="button" @onclick="NavigateBack" class="py-2 px-4 border border-zinc-200 rounded-lg bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors text-xs cursor-pointer">Cancel</button>
+                            <button type="button" @onclick="ProcessImport" disabled="@(_selectedFile == null || _isProcessing)" class="inline-flex items-center gap-1.5 py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-xs cursor-pointer">
+                                @if (_isProcessing)
+                                {
+                                    <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
+                                    <span>Processing...</span>
+                                }
+                                else
+                                {
+                                    <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <span>Upload & Import</span>
+                                }
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results / Output Block -->
+                    @if (_result != null)
+                    {
+                        @if (_result.Success)
+                        {
+                            <div class="bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg p-5 animate-fade-in flex gap-3.5">
+                                <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0 text-lg font-bold">✓</div>
+                                <div>
+                                    <h4 class="font-bold text-sm text-emerald-900">Import Succeeded!</h4>
+                                    <p class="text-xs mt-1">Successfully imported and updated <span class="font-bold">@_result.SuccessCount</span> employee records from a total of <span class="font-bold">@_result.TotalRows</span> rows.</p>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="bg-red-50 border border-red-200 text-red-800 rounded-lg p-5 animate-fade-in">
+                                <div class="flex gap-3.5 mb-4">
+                                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center flex-shrink-0 text-lg font-bold">✗</div>
+                                    <div>
+                                        <h4 class="font-bold text-sm text-red-900">Import Failed</h4>
+                                        <p class="text-xs mt-1">We found <span class="font-bold text-red-600">@_result.ErrorCount</span> validation errors. Database changes have been completely rolled back.</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="border-t border-red-150 pt-3 max-h-60 overflow-y-auto">
+                                    <ul class="text-[11px] font-mono space-y-1.5 list-inside list-disc text-red-700">
+                                        @foreach (var err in _result.Errors)
+                                        {
+                                            <li>@err</li>
+                                        }
+                                    </ul>
+                                </div>
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectToLogin />
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private IBrowserFile? _selectedFile;
+    private bool _isProcessing;
+    private ImportResultDto? _result;
+
+    private void OnFolderFileSelected(InputFileChangeEventArgs e)
+    {
+        _selectedFile = e.File;
+        _result = null;
+        StateHasChanged();
+    }
+
+    private void NavigateBack()
+    {
+        NavManager.NavigateTo("/hr/employees");
+    }
+
+    private async Task DownloadTemplate()
+    {
+        try
+        {
+            var baseUri = NavManager.BaseUri;
+            var response = await Http.GetAsync($"{baseUri}api/employees/import/template");
+            if (response.IsSuccessStatusCode)
+            {
+                var bytes = await response.Content.ReadAsByteArrayAsync();
+                var base64 = Convert.ToBase64String(bytes);
+                await JSRuntime.InvokeVoidAsync("downloadFile", "employee_import_template.xlsx", base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                Snackbar.Add("Import template downloaded", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("Failed to download template.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ProcessImport()
+    {
+        if (_selectedFile == null || _isProcessing) return;
+
+        _isProcessing = true;
+        _result = null;
+        StateHasChanged();
+
+        try
+        {
+            using var content = new MultipartFormDataContent();
+            var fileContent = new StreamContent(_selectedFile.OpenReadStream(5 * 1024 * 1024));
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            
+            content.Add(fileContent, "file", _selectedFile.Name);
+
+            var baseUri = NavManager.BaseUri;
+            var response = await Http.PostAsync($"{baseUri}api/employees/import", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                _result = await response.Content.ReadFromJsonAsync<ImportResultDto>();
+                if (_result?.Success == true)
+                {
+                    Snackbar.Add($"Imported {_result.SuccessCount} employees successfully!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add("Import failed with validation errors.", Severity.Warning);
+                }
+            }
+            else
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+                Snackbar.Add($"Upload failed: {errorBody}", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error during import: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isProcessing = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string FormatSize(long bytes)
+    {
+        string[] suffixes = { "B", "KB", "MB", "GB" };
+        int counter = 0;
+        decimal number = bytes;
+        while (Math.Round(number / 1024) >= 1)
+        {
+            number /= 1024;
+            counter++;
+        }
+        return $"{number:n1} {suffixes[counter]}";
+    }
+}

@@ -1,0 +1,296 @@
+@page "/leave/approval"
+@using ERPHub.Models
+@using LeaveApp = ERPHub.Models.LeaveApplication
+@using LeaveTypeModel = ERPHub.Models.LeaveType
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ISnackbar Snackbar
+
+<PageTitle>ERPHub - Leave Approval Queue</PageTitle>
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <div class="animate-fade-in">
+            <!-- Header -->
+            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+                <div>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Leave Approval Queue</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Review and action all pending leave requests. Approve or reject with a single click.</p>
+                </div>
+                <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md border border-zinc-200 text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer text-xs" @onclick="LoadData">
+                    <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" Class="mr-1" />
+                    Refresh Queue
+                </button>
+            </div>
+
+            @if (_isLoading)
+            {
+                <div class="flex justify-center items-center py-20">
+                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                </div>
+            }
+            else
+            {
+                <!-- Summary Counters -->
+                <div class="grid grid-cols-3 gap-4 mb-6 max-sm:grid-cols-1">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #f59e0b">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Pending Queue</div>
+                        <div class="text-2xl font-extrabold text-amber-600 mt-1 font-heading">@_pending.Count</div>
+                        <div class="text-xs text-zinc-400">Awaiting decision</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #10b981">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Approved Today</div>
+                        <div class="text-2xl font-extrabold text-emerald-600 mt-1 font-heading">@_approvedToday</div>
+                        <div class="text-xs text-zinc-400">This session</div>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm" style="border-left:4px solid #ef4444">
+                        <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider font-heading">Rejected Today</div>
+                        <div class="text-2xl font-extrabold text-rose-600 mt-1 font-heading">@_rejectedToday</div>
+                        <div class="text-xs text-zinc-400">This session</div>
+                    </div>
+                </div>
+
+                @if (_pending.Count == 0)
+                {
+                    <div class="bg-white border border-zinc-200 rounded-xl p-16 text-center shadow-sm">
+                        <MudIcon Icon="@Icons.Material.Filled.CheckCircleOutline" Size="Size.Large" Class="text-emerald-400 mb-3" />
+                        <div class="text-zinc-500 text-sm font-semibold font-body mt-2">All Clear — No Pending Leave Requests</div>
+                        <div class="text-zinc-400 text-xs mt-1">All leave applications have been processed.</div>
+                    </div>
+                }
+                else
+                {
+                    <!-- Pending Application Cards -->
+                    <div class="grid grid-cols-1 gap-4">
+                        @foreach (var app in _pending)
+                        {
+                            var ltColor = _leaveTypeColors.TryGetValue(app.LeaveType, out var c) ? c : "#6366f1";
+                            <div class="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden transition-all hover:shadow-md">
+                                <div class="flex items-stretch">
+                                    <!-- Color Accent -->
+                                    <div class="w-1.5 flex-shrink-0" style="background-color: @ltColor"></div>
+
+                                    <!-- Content -->
+                                    <div class="flex-1 p-5">
+                                        <div class="flex items-start justify-between gap-4 max-sm:flex-col">
+                                            <!-- Employee Info -->
+                                            <div class="flex-1">
+                                                <div class="flex items-center gap-3 mb-2">
+                                                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                                                         style="background-color: @ltColor">
+                                                        @app.EmployeeName[..1].ToUpper()
+                                                    </div>
+                                                    <div>
+                                                        <div class="font-bold text-zinc-900 text-sm">@app.EmployeeName</div>
+                                                        <div class="text-zinc-400 text-[10px] font-mono">@app.EmployeeId</div>
+                                                    </div>
+                                                </div>
+                                                <div class="grid grid-cols-2 gap-x-8 gap-y-1 text-xs text-zinc-600 ml-12 max-sm:ml-0">
+                                                    <div><span class="font-bold text-zinc-400">Department:</span> @(app.Department?.NameEn ?? "—")</div>
+                                                    <div><span class="font-bold text-zinc-400">Leave Type:</span>
+                                                        <span class="font-semibold" style="color:@ltColor">@app.LeaveType</span>
+                                                    </div>
+                                                    <div><span class="font-bold text-zinc-400">From:</span> @app.LeaveDate.ToString("dd MMM yyyy")</div>
+                                                    <div><span class="font-bold text-zinc-400">To:</span> @app.EndDate.ToString("dd MMM yyyy")</div>
+                                                    <div><span class="font-bold text-zinc-400">Duration:</span> <span class="font-extrabold text-zinc-800">@app.TotalDays day(s)</span></div>
+                                                    <div><span class="font-bold text-zinc-400">Applied:</span> @app.CreatedAt.ToString("dd MMM yyyy")</div>
+                                                </div>
+                                                @if (!string.IsNullOrWhiteSpace(app.Reason))
+                                                {
+                                                    <div class="ml-12 mt-2 text-xs text-zinc-500 bg-zinc-50 border border-zinc-100 rounded-lg px-3 py-2 max-sm:ml-0">
+                                                        <span class="font-bold text-zinc-400">Reason:</span> @app.Reason
+                                                    </div>
+                                                }
+                                            </div>
+
+                                            <!-- Actions -->
+                                            <div class="flex flex-col gap-2 flex-shrink-0">
+                                                <button type="button"
+                                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                                                        @onclick="() => OpenApproveDialog(app)">
+                                                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
+                                                    Approve
+                                                </button>
+                                                <button type="button"
+                                                        class="inline-flex items-center gap-1.5 px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold rounded-lg border border-rose-200 transition-colors cursor-pointer"
+                                                        @onclick="() => OpenRejectDialog(app)">
+                                                    <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Small" />
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+
+                <!-- Recently Processed (Today's actions) -->
+                @if (_recentlyProcessed.Count > 0)
+                {
+                    <div class="mt-8">
+                        <h3 class="text-sm font-bold text-zinc-700 mb-3 font-heading">Recently Processed (This Session)</h3>
+                        <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                            <MudTable Items="@_recentlyProcessed" Hover="true" Dense="true" Elevation="0">
+                                <HeaderContent>
+                                    <MudTh>Employee</MudTh>
+                                    <MudTh>Leave Type</MudTh>
+                                    <MudTh Style="text-align:center">Days</MudTh>
+                                    <MudTh Style="text-align:center">Decision</MudTh>
+                                    <MudTh>Reason</MudTh>
+                                </HeaderContent>
+                                <RowTemplate>
+                                    <MudTd>
+                                        <div class="text-sm font-semibold text-zinc-800">@context.EmployeeName</div>
+                                        <div class="text-[10px] text-zinc-400 font-mono">@context.EmployeeId</div>
+                                    </MudTd>
+                                    <MudTd><span class="text-xs text-zinc-600">@context.LeaveType</span></MudTd>
+                                    <MudTd Style="text-align:center"><span class="font-bold text-zinc-700">@context.TotalDays</span></MudTd>
+                                    <MudTd Style="text-align:center">
+                                        @if (context.Status == "Approved")
+                                        {
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100">Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100">Rejected</span>
+                                        }
+                                    </MudTd>
+                                    <MudTd><span class="text-xs text-zinc-500">@(string.IsNullOrEmpty(context.RejectedReason) ? context.ApprovedBy : context.RejectedReason)</span></MudTd>
+                                </RowTemplate>
+                            </MudTable>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
+
+        <!-- Approve Dialog -->
+        @if (_showApproveDialog && _actionTarget != null)
+        {
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in" @onclick="() => _showApproveDialog = false">
+                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4" @onclick:stopPropagation="true">
+                    <h3 class="text-base font-bold text-emerald-700 font-heading mb-1">Approve Leave</h3>
+                    <p class="text-xs text-zinc-500 mb-4 font-body">Approving <strong>@_actionTarget.TotalDays day(s)</strong> leave for <strong>@_actionTarget.EmployeeName</strong> (@_actionTarget.LeaveType).</p>
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Approved By</label>
+                        <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm outline-none focus:border-emerald-500" @bind="_approverName" placeholder="Your name / designation" />
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 cursor-pointer" @onclick="() => _showApproveDialog = false">Cancel</button>
+                        <button type="button" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold hover:bg-emerald-700 cursor-pointer" @onclick="ConfirmApprove">Confirm Approve</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+        <!-- Reject Dialog -->
+        @if (_showRejectDialog && _actionTarget != null)
+        {
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in" @onclick="() => _showRejectDialog = false">
+                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4" @onclick:stopPropagation="true">
+                    <h3 class="text-base font-bold text-rose-700 font-heading mb-1">Reject Leave Application</h3>
+                    <p class="text-xs text-zinc-500 mb-4 font-body">Rejecting leave for <strong>@_actionTarget.EmployeeName</strong>. Please state a reason.</p>
+                    <div class="mb-3">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Rejected By</label>
+                        <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm outline-none focus:border-red-400" @bind="_approverName" placeholder="Your name / designation" />
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Reason for Rejection</label>
+                        <textarea rows="3" class="w-full border border-zinc-200 rounded-lg p-2 text-sm outline-none focus:border-red-400" @bind="_rejectReason" placeholder="Reason for rejection..."></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2">
+                        <button type="button" class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 cursor-pointer" @onclick="() => _showRejectDialog = false">Cancel</button>
+                        <button type="button" class="px-4 py-2 bg-rose-600 text-white rounded-lg text-xs font-bold hover:bg-rose-700 cursor-pointer" @onclick="ConfirmReject">Confirm Reject</button>
+                    </div>
+                </div>
+            </div>
+        }
+    </Authorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
+</AuthorizeView>
+
+@code {
+    private List<LeaveApp> _pending = new();
+    private List<LeaveApp> _recentlyProcessed = new();
+    private Dictionary<string, string> _leaveTypeColors = new();
+    private bool _isLoading = true;
+    private int _approvedToday = 0;
+    private int _rejectedToday = 0;
+
+    // Dialogs
+    private bool _showApproveDialog = false;
+    private bool _showRejectDialog = false;
+    private LeaveApp? _actionTarget;
+    private string _approverName = "HR Manager";
+    private string _rejectReason = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLeaveTypeColors();
+        await LoadData();
+    }
+
+    private async Task LoadLeaveTypeColors()
+    {
+        try
+        {
+            var types = await Http.GetFromJsonAsync<List<LeaveTypeModel>>($"{NavManager.BaseUri}api/leavetypes");
+            if (types != null)
+                _leaveTypeColors = types.ToDictionary(t => t.Name, t => t.Color);
+        }
+        catch { }
+    }
+
+    private async Task LoadData()
+    {
+        _isLoading = true;
+        try
+        {
+            var all = await Http.GetFromJsonAsync<List<LeaveApp>>($"{NavManager.BaseUri}api/leaveapplications") ?? new();
+            _pending = all.Where(a => a.Status == "Pending").ToList();
+        }
+        catch (Exception ex) { Snackbar.Add($"Load error: {ex.Message}", Severity.Error); }
+        finally { _isLoading = false; }
+    }
+
+    private void OpenApproveDialog(LeaveApp app) { _actionTarget = app; _approverName = "HR Manager"; _showApproveDialog = true; }
+    private void OpenRejectDialog(LeaveApp app) { _actionTarget = app; _approverName = "HR Manager"; _rejectReason = ""; _showRejectDialog = true; }
+
+    private async Task ConfirmApprove()
+    {
+        if (_actionTarget == null) return;
+        var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/leaveapplications/{_actionTarget.Id}/approve",
+            new { ApprovedBy = _approverName });
+        if (resp.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"✅ Approved leave for {_actionTarget.EmployeeName}.", Severity.Success);
+            _actionTarget.Status = "Approved"; _actionTarget.ApprovedBy = _approverName;
+            _recentlyProcessed.Insert(0, _actionTarget);
+            _approvedToday++;
+            _pending.Remove(_actionTarget);
+            _showApproveDialog = false;
+            _actionTarget = null;
+        }
+        else Snackbar.Add("Approve failed.", Severity.Error);
+    }
+
+    private async Task ConfirmReject()
+    {
+        if (_actionTarget == null) return;
+        var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/leaveapplications/{_actionTarget.Id}/reject",
+            new { RejectedBy = _approverName, Reason = _rejectReason });
+        if (resp.IsSuccessStatusCode)
+        {
+            Snackbar.Add($"❌ Rejected leave for {_actionTarget.EmployeeName}.", Severity.Info);
+            _actionTarget.Status = "Rejected"; _actionTarget.RejectedReason = _rejectReason; _actionTarget.ApprovedBy = _approverName;
+            _recentlyProcessed.Insert(0, _actionTarget);
+            _rejectedToday++;
+            _pending.Remove(_actionTarget);
+            _showRejectDialog = false;
+            _actionTarget = null;
+        }
+        else Snackbar.Add("Reject failed.", Severity.Error);
+    }
+}

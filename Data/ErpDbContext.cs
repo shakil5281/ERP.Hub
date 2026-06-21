@@ -33,6 +33,7 @@ namespace ERPHub.Data
         public DbSet<Manpower> Manpowers => Set<Manpower>();
         public DbSet<ManpowerRequirement> ManpowerRequirements => Set<ManpowerRequirement>();
         public DbSet<Separation> Separations => Set<Separation>();
+        public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -245,6 +246,34 @@ namespace ERPHub.Data
 
             modelBuilder.Entity<Separation>()
                 .HasIndex(s => s.ResignDate);
+
+            // LeaveApplication relationships
+            modelBuilder.Entity<LeaveApplication>()
+                .HasOne(la => la.Department)
+                .WithMany()
+                .HasForeignKey(la => la.DepartmentId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LeaveApplication>()
+                .HasOne(la => la.Designation)
+                .WithMany()
+                .HasForeignKey(la => la.DesignationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LeaveApplication>()
+                .HasOne(la => la.LeaveTypeNav)
+                .WithMany()
+                .HasForeignKey(la => la.LeaveTypeId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<LeaveApplication>()
+                .HasIndex(la => la.EmployeeId);
+
+            modelBuilder.Entity<LeaveApplication>()
+                .HasIndex(la => la.Status);
+
+            modelBuilder.Entity<LeaveApplication>()
+                .HasIndex(la => la.LeaveDate);
         }
     }
 }

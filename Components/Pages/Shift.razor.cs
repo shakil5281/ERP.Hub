@@ -22,8 +22,8 @@ public partial class Shift
     private string _searchQuery = string.Empty;
 
     private bool _showFormModal = false;
-    private bool _isEditMode   = false;
-    private bool _isSaving     = false;
+    private bool _isEditMode = false;
+    private bool _isSaving = false;
     private ERPHub.Models.Shift _editingShift = new();
 
     protected override async Task OnInitializedAsync()
@@ -52,7 +52,7 @@ public partial class Shift
 
     private void OpenAddModal()
     {
-        _isEditMode   = false;
+        _isEditMode = false;
         _editingShift = new ERPHub.Models.Shift();
         _showFormModal = true;
     }
@@ -62,12 +62,12 @@ public partial class Shift
         _isEditMode = true;
         _editingShift = new ERPHub.Models.Shift
         {
-            Id        = shift.Id,
+            Id = shift.Id,
             ShiftName = shift.ShiftName,
-            InTime    = shift.InTime,
-            OutTime   = shift.OutTime,
-            LateTime  = shift.LateTime,
-            OffDay    = shift.OffDay
+            InTime = shift.InTime,
+            OutTime = shift.OutTime,
+            LateTime = shift.LateTime,
+            OffDay = shift.OffDay
         };
         _showFormModal = true;
     }
@@ -75,7 +75,7 @@ public partial class Shift
     private void CloseModal()
     {
         _showFormModal = false;
-        _isSaving      = false;
+        _isSaving = false;
     }
 
     private async Task SaveShift()
@@ -158,16 +158,16 @@ public partial class Shift
     }
 
     // --- Toast Helpers ---
-    private bool _showToast    = false;
+    private bool _showToast = false;
     private string _toastMessage = string.Empty;
     private bool _showErrorToast = false;
-    private string _errorMessage  = string.Empty;
+    private string _errorMessage = string.Empty;
 
     private void ShowToast(string message)
     {
-        _toastMessage    = message;
-        _showToast       = true;
-        _showErrorToast  = false;
+        _toastMessage = message;
+        _showToast = true;
+        _showErrorToast = false;
         StateHasChanged();
         Task.Delay(3000).ContinueWith(_ =>
         {
@@ -178,9 +178,9 @@ public partial class Shift
 
     private void ShowErrorToast(string message)
     {
-        _errorMessage    = message;
-        _showErrorToast  = true;
-        _showToast       = false;
+        _errorMessage = message;
+        _showErrorToast = true;
+        _showToast = false;
         StateHasChanged();
         Task.Delay(3000).ContinueWith(_ =>
         {
