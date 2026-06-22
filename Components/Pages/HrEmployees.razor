@@ -127,6 +127,15 @@
                                 <MudSelectItem Value="@("2023")">2023</MudSelectItem>
                             </MudSelect>
                         </div>
+                        
+                        <div class="flex justify-end mt-2">
+                            <button type="button" class="py-2 px-6 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors text-sm flex items-center gap-2" @onclick="ApplyFilters">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                                Apply Filters
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,6 +248,17 @@
     private string _selectedStatus = "";
     private string _selectedYear = "";
 
+    private string _activeSearchQuery = "";
+    private string _activeEmployeeIdFilter = "";
+    private string _activeCompany = "";
+    private string _activeDept = "";
+    private string _activeSection = "";
+    private string _activeDesignation = "";
+    private string _activeLine = "";
+    private string _activeGroup = "";
+    private string _activeStatus = "";
+    private string _activeYear = "";
+
     private bool _showAdvancedFilters = false;
     private bool _isLoading = true;
     private bool _showDeleteDialog = false;
@@ -306,18 +326,33 @@
 
     private void ToggleAdvancedFilters() => _showAdvancedFilters = !_showAdvancedFilters;
 
-    private bool HasActiveFilters => !string.IsNullOrEmpty(_employeeIdFilter) ||
-                                     !string.IsNullOrEmpty(_selectedCompany) ||
-                                     !string.IsNullOrEmpty(_selectedDept) || 
-                                     !string.IsNullOrEmpty(_selectedSection) || 
-                                     !string.IsNullOrEmpty(_selectedDesignation) || 
-                                     !string.IsNullOrEmpty(_selectedLine) || 
-                                     !string.IsNullOrEmpty(_selectedGroup) || 
-                                     !string.IsNullOrEmpty(_selectedStatus) || 
-                                     !string.IsNullOrEmpty(_selectedYear);
+    private bool HasActiveFilters => !string.IsNullOrEmpty(_activeEmployeeIdFilter) ||
+                                     !string.IsNullOrEmpty(_activeCompany) ||
+                                     !string.IsNullOrEmpty(_activeDept) || 
+                                     !string.IsNullOrEmpty(_activeSection) || 
+                                     !string.IsNullOrEmpty(_activeDesignation) || 
+                                     !string.IsNullOrEmpty(_activeLine) || 
+                                     !string.IsNullOrEmpty(_activeGroup) || 
+                                     !string.IsNullOrEmpty(_activeStatus) || 
+                                     !string.IsNullOrEmpty(_activeYear);
+
+    private void ApplyFilters()
+    {
+        _activeSearchQuery = _searchQuery;
+        _activeEmployeeIdFilter = _employeeIdFilter;
+        _activeCompany = _selectedCompany;
+        _activeDept = _selectedDept;
+        _activeSection = _selectedSection;
+        _activeDesignation = _selectedDesignation;
+        _activeLine = _selectedLine;
+        _activeGroup = _selectedGroup;
+        _activeStatus = _selectedStatus;
+        _activeYear = _selectedYear;
+    }
 
     private void ClearFilters()
     {
+        _searchQuery = "";
         _employeeIdFilter = "";
         _selectedCompany = "";
         _selectedDept = "";
@@ -327,22 +362,24 @@
         _selectedGroup = "";
         _selectedStatus = "";
         _selectedYear = "";
+        
+        ApplyFilters();
     }
 
     private IEnumerable<Employee> FilteredEmployees => _employees
-        .Where(e => string.IsNullOrEmpty(_searchQuery) || 
-                    e.EmployeeName.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
-                    e.Email.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) || 
-                    (e.EmployeeId != null && e.EmployeeId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase)))
-        .Where(e => string.IsNullOrEmpty(_employeeIdFilter) || (e.EmployeeId != null && e.EmployeeId.Equals(_employeeIdFilter, StringComparison.OrdinalIgnoreCase)))
-        .Where(e => string.IsNullOrEmpty(_selectedCompany) || (e.Company?.CompanyNameEn == _selectedCompany))
-        .Where(e => string.IsNullOrEmpty(_selectedDept) || (e.Department?.NameEn == _selectedDept))
-        .Where(e => string.IsNullOrEmpty(_selectedSection) || (e.Section?.NameEn == _selectedSection))
-        .Where(e => string.IsNullOrEmpty(_selectedDesignation) || (e.Designation?.NameEn == _selectedDesignation))
-        .Where(e => string.IsNullOrEmpty(_selectedLine) || (e.Line?.NameEn == _selectedLine))
+        .Where(e => string.IsNullOrEmpty(_activeSearchQuery) || 
+                    e.EmployeeName.Contains(_activeSearchQuery, StringComparison.OrdinalIgnoreCase) || 
+                    e.Email.Contains(_activeSearchQuery, StringComparison.OrdinalIgnoreCase) || 
+                    (e.EmployeeId != null && e.EmployeeId.Contains(_activeSearchQuery, StringComparison.OrdinalIgnoreCase)))
+        .Where(e => string.IsNullOrEmpty(_activeEmployeeIdFilter) || (e.EmployeeId != null && e.EmployeeId.Equals(_activeEmployeeIdFilter, StringComparison.OrdinalIgnoreCase)))
+        .Where(e => string.IsNullOrEmpty(_activeCompany) || (e.Company?.CompanyNameEn == _activeCompany))
+        .Where(e => string.IsNullOrEmpty(_activeDept) || (e.Department?.NameEn == _activeDept))
+        .Where(e => string.IsNullOrEmpty(_activeSection) || (e.Section?.NameEn == _activeSection))
+        .Where(e => string.IsNullOrEmpty(_activeDesignation) || (e.Designation?.NameEn == _activeDesignation))
+        .Where(e => string.IsNullOrEmpty(_activeLine) || (e.Line?.NameEn == _activeLine))
         // Note: Group is not currently a property on Employee, so we don't filter by it physically. If GroupId is added later, filter here.
-        .Where(e => string.IsNullOrEmpty(_selectedStatus) || e.EmployeeStatus == _selectedStatus)
-        .Where(e => string.IsNullOrEmpty(_selectedYear) || e.JoiningDate.Year.ToString() == _selectedYear);
+        .Where(e => string.IsNullOrEmpty(_activeStatus) || e.EmployeeStatus == _activeStatus)
+        .Where(e => string.IsNullOrEmpty(_activeYear) || e.JoiningDate.Year.ToString() == _activeYear);
 
     private static string GetInitials(string name)
     {
