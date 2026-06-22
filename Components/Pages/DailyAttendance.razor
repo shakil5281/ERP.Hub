@@ -12,12 +12,13 @@
 <AuthorizeView Context="authContext">
     <Authorized>
         @* Header with Export Buttons *@
-        <div class="d-flex justify-content-between align-items-center mb-6" style="flex-wrap:wrap; gap: 16px;">
+        <div class="d-flex align-center mb-6 w-100" style="flex-wrap:wrap; gap: 16px; width: 100%;">
             <div>
                 <MudText Typo="Typo.h5" Class="fw-extrabold">Daily Attendance Sheet</MudText>
                 <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Track employee check-in/out, late registers, overtime, and daily status.</MudText>
             </div>
-            <div class="d-flex gap-2">
+            <MudSpacer />
+            <div class="d-flex justify-end gap-2">
                 <MudButton Variant="Variant.Outlined" Color="Color.Default"
                            Disabled="@(_records.Count == 0 || _isExporting)"
                            OnClick="ExportToExcel"
@@ -174,6 +175,21 @@
                         }
                     </MudSelect>
                 </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Attendance Status"
+                               @bind-Value="_attendanceStatusFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
+                        <MudSelectItem Value="@("Present")">Present</MudSelectItem>
+                        <MudSelectItem Value="@("Absent")">Absent</MudSelectItem>
+                        <MudSelectItem Value="@("Late")">Late</MudSelectItem>
+                        <MudSelectItem Value="@("Leave")">Leave</MudSelectItem>
+                        <MudSelectItem Value="@("Holiday")">Holiday / Off</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
                 <MudItem xs="12" sm="12" md="3" Class="d-flex align-center gap-2" Style="margin-top: 10px;">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary"
                                Disabled="@_isLoading" @onclick="LoadRecords" Class="flex-grow-1">
@@ -240,7 +256,10 @@
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
                 <MudTable Items="@_records" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0" Filter="new Func<AttendanceRecord, bool>(FilterFunc)">
                     <ToolBarContent>
-                        <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Attendance Records</MudText>
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Attendance Records</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color">Date: @_selectedDate.ToString("yyyy-MM-dd")</MudText>
+                        </div>
                         <MudSpacer />
                         <MudTextField @bind-Value="_searchString"
                                       Placeholder="Quick search name or ID..."
@@ -253,18 +272,17 @@
                                       Clearable="true" />
                     </ToolBarContent>
                     <HeaderContent>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.AttendanceDate)">Date</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align: center;">Sl</MudTh>
                         <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.EmployeeId)">Employee ID</MudTableSortLabel></MudTh>
                         <MudTh><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => GetEmployeeName(x.EmployeeId))">Employee Name</MudTableSortLabel></MudTh>
                         <MudTh Style="text-align: center;"><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">In Time</MudText></MudTh>
                         <MudTh Style="text-align: center;"><MudText Typo="Typo.caption" Class="fw-bold mud-secondary-text-color">Out Time</MudText></MudTh>
                         <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.LateMinutes)">Late</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.WorkedMinutes)">Worked</MudTableSortLabel></MudTh>
                         <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.OvertimeMinutes)">OT</MudTableSortLabel></MudTh>
                         <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AttendanceRecord, object>(x => x.AttendanceStatus)">Status</MudTableSortLabel></MudTh>
                     </HeaderContent>
                     <RowTemplate>
-                        <MudTd Style="text-align: center;" DataLabel="Date"><MudText Typo="Typo.body2" Class="font-mono">@context.AttendanceDate.ToString("yyyy-MM-dd")</MudText></MudTd>
+                        <MudTd Style="text-align: center;" DataLabel="Sl">@(_records.IndexOf(context) + 1)</MudTd>
                         <MudTd Style="text-align: center;" DataLabel="Employee ID"><MudText Typo="Typo.body2" Class="fw-bold font-mono">@context.EmployeeId</MudText></MudTd>
                         <MudTd DataLabel="Employee Name"><MudText Typo="Typo.body2" Class="fw-medium">@GetEmployeeName(context.EmployeeId)</MudText></MudTd>
                         <MudTd Style="text-align: center;" DataLabel="In Time"><MudText Typo="Typo.body2" Class="font-mono">@FormatTime(context.ActualInPunch)</MudText></MudTd>
@@ -274,13 +292,12 @@
                                 @(context.LateMinutes > 0 ? $"{context.LateMinutes}m" : "-")
                             </MudText>
                         </MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Worked"><MudText Typo="Typo.body2">@(context.WorkedMinutes > 0 ? $"{context.WorkedMinutes / 60}h {context.WorkedMinutes % 60}m" : "-")</MudText></MudTd>
                         <MudTd Style="text-align: center;" DataLabel="OT">
                             <MudText Typo="Typo.body2" Class="@(context.OvertimeMinutes > 0 ? "fw-bold" : "mud-secondary-text-color")">
                                 @(context.OvertimeMinutes > 0 ? $"{context.OvertimeMinutes}m" : "-")
                             </MudText>
                         </MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Status">@StatusBadge(context.AttendanceStatus)</MudTd>
+                        <MudTd Style="text-align: center;" DataLabel="Status">@StatusBadge(context.AttendanceStatus, context.Remarks)</MudTd>
                     </RowTemplate>
                     <PagerContent>
                         <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
@@ -309,6 +326,7 @@
     private int _designationIdFilter;
     private int _lineIdFilter;
     private string _groupFilter = "All";
+    private string _attendanceStatusFilter = "All";
     private int _shiftIdFilter;
     private bool _isLoading;
     private bool _isExporting;
@@ -397,8 +415,10 @@
                            _designationIdFilter > 0 || _lineIdFilter > 0 ||
                            _shiftIdFilter > 0 || _companyIdFilter > 0 ||
                            (_groupFilter != "All" && !string.IsNullOrEmpty(_groupFilter));
+        
+        var hasStatusFilter = _attendanceStatusFilter != "All" && !string.IsNullOrEmpty(_attendanceStatusFilter);
 
-        if (!hasOrgFilter)
+        if (!hasOrgFilter && !hasStatusFilter)
         {
             _records = _allRecords;
             return;
@@ -415,8 +435,20 @@
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         _records = _allRecords
-            .Where(r => matchingEmployeeIds.Contains(r.EmployeeId))
+            .Where(r => !hasOrgFilter || matchingEmployeeIds.Contains(r.EmployeeId))
+            .Where(r => !hasStatusFilter || MatchStatus(r.AttendanceStatus, _attendanceStatusFilter))
             .ToList();
+    }
+
+    private bool MatchStatus(string? actualStatus, string filterStatus)
+    {
+        if (filterStatus == "Absent") return string.IsNullOrEmpty(actualStatus) || actualStatus == "Absent";
+        if (string.IsNullOrEmpty(actualStatus)) return false;
+        if (filterStatus == "Present") return actualStatus.Contains("Present") || actualStatus.Contains("Missing");
+        if (filterStatus == "Late") return actualStatus.Contains("Late");
+        if (filterStatus == "Leave") return actualStatus.Contains("Leave");
+        if (filterStatus == "Holiday") return actualStatus.Contains("Holiday") || actualStatus.Contains("Weekly Off");
+        return actualStatus == filterStatus;
     }
 
     private async Task ClearFilters()
@@ -430,6 +462,7 @@
         _designationIdFilter = 0;
         _lineIdFilter = 0;
         _groupFilter = "All";
+        _attendanceStatusFilter = "All";
         _shiftIdFilter = 0;
         _searchString = "";
         await LoadRecords();
@@ -470,28 +503,30 @@
         return emp?.EmployeeName ?? "-";
     }
 
-    private static RenderFragment StatusBadge(string status) => builder =>
+    private static string GetShortStatus(string status, string? remarks = null)
     {
-        var label = status switch
+        if (string.IsNullOrEmpty(status)) return "";
+        if (status == "Absent") return "A";
+        if (status.Contains("Present")) return "P";
+        if (status == "Late") return "L";
+        if (status.Contains("Missing")) return "P";
+        if (status.Contains("Leave"))
         {
-            "Present" => "Present",
-            "Present + Overtime" => "Present + OT",
-            "Late" => "Late",
-            "Early Exit" => "Early Exit",
-            "Absent" => "Absent",
-            "Leave" => "Leave",
-            "Half Day" => "Half Day",
-            "Holiday" => "Holiday",
-            "Holiday Worked" => "Holiday Worked",
-            "Weekly Off" => "Weekly Off",
-            "Weekly Off Worked" => "WO Worked",
-            "Missing In Punch" => "Missing In",
-            "Missing Out Punch" => "Missing Out",
-            _ => status
-        };
+            if (remarks != null && remarks.Contains("SL", StringComparison.OrdinalIgnoreCase)) return "SL";
+            if (remarks != null && remarks.Contains("CL", StringComparison.OrdinalIgnoreCase)) return "CL";
+            return "CL/SL";
+        }
+        if (status.Contains("Holiday") || status.Contains("Weekly Off")) return "W";
+        return status;
+    }
 
+    private static RenderFragment StatusBadge(string status, string? remarks) => builder =>
+    {
+        var label = GetShortStatus(status, remarks);
+        var colorClass = label == "A" ? "text-error fw-bold" : "fw-semibold text-zinc-800";
+        
         builder.OpenElement(0, "span");
-        builder.AddAttribute(1, "class", "fw-semibold text-zinc-800");
+        builder.AddAttribute(1, "class", colorClass);
         builder.AddContent(2, label);
         builder.CloseElement();
     };
@@ -505,18 +540,25 @@
 
         try
         {
-            var columns = GetExportColumns();
+            var exportRecords = _records.Where(FilterFunc).ToList();
+            if (exportRecords.Count == 0)
+            {
+                Snackbar.Add("No records match the current filter.", Severity.Warning);
+                return;
+            }
+
+            var columns = GetExportColumns(exportRecords);
             var company = _companies.FirstOrDefault();
             var summary = new AttendanceSummary(
-                TotalEmployees: _records.Count,
-                TotalPresent: _records.Count(r => r.AttendanceStatus is "Present" or "Present + Overtime" or "Late" or "Early Exit" or "Half Day" or "Holiday Worked" or "Weekly Off Worked" or "Missing In Punch" or "Missing Out Punch"),
-                TotalAbsent: _records.Count(r => r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus)),
-                TotalLate: _records.Count(r => r.AttendanceStatus is "Late" or "Early Exit"),
-                TotalLeave: _records.Count(r => r.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
+                TotalEmployees: exportRecords.Count,
+                TotalPresent: exportRecords.Count(r => r.AttendanceStatus is "Present" or "Present + Overtime" or "Late" or "Early Exit" or "Half Day" or "Holiday Worked" or "Weekly Off Worked" or "Missing In Punch" or "Missing Out Punch"),
+                TotalAbsent: exportRecords.Count(r => r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus)),
+                TotalLate: exportRecords.Count(r => r.AttendanceStatus is "Late" or "Early Exit"),
+                TotalLeave: exportRecords.Count(r => r.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
             );
 
             var bytes = await ExportService.ExportAttendanceToExcelAsync(
-                _records,
+                exportRecords,
                 "Daily Attendance Sheet",
                 _selectedDate,
                 company!,
@@ -548,18 +590,25 @@
 
         try
         {
-            var columns = GetExportColumns();
+            var exportRecords = _records.Where(FilterFunc).ToList();
+            if (exportRecords.Count == 0)
+            {
+                Snackbar.Add("No records match the current filter.", Severity.Warning);
+                return;
+            }
+
+            var columns = GetExportColumns(exportRecords);
             var company = _companies.FirstOrDefault();
             var summary = new AttendanceSummary(
-                TotalEmployees: _records.Count,
-                TotalPresent: _records.Count(r => r.AttendanceStatus is "Present" or "Present + Overtime" or "Late" or "Early Exit" or "Half Day" or "Holiday Worked" or "Weekly Off Worked" or "Missing In Punch" or "Missing Out Punch"),
-                TotalAbsent: _records.Count(r => r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus)),
-                TotalLate: _records.Count(r => r.AttendanceStatus is "Late" or "Early Exit"),
-                TotalLeave: _records.Count(r => r.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
+                TotalEmployees: exportRecords.Count,
+                TotalPresent: exportRecords.Count(r => r.AttendanceStatus is "Present" or "Present + Overtime" or "Late" or "Early Exit" or "Half Day" or "Holiday Worked" or "Weekly Off Worked" or "Missing In Punch" or "Missing Out Punch"),
+                TotalAbsent: exportRecords.Count(r => r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus)),
+                TotalLate: exportRecords.Count(r => r.AttendanceStatus is "Late" or "Early Exit"),
+                TotalLeave: exportRecords.Count(r => r.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
             );
 
             var bytes = await ExportService.ExportAttendanceToPdfAsync(
-                _records,
+                exportRecords,
                 "Daily Attendance Sheet",
                 _selectedDate,
                 company!,
@@ -582,16 +631,15 @@
         }
     }
 
-    private Dictionary<string, Func<AttendanceRecord, object>> GetExportColumns() => new()
+    private Dictionary<string, Func<AttendanceRecord, object>> GetExportColumns(List<AttendanceRecord> recordsSource) => new()
     {
-        ["Date"] = r => r.AttendanceDate,
+        ["Sl"] = r => recordsSource.IndexOf(r) + 1,
         ["Employee ID"] = r => r.EmployeeId,
         ["Employee Name"] = r => GetEmployeeName(r.EmployeeId),
         ["In Time"] = r => r.ActualInPunch?.ToString("hh:mm:ss tt") ?? "--:--:--",
         ["Out Time"] = r => r.ActualOutPunch?.ToString("hh:mm:ss tt") ?? "--:--:--",
         ["Late (min)"] = r => r.LateMinutes > 0 ? r.LateMinutes : 0,
-        ["Worked (hrs)"] = r => r.WorkedMinutes > 0 ? Math.Round(r.WorkedMinutes / 60.0, 2) : 0,
         ["OT (min)"] = r => r.OvertimeMinutes > 0 ? r.OvertimeMinutes : 0,
-        ["Status"] = r => r.AttendanceStatus
+        ["Status"] = r => GetShortStatus(r.AttendanceStatus, r.Remarks)
     };
 }

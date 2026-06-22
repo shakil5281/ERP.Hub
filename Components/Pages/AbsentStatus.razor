@@ -1,141 +1,195 @@
 @page "/attendance/absent-status"
+@using ERPHub.Models
+@using ERPHub.Services
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject IExportService ExportService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject AttendanceService AttendanceService
 
-<PageTitle>ERPHub - Absent Status</PageTitle>
+<PageTitle>ERPHub - Absent Summary</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        <div class="animate-fade-in">
-            <!-- Header Block -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
-                <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Absent Status</h2>
-                    <p class="text-zinc-500 text-sm mt-0.5 font-body">Monitor absenteeism, record reasons, and assign official leave categories to unnotified absences.</p>
-                </div>
+        @* Header with Export Buttons *@
+        <div class="d-flex align-center mb-6 w-100" style="flex-wrap:wrap; gap: 16px;">
+            <div>
+                <MudText Typo="Typo.h5" Class="fw-extrabold">Absent Status Summary</MudText>
+                <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Track employee total absent and continuous absent days over a period.</MudText>
             </div>
-
-            <!-- Metrics -->
-            <div class="grid grid-cols-4 gap-4 mb-6 max-xl:grid-cols-2 max-sm:grid-cols-1">
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-rose-600">Total Absences</div>
-                    <div class="text-xl font-extrabold text-rose-600 mt-1">@TotalAbsentCount</div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-zinc-600">Unexcused Absences</div>
-                    <div class="text-xl font-extrabold text-zinc-950 mt-1">@UnexcusedCount</div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
-                    <div class="text-[10px] text-zinc-400 font-bold uppercase tracking-wider text-emerald-600">Excused / Approved</div>
-                    <div class="text-xl font-extrabold text-emerald-600 mt-1">@ExcusedCount</div>
-                </div>
-                <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm text-indigo-700 bg-indigo-50/10">
-                    <div class="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Official Duty (OD)</div>
-                    <div class="text-xl font-extrabold text-indigo-700 mt-1">@OfficialDutyCount</div>
-                </div>
-            </div>
-
-            <!-- Filters Bar -->
-            <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6 flex justify-between items-center gap-4 max-sm:flex-col max-sm:items-stretch">
-                <div class="flex gap-3 flex-1 max-w-[600px] max-sm:flex-col">
-                    <input type="text" 
-                           class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" 
-                           placeholder="Search by Employee ID or Name..." 
-                           @bind="_searchQuery" @bind:event="oninput" />
-                    
-                    <div class="w-48 max-sm:w-full">
-                        <MudSelect T="string" @bind-Value="_typeFilter" Placeholder="Absence Type" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@((string?)null)">All Categories</MudSelectItem>
-                            <MudSelectItem Value="@("Unexcused")">Unexcused</MudSelectItem>
-                            <MudSelectItem Value="@("Sick Leave")">Sick Leave</MudSelectItem>
-                            <MudSelectItem Value="@("Casual Leave")">Casual Leave</MudSelectItem>
-                            <MudSelectItem Value="@("Official Duty")">Official Duty</MudSelectItem>
-                        </MudSelect>
-                    </div>
-                </div>
-                <div class="flex gap-2 items-center">
-                    <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
-                    <MudDatePicker Date="@_absentDate"
-                                   DateChanged="OnDateChanged"
-                                   Label="Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
-                </div>
-            </div>
-
-            <!-- Table -->
-            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@FilteredRecords" Hover="true" Dense="true" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>Emp ID</MudTh>
-                        <MudTh>Employee Name</MudTh>
-                        <MudTh>Department</MudTh>
-                        <MudTh>Shift</MudTh>
-                        <MudTh>Absence Category</MudTh>
-                        <MudTh>Excused By</MudTh>
-                        <MudTh>Remarks</MudTh>
-                        <MudTh Class="text-right">Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
-                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
-                        <MudTd DataLabel="Department">@context.Department</MudTd>
-                        <MudTd DataLabel="Shift">@context.Shift</MudTd>
-                        <MudTd DataLabel="Absence Category">
-                            @if (context.Category == "Unexcused")
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200">Unexcused</span>
-                            }
-                            else if (context.Category == "Official Duty")
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">Official Duty</span>
-                            }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">@context.Category</span>
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Excused By">@context.ExcusedBy</MudTd>
-                        <MudTd DataLabel="Remarks"><span class="text-xs text-zinc-500 italic">@context.Remarks</span></MudTd>
-                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
-                            <MudIconButton Icon="@Icons.Material.Filled.EditCalendar" Size="@Size.Small" Color="Color.Primary" title="Update Status" OnClick="() => OpenStatusDialog(context)" />
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+            <MudSpacer />
+            <div class="d-flex justify-end gap-2">
+                <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                           Disabled="@(_records.Count == 0 || _isExporting)"
+                           OnClick="ExportToExcel"
+                           StartIcon="@Icons.Material.Filled.TableChart"
+                           Size="Size.Small">
+                    Excel
+                </MudButton>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                           Disabled="@(_records.Count == 0 || _isExporting)"
+                           OnClick="ExportToPdf"
+                           StartIcon="@Icons.Material.Filled.PictureAsPdf"
+                           Size="Size.Small">
+                    PDF
+                </MudButton>
             </div>
         </div>
 
-        <!-- Status Dialog -->
-        @if (_showStatusDialog && _activeRecord != null)
-        {
-            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in">
-                <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4">
-                    <h3 class="text-base font-bold text-zinc-950 font-heading mb-1">Update Absence Category</h3>
-                    <p class="text-xs text-zinc-500 mb-4">Set leave code or duty bypass details for @_activeRecord.Name.</p>
-                    
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Absence Category</label>
-                            <select class="w-full border border-zinc-200 rounded-lg p-1.5 text-xs text-zinc-900 outline-none bg-white focus:border-black" @bind="_activeRecord.Category">
-                                <option value="Unexcused">Unexcused</option>
-                                <option value="Sick Leave">Sick Leave</option>
-                                <option value="Casual Leave">Casual Leave</option>
-                                <option value="Official Duty">Official Duty</option>
-                                <option value="Earned Leave">Earned Leave</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Remarks / Reason</label>
-                            <input type="text" class="w-full border border-zinc-200 rounded-lg p-2 text-sm text-zinc-900 outline-none focus:border-black" @bind="_activeRecord.Remarks" placeholder="Medical rest certificate, official permit, etc." />
-                        </div>
-                    </div>
+        @* Filters *@
+        <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4" Style="border-radius:8px;">
+            <MudGrid Spacing="3" class="align-items-end">
+                <MudItem xs="12" sm="4" md="3">
+                    <MudDatePicker Label="From Date"
+                                   Date="@_fromDate"
+                                   DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })"
+                                   Editable="true"
+                                   Placeholder="Select Date"
+                                   DateFormat="yyyy-MM-dd"
+                                   dense="true"
+                                   Margin="Margin.Dense"
+                                   Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudDatePicker Label="To Date"
+                                   Date="@_toDate"
+                                   DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })"
+                                   Editable="true"
+                                   Placeholder="Select Date"
+                                   DateFormat="yyyy-MM-dd"
+                                   dense="true"
+                                   Margin="Margin.Dense"
+                                   Variant="Variant.Outlined" />
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudTextField Label="Employee ID"
+                                  @bind-Value="_employeeIdFilter"
+                                  Variant="Variant.Outlined"
+                                  Placeholder="e.g. 1001"
+                                  dense="true"
+                                  Margin="Margin.Dense"
+                                  Immediate="true" />
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Employee Status"
+                               @bind-Value="_employeeStatus"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="0">All</MudSelectItem>
+                        <MudSelectItem Value="1">Active</MudSelectItem>
+                        <MudSelectItem Value="2">Inactive</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Company"
+                               @bind-Value="_companyIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense">
+                        <MudSelectItem Value="0">All Companies</MudSelectItem>
+                        @foreach (var c in _companies)
+                        {
+                            <MudSelectItem Value="@c.Id">@c.CompanyNameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Department"
+                               @bind-Value="_departmentIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="0">All Departments</MudSelectItem>
+                        @foreach (var d in _departments)
+                        {
+                            <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="4" md="3">
+                    <MudSelect Label="Designation"
+                               @bind-Value="_designationIdFilter"
+                               Variant="Variant.Outlined"
+                               dense="true"
+                               Margin="Margin.Dense"
+                               Clearable="true">
+                        <MudSelectItem Value="0">All Designations</MudSelectItem>
+                        @foreach (var dg in _designations)
+                        {
+                            <MudSelectItem Value="@dg.Id">@dg.NameEn</MudSelectItem>
+                        }
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="12" sm="12" md="3" Class="d-flex align-center gap-2" Style="margin-top: 10px;">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
+                               Disabled="@_isLoading" @onclick="LoadRecords" Class="flex-grow-1">
+                        Apply
+                    </MudButton>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Default"
+                               @onclick="ClearFilters" Class="flex-grow-1">
+                        Clear
+                    </MudButton>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
 
-                    <div class="flex justify-end gap-2 mt-6">
-                        <button class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="CloseStatusDialog">Cancel</button>
-                        <button class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="SaveStatus">Save Status</button>
-                    </div>
-                </div>
+        @* Data Table *@
+        @if (_isLoading)
+        {
+            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Loading records...</MudText>
+        }
+        else
+        {
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                <MudTable Items="@_records" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0" Filter="new Func<AbsentSummaryDto, bool>(FilterFunc)">
+                    <ToolBarContent>
+                        <div>
+                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Absent Summary</MudText>
+                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@_fromDate.ToString("yyyy-MM-dd") to @_toDate.ToString("yyyy-MM-dd")</MudText>
+                        </div>
+                        <MudSpacer />
+                        <MudTextField @bind-Value="_searchString"
+                                      Placeholder="Quick search name or ID..."
+                                      Adornment="Adornment.Start"
+                                      AdornmentIcon="@Icons.Material.Filled.Search"
+                                      IconSize="Size.Small"
+                                      Class="mt-0"
+                                      Variant="Variant.Outlined"
+                                      Margin="Margin.Dense"
+                                      Clearable="true" />
+                    </ToolBarContent>
+                    <HeaderContent>
+                        <MudTh Style="text-align: center;">Sl</MudTh>
+                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.EmployeeId)">Employee ID</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.Department)">Department</MudTableSortLabel></MudTh>
+                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.Designation)">Designation</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.TotalAbsentDays)">Total Absent</MudTableSortLabel></MudTh>
+                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.ContinuousAbsentDays)">Continuous Absent</MudTableSortLabel></MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd Style="text-align: center;" DataLabel="Sl">@(_records.IndexOf(context) + 1)</MudTd>
+                        <MudTd Style="text-align: center;" DataLabel="Employee ID"><MudText Typo="Typo.body2" Class="fw-bold font-mono">@context.EmployeeId</MudText></MudTd>
+                        <MudTd DataLabel="Employee Name"><MudText Typo="Typo.body2" Class="fw-medium">@context.EmployeeName</MudText></MudTd>
+                        <MudTd DataLabel="Department"><MudText Typo="Typo.body2">@context.Department</MudText></MudTd>
+                        <MudTd DataLabel="Designation"><MudText Typo="Typo.body2">@context.Designation</MudText></MudTd>
+                        <MudTd Style="text-align: center;" DataLabel="Total Absent">
+                            <MudText Typo="Typo.body2" Class="fw-bold text-error">@context.TotalAbsentDays</MudText>
+                        </MudTd>
+                        <MudTd Style="text-align: center;" DataLabel="Continuous Absent">
+                            <MudText Typo="Typo.body2" Class="fw-bold text-warning">@context.ContinuousAbsentDays</MudText>
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+                    </PagerContent>
+                    <NoRecordsContent>
+                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
+                    </NoRecordsContent>
+                </MudTable>
             </div>
         }
     </Authorized>
@@ -145,154 +199,222 @@
 </AuthorizeView>
 
 @code {
-    [Inject] private IErpService ErpService { get; set; } = default!;
-    [Inject] private AttendanceService AttendanceService { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    private DateTime _fromDate = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+    private DateTime _toDate = DateTime.Today;
+    
+    private string? _employeeIdFilter;
+    private int _employeeStatus; // 0=All, 1=Active, 2=Inactive
+    private int _companyIdFilter;
+    private int _departmentIdFilter;
+    private int _designationIdFilter;
+    
+    private bool _isLoading;
+    private bool _isExporting;
+    private string _searchString = "";
+    
+    private List<AbsentSummaryDto> _records = new();
+    private List<AbsentSummaryDto> _allRecords = new();
 
-    private string _searchQuery = string.Empty;
-    private string _typeFilter = string.Empty;
-    private DateTime _absentDate = DateTime.Today;
-
-    private bool _showStatusDialog = false;
-    private AbsentUiRecord? _activeRecord;
-
-    private int TotalAbsentCount => FilteredRecords.Count();
-    private int UnexcusedCount => FilteredRecords.Count(r => r.Category == "Unexcused");
-    private int ExcusedCount => FilteredRecords.Count(r => r.Category.Contains("Leave"));
-    private int OfficialDutyCount => FilteredRecords.Count(r => r.Category == "Official Duty");
-
-    private List<AbsentUiRecord> _records = new();
+    private List<Company> _companies = new();
+    private List<Department> _departments = new();
+    private List<Designation> _designations = new();
+    private List<Employee> _employees = new();
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadData();
+        await LoadLookupData();
+        await LoadRecords();
     }
 
-    private async Task LoadData()
+    private async Task LoadLookupData()
     {
-        var dbRecords = await AttendanceService.GetAttendanceRecordsAsync(_absentDate, _absentDate);
-        if (!dbRecords.Any())
+        try
         {
-            await AttendanceService.CalculateAttendanceAsync(_absentDate, _absentDate);
-            dbRecords = await AttendanceService.GetAttendanceRecordsAsync(_absentDate, _absentDate);
+            var baseUri = NavManager.BaseUri;
+            var companiesTask = Http.GetFromJsonAsync<List<Company>>($"{baseUri}api/companies");
+            var departmentsTask = Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments");
+            var designationsTask = Http.GetFromJsonAsync<List<Designation>>($"{baseUri}api/designations");
+            var employeesTask = Http.GetFromJsonAsync<List<Employee>>($"{baseUri}api/employees");
+
+            await Task.WhenAll(companiesTask, departmentsTask, designationsTask, employeesTask);
+
+            _companies = await companiesTask ?? new();
+            _departments = await departmentsTask ?? new();
+            _designations = await designationsTask ?? new();
+            _employees = await employeesTask ?? new();
         }
-
-        var employees = await ErpService.GetEmployeesAsync();
-        var departments = await ErpService.GetDepartmentsAsync();
-        var shifts = await ErpService.GetShiftsAsync();
-
-        var empMap = employees.GroupBy(e => e.EmployeeId).ToDictionary(g => g.Key, g => g.First());
-        var deptMap = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
-        var shiftMap = shifts.GroupBy(s => s.Id).ToDictionary(g => g.Key, g => g.First().ShiftName);
-
-        _records = dbRecords
-            .Where(r => r.AttendanceStatus == "Absent" || 
-                        r.AttendanceStatus == "Leave" || 
-                        r.AttendanceStatus.Contains("Leave") || 
-                        r.AttendanceStatus == "Official Duty")
-            .Select(r => {
-                empMap.TryGetValue(r.EmployeeId, out var emp);
-                string deptName = (emp != null && deptMap.TryGetValue(emp.DepartmentId, out var dn)) ? dn : "IT";
-                string shiftName = (emp != null && shiftMap.TryGetValue(emp.ShiftId, out var sn)) ? sn : "Day Shift";
-
-                string category = r.AttendanceStatus == "Absent" ? "Unexcused" : r.AttendanceStatus;
-                var parsed = ParseDbRemarks(r.Remarks);
-
-                return new AbsentUiRecord
-                {
-                    Id = r.Id,
-                    EmpId = r.EmployeeId,
-                    Name = emp?.EmployeeName ?? "Unknown Employee",
-                    Department = deptName,
-                    Shift = shiftName,
-                    Category = category,
-                    ExcusedBy = parsed.ExcusedBy,
-                    Remarks = parsed.Remarks,
-                    DbRecord = r
-                };
-            }).ToList();
-    }
-
-    private (string Remarks, string ExcusedBy) ParseDbRemarks(string? remarks)
-    {
-        if (string.IsNullOrWhiteSpace(remarks)) return ("", "None");
-        
-        int idx = remarks.IndexOf(" (Excused By: ");
-        if (idx >= 0)
+        catch
         {
-            string cleanRemarks = remarks.Substring(0, idx);
-            string excusedBy = remarks.Substring(idx + " (Excused By: ".Length).TrimEnd(')');
-            return (cleanRemarks, excusedBy);
-        }
-        
-        return (remarks, "None");
-    }
-
-    private async Task OnDateChanged(DateTime? date)
-    {
-        if (date.HasValue)
-        {
-            _absentDate = date.Value;
-            await LoadData();
-            Snackbar.Add($"Loaded absences for {_absentDate.ToString("yyyy-MM-dd")}", Severity.Info);
+            // Lookup data failed
         }
     }
 
-    private void OpenStatusDialog(AbsentUiRecord record)
+    private async Task LoadRecords()
     {
-        _activeRecord = new AbsentUiRecord
+        _isLoading = true;
+        StateHasChanged();
+
+        try
         {
-            Id = record.Id,
-            EmpId = record.EmpId,
-            Name = record.Name,
-            Department = record.Department,
-            Shift = record.Shift,
-            Category = record.Category,
-            ExcusedBy = record.ExcusedBy,
-            Remarks = record.Remarks,
-            DbRecord = record.DbRecord
-        };
-        _showStatusDialog = true;
-    }
-
-    private void CloseStatusDialog()
-    {
-        _showStatusDialog = false;
-        _activeRecord = null;
-    }
-
-    private async Task SaveStatus()
-    {
-        if (_activeRecord != null)
-        {
-            string excusedBy = _activeRecord.Category != "Unexcused" ? "Jane Doe (HR)" : "";
-            string status = _activeRecord.Category == "Unexcused" ? "Absent" : _activeRecord.Category;
-
-            await AttendanceService.UpdateAbsentStatusAsync(_activeRecord.Id, status, _activeRecord.Remarks, excusedBy);
-            await LoadData();
-            Snackbar.Add($"Absence record updated for {_activeRecord.Name}.", Severity.Success);
+            bool? activeParam = _employeeStatus == 1 ? true : (_employeeStatus == 2 ? false : null);
+            
+            // Generate the raw attendance first so it is populated in the database.
+            // Be aware that CalculateAttendanceAsync takes null dates as "Today",
+            // and it might be slow for a whole month. But we will let it run.
+            await AttendanceService.CalculateAttendanceAsync(_fromDate, _toDate);
+            
+            _allRecords = await AttendanceService.GetAbsentSummaryAsync(_fromDate, _toDate, _employeeIdFilter, activeParam);
+            
+            ApplyClientFilters();
         }
-        CloseStatusDialog();
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Error loading records: {ex.Message}", Severity.Error);
+            _allRecords = new();
+            _records = new();
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
     }
 
-    private IEnumerable<AbsentUiRecord> FilteredRecords =>
-        _records.Where(r =>
-            (string.IsNullOrEmpty(_typeFilter) || r.Category == _typeFilter) &&
-            (string.IsNullOrEmpty(_searchQuery) ||
-             r.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
-             r.EmpId.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
-        );
-
-    public class AbsentUiRecord
+    private void ApplyClientFilters()
     {
-        public int Id { get; set; }
-        public string EmpId { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string Department { get; set; } = string.Empty;
-        public string Shift { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
-        public string ExcusedBy { get; set; } = string.Empty;
-        public string Remarks { get; set; } = string.Empty;
-        public AttendanceRecord DbRecord { get; set; } = default!;
+        var matchingEmployeeIds = _employees
+            .Where(e =>
+                (_departmentIdFilter == 0 || e.DepartmentId == _departmentIdFilter) &&
+                (_designationIdFilter == 0 || e.DesignationId == _designationIdFilter))
+            .Select(e => e.EmployeeId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        bool hasOrgFilter = _departmentIdFilter > 0 || _designationIdFilter > 0;
+
+        _records = _allRecords
+            .Where(r => !hasOrgFilter || matchingEmployeeIds.Contains(r.EmployeeId))
+            .ToList();
     }
+
+    private async Task ClearFilters()
+    {
+        _fromDate = new(DateTime.Today.Year, DateTime.Today.Month, 1);
+        _toDate = DateTime.Today;
+        _employeeIdFilter = null;
+        _employeeStatus = 0;
+        _companyIdFilter = 0;
+        _departmentIdFilter = 0;
+        _designationIdFilter = 0;
+        _searchString = "";
+        await LoadRecords();
+    }
+
+    private bool FilterFunc(AbsentSummaryDto element)
+    {
+        if (string.IsNullOrWhiteSpace(_searchString))
+            return true;
+
+        if (element.EmployeeId != null && element.EmployeeId.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        if (element.EmployeeName != null && element.EmployeeName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+            
+        if (element.Department != null && element.Department.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        return false;
+    }
+
+    private async Task ExportToExcel()
+    {
+        if (_records.Count == 0 || _isExporting) return;
+
+        _isExporting = true;
+        StateHasChanged();
+
+        try
+        {
+            var exportRecords = _records.Where(FilterFunc).ToList();
+            if (exportRecords.Count == 0)
+            {
+                Snackbar.Add("No records match the current filter.", Severity.Warning);
+                return;
+            }
+
+            var columns = GetExportColumns(exportRecords);
+
+            var bytes = await ExportService.ExportToExcelAsync(
+                exportRecords,
+                "Absent Summary",
+                $"Absent Summary ({_fromDate:yyyy-MM-dd} to {_toDate:yyyy-MM-dd})",
+                columns);
+                
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"AbsentSummary_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
+
+            await JS.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            Snackbar.Add("Excel exported successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ExportToPdf()
+    {
+        if (_records.Count == 0 || _isExporting) return;
+
+        _isExporting = true;
+        StateHasChanged();
+
+        try
+        {
+            var exportRecords = _records.Where(FilterFunc).ToList();
+            if (exportRecords.Count == 0)
+            {
+                Snackbar.Add("No records match the current filter.", Severity.Warning);
+                return;
+            }
+
+            var columns = GetExportColumns(exportRecords);
+
+            var bytes = await ExportService.ExportToPdfAsync(
+                exportRecords,
+                $"Absent Summary ({_fromDate:yyyy-MM-dd} to {_toDate:yyyy-MM-dd})",
+                columns);
+                
+            var base64 = Convert.ToBase64String(bytes);
+            var fileName = $"AbsentSummary_{DateTime.Now:yyyyMMddHHmmss}.pdf";
+
+            await JS.InvokeVoidAsync("downloadFile", fileName, base64, "application/pdf");
+            Snackbar.Add("PDF exported successfully", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isExporting = false;
+            StateHasChanged();
+        }
+    }
+
+    private Dictionary<string, Func<AbsentSummaryDto, object>> GetExportColumns(List<AbsentSummaryDto> recordsSource) => new()
+    {
+        ["Sl"] = r => recordsSource.IndexOf(r) + 1,
+        ["Employee ID"] = r => r.EmployeeId,
+        ["Employee Name"] = r => r.EmployeeName,
+        ["Department"] = r => r.Department,
+        ["Designation"] = r => r.Designation,
+        ["Total Absent"] = r => r.TotalAbsentDays,
+        ["Continuous Absent"] = r => r.ContinuousAbsentDays
+    };
 }

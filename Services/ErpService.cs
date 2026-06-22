@@ -1920,103 +1920,26 @@ namespace ERPHub.Services
         }
 
         // Separations
-        public async Task<List<Separation>> GetSeparationsAsync()
+        public async Task<List<Separation>> GetSeparationsAsync(string? type = null, string? status = null, int? deptId = null, DateTime? fromDate = null, DateTime? toDate = null)
         {
-            var count = await _context.Separations.CountAsync();
-            if (count == 0)
-            {
-                var departments = await _context.Departments.Take(4).ToListAsync();
-                var sections = await _context.Sections.Take(4).ToListAsync();
-                var designations = await _context.Designations.Take(4).ToListAsync();
-
-                if (departments.Count > 0)
-                {
-                    var seeds = new List<Separation>
-                    {
-                        new Separation
-                        {
-                            EmployeeId = "EMP-0042",
-                            EmployeeName = "Karim Uddin",
-                            DepartmentId = departments[0].Id,
-                            SectionId = sections.Count > 0 ? sections[0].Id : (int?)null,
-                            DesignationId = designations.Count > 0 ? designations[0].Id : (int?)null,
-                            SeparationType = "Resignation",
-                            ResignDate = DateTime.Today.AddDays(-20),
-                            LastWorkingDay = DateTime.Today.AddDays(10),
-                            ExitInterviewDate = DateTime.Today.AddDays(5),
-                            Reason = "Pursuing higher education opportunities abroad.",
-                            HandoverNotes = "Handover project docs to team lead before last day.",
-                            Status = "Notice Period",
-                            ClearanceProgress = 50,
-                            CreatedAt = DateTime.Now.AddDays(-20),
-                            ApprovedBy = "HR Manager"
-                        },
-                        new Separation
-                        {
-                            EmployeeId = "EMP-0118",
-                            EmployeeName = "Nazma Begum",
-                            DepartmentId = departments.Count > 1 ? departments[1].Id : departments[0].Id,
-                            SectionId = sections.Count > 1 ? sections[1].Id : (int?)null,
-                            DesignationId = designations.Count > 1 ? designations[1].Id : (int?)null,
-                            SeparationType = "Retirement",
-                            ResignDate = DateTime.Today.AddDays(-60),
-                            LastWorkingDay = DateTime.Today.AddDays(-30),
-                            ExitInterviewDate = DateTime.Today.AddDays(-32),
-                            Reason = "Completed 25 years of service and eligible for full retirement benefit.",
-                            HandoverNotes = "All records transferred to deputy manager.",
-                            Status = "Settled",
-                            ClearanceProgress = 100,
-                            CreatedAt = DateTime.Now.AddDays(-60),
-                            ApprovedBy = "HR Director",
-                            ApprovedDate = DateTime.Now.AddDays(-55)
-                        },
-                        new Separation
-                        {
-                            EmployeeId = "EMP-0271",
-                            EmployeeName = "Rafiqul Islam",
-                            DepartmentId = departments.Count > 2 ? departments[2].Id : departments[0].Id,
-                            SectionId = sections.Count > 2 ? sections[2].Id : (int?)null,
-                            DesignationId = designations.Count > 2 ? designations[2].Id : (int?)null,
-                            SeparationType = "Termination",
-                            ResignDate = DateTime.Today.AddDays(-10),
-                            LastWorkingDay = DateTime.Today.AddDays(-10),
-                            Reason = "Repeated policy violations and misconduct.",
-                            HandoverNotes = "Access revoked immediately. IT assets collected.",
-                            Status = "Terminated",
-                            ClearanceProgress = 75,
-                            CreatedAt = DateTime.Now.AddDays(-10),
-                            ApprovedBy = "HR Manager",
-                            ApprovedDate = DateTime.Now.AddDays(-10)
-                        },
-                        new Separation
-                        {
-                            EmployeeId = "EMP-0389",
-                            EmployeeName = "Sonia Akter",
-                            DepartmentId = departments.Count > 3 ? departments[3].Id : departments[0].Id,
-                            SectionId = sections.Count > 3 ? sections[3].Id : (int?)null,
-                            DesignationId = designations.Count > 3 ? designations[3].Id : (int?)null,
-                            SeparationType = "Voluntary Exit",
-                            ResignDate = DateTime.Today.AddDays(-5),
-                            LastWorkingDay = DateTime.Today.AddDays(25),
-                            Reason = "Family relocation to another city.",
-                            HandoverNotes = "Currently completing task handover to senior colleague.",
-                            Status = "Initiated",
-                            ClearanceProgress = 10,
-                            CreatedAt = DateTime.Now.AddDays(-5),
-                        }
-                    };
-
-                    await _context.Separations.AddRangeAsync(seeds);
-                    await _context.SaveChangesAsync();
-                }
-            }
-
-            return await _context.Separations
+            var query = _context.Separations
                 .Include(s => s.Department)
                 .Include(s => s.Section)
                 .Include(s => s.Designation)
-                .OrderByDescending(s => s.CreatedAt)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(type) && type != "All")
+                query = query.Where(s => s.SeparationType == type);
+            if (!string.IsNullOrEmpty(status) && status != "All")
+                query = query.Where(s => s.Status == status);
+            if (deptId.HasValue && deptId > 0)
+                query = query.Where(s => s.DepartmentId == deptId.Value);
+            if (fromDate.HasValue)
+                query = query.Where(s => s.ResignDate >= fromDate.Value.Date);
+            if (toDate.HasValue)
+                query = query.Where(s => s.ResignDate <= toDate.Value.Date);
+
+            return await query.OrderByDescending(s => s.CreatedAt).ToListAsync();
         }
 
         public async Task<Separation?> GetSeparationByIdAsync(int id)

@@ -114,7 +114,7 @@ namespace ERPHub.Services
         Task DeleteManpowerRequirementAsync(int id);
 
         // Separations
-        Task<List<Separation>> GetSeparationsAsync();
+        Task<List<Separation>> GetSeparationsAsync(string? type = null, string? status = null, int? deptId = null, DateTime? fromDate = null, DateTime? toDate = null);
         Task<Separation?> GetSeparationByIdAsync(int id);
         Task AddSeparationAsync(Separation separation);
         Task UpdateSeparationAsync(Separation separation);

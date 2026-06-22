@@ -216,6 +216,7 @@ namespace ERPHub.Services
                 // Column widths
                 var columnWidths = new Dictionary<string, double>
                 {
+                    ["Sl"] = 6,
                     ["Date"] = 12,
                     ["Employee ID"] = 11,
                     ["Employee Name"] = 28,

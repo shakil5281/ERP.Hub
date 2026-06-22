@@ -2,76 +2,114 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 
-<PageTitle>ERPHub - Daily Attendance Process</PageTitle>
+<PageTitle>ERPHub - Attendance Processing Hub</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
         <div class="animate-fade-in">
             <div class="mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Daily Attendance Process</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Select a date range and process attendance from punch records.</p>
+                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Attendance Processing Hub</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage punch logs, daily attendance, and monthly closures from a single dashboard.</p>
                 </div>
             </div>
 
-            <div class="bg-white border border-zinc-200 rounded-lg p-6 mb-4 flex flex-wrap gap-4 items-end">
-                <div>
-                    <MudDatePicker Date="@_fromDate"
-                                   DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })"
-                                   Label="Start Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
-                </div>
-                <div>
-                    <MudDatePicker Date="@_toDate"
-                                   DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })"
-                                   Label="End Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
-                </div>
-                <div>
-                    <button type="button" class="px-5 py-2 bg-black text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2" @onclick="ProcessAttendance" disabled="@_isProcessing">
-                        @if (_isProcessing)
+            <div class="flex flex-col gap-6">
+                <!-- Task 1: Collect Punch Logs -->
+                <MudCard Elevation="2" Class="rounded-lg">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" Class="font-bold">1. Collect Punch Logs</MudText>
+                            <MudText Typo="Typo.body2" Class="text-zinc-500">Fetch the latest punch logs from biometric devices.</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIcon Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Primary" Size="Size.Large" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <div class="flex gap-4 items-center flex-wrap">
+                            <MudDatePicker @bind-Date="_fromDateLogs" Label="Start Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            <MudDatePicker @bind-Date="_toDateLogs" Label="End Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(_collectMessage))
                         {
-                            <svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
+                            <MudAlert Severity="@(_collectError ? Severity.Error : Severity.Success)" Class="mt-4">@_collectMessage</MudAlert>
                         }
-                        else
+                    </MudCardContent>
+                    <MudCardActions Class="px-4 pb-4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectPunchLogs" Disabled="@_isProcessingLogs" StartIcon="@Icons.Material.Filled.CloudDownload">
+                            @if (_isProcessingLogs) {
+                                <MudProgressCircular Class="ms-n1 mr-2" Size="Size.Small" Indeterminate="true"/>
+                            }
+                            @_collectButtonText
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+
+                <!-- Task 2: Process Daily Attendance -->
+                <MudCard Elevation="2" Class="rounded-lg">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" Class="font-bold">2. Daily Attendance Process</MudText>
+                            <MudText Typo="Typo.body2" Class="text-zinc-500">Calculate working hours, late entries, and overtime.</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIcon Icon="@Icons.Material.Filled.Calculate" Color="Color.Secondary" Size="Size.Large" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <div class="flex gap-4 items-center flex-wrap">
+                            <MudDatePicker @bind-Date="_fromDateProcess" Label="Start Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            <MudDatePicker @bind-Date="_toDateProcess" Label="End Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                        </div>
+                        @if (!string.IsNullOrEmpty(_processMessage))
                         {
-                            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+                            <MudAlert Severity="@(_processError ? Severity.Error : Severity.Success)" Class="mt-4">@_processMessage</MudAlert>
                         }
-                        @_processButtonText
-                    </button>
-                </div>
+                    </MudCardContent>
+                    <MudCardActions Class="px-4 pb-4">
+                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ProcessAttendance" Disabled="@_isProcessingAttendance" StartIcon="@Icons.Material.Filled.Calculate">
+                            @if (_isProcessingAttendance) {
+                                <MudProgressCircular Class="ms-n1 mr-2" Size="Size.Small" Indeterminate="true"/>
+                            }
+                            @_processButtonText
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+
+                <!-- Task 3: Monthly Process -->
+                <MudCard Elevation="2" Class="rounded-lg">
+                    <MudCardHeader>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6" Class="font-bold">3. Monthly Process</MudText>
+                            <MudText Typo="Typo.body2" Class="text-zinc-500">Consolidate end-of-month registers and freeze time sheets.</MudText>
+                        </CardHeaderContent>
+                        <CardHeaderActions>
+                            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Dark" Size="Size.Large" />
+                        </CardHeaderActions>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        <MudTable Items="@_checks" Hover="true" SortLabel="Sort By" Dense="true" Elevation="0" Class="border border-zinc-200 rounded-lg">
+                            <HeaderContent>
+                                <MudTh>Verification Target</MudTh>
+                                <MudTh>Assigned Role</MudTh>
+                                <MudTh>Status</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Verification Target">@context.Target</MudTd>
+                                <MudTd DataLabel="Assigned Role">@context.Role</MudTd>
+                                <MudTd DataLabel="Status">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @context.BadgeClass">@context.Status</span>
+                                </MudTd>
+                            </RowTemplate>
+                        </MudTable>
+                    </MudCardContent>
+                    <MudCardActions Class="px-4 pb-4 flex justify-end gap-2">
+                        <MudButton Variant="Variant.Outlined" Color="Color.Default">Cancel</MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Filled.Lock">Freeze Month Logs</MudButton>
+                    </MudCardActions>
+                </MudCard>
             </div>
-
-            @if (_isProcessing)
-            {
-                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4 flex items-center gap-3">
-                    <svg class="w-5 h-5 text-blue-500 animate-spin" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-dasharray="60 40" /></svg>
-                    <span class="text-xs text-blue-700 font-medium">Processing attendance...</span>
-                </div>
-            }
-
-            @if (!string.IsNullOrEmpty(_processMessage))
-            {
-                <div class="@(_processError ? "bg-red-50 border-red-200 text-red-700" : "bg-green-50 border-green-200 text-green-700") border rounded-lg p-4 mb-4 flex items-center gap-3">
-                    @if (_processError)
-                    {
-                        <svg class="w-5 h-5 text-red-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-                    }
-                    else
-                    {
-                        <svg class="w-5 h-5 text-green-500 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    }
-                    <span class="text-xs font-medium">@_processMessage</span>
-                </div>
-            }
         </div>
     </Authorized>
     <NotAuthorized>
@@ -80,30 +118,112 @@
 </AuthorizeView>
 
 @code {
-    private DateTime? _fromDate;
-    private DateTime? _toDate;
-    private bool _isProcessing;
-    private string _processButtonText = "Process";
+    // Logs State
+    private DateTime? _fromDateLogs;
+    private DateTime? _toDateLogs;
+    private bool _isProcessingLogs;
+    private string _collectButtonText = "Collect Logs";
+    private string? _collectMessage;
+    private bool _collectError;
+
+    // Process State
+    private DateTime? _fromDateProcess;
+    private DateTime? _toDateProcess;
+    private bool _isProcessingAttendance;
+    private string _processButtonText = "Process Attendance";
     private string? _processMessage;
     private bool _processError;
 
+    // Monthly State
+    public class ClosureCheck
+    {
+        public string Target { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public string BadgeClass { get; set; } = string.Empty;
+    }
+
+    private List<ClosureCheck> _checks = new();
+
     protected override Task OnInitializedAsync()
     {
-        _fromDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
-        _toDate = DateTime.Today;
+        var startOfMonth = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+        _fromDateLogs = startOfMonth;
+        _toDateLogs = DateTime.Today;
+        _fromDateProcess = startOfMonth;
+        _toDateProcess = DateTime.Today;
+
+        _checks = new List<ClosureCheck>
+        {
+            new ClosureCheck { Target = "Validate all daily attendance registries", Role = "Operations Manager", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
+            new ClosureCheck { Target = "Lock biometric logs for current month", Role = "System Administrator", Status = "Pending", BadgeClass = "bg-amber-50 text-amber-700" },
+            new ClosureCheck { Target = "Generate monthly time sheet audit summaries", Role = "HR Director", Status = "Pending", BadgeClass = "bg-amber-50 text-amber-700" }
+        };
+
         return Task.CompletedTask;
+    }
+
+    private async Task CollectPunchLogs()
+    {
+        if (!_fromDateLogs.HasValue || !_toDateLogs.HasValue)
+        {
+            _collectError = true;
+            _collectMessage = "Please select both start and end dates.";
+            return;
+        }
+
+        _isProcessingLogs = true;
+        _collectButtonText = "Collecting...";
+        _collectMessage = null;
+        _collectError = false;
+        StateHasChanged();
+
+        try
+        {
+            var url = $"{NavManager.BaseUri}api/punchrecords/sync-range?fromDate={_fromDateLogs.Value:yyyy-MM-dd}&toDate={_toDateLogs.Value:yyyy-MM-dd}";
+            var result = await Http.PostAsync(url, null);
+            var content = await result.Content.ReadAsStringAsync();
+
+            if (result.IsSuccessStatusCode)
+            {
+                _collectError = false;
+                _collectMessage = content;
+                _collectButtonText = "Collected!";
+                await Task.Delay(2000);
+            }
+            else
+            {
+                _collectError = true;
+                _collectMessage = content;
+                _collectButtonText = "Failed";
+                await Task.Delay(3000);
+            }
+        }
+        catch (Exception ex)
+        {
+            _collectError = true;
+            _collectMessage = ex.Message;
+            _collectButtonText = "Failed";
+            await Task.Delay(3000);
+        }
+        finally
+        {
+            _isProcessingLogs = false;
+            _collectButtonText = "Collect Logs";
+            StateHasChanged();
+        }
     }
 
     private async Task ProcessAttendance()
     {
-        if (!_fromDate.HasValue || !_toDate.HasValue)
+        if (!_fromDateProcess.HasValue || !_toDateProcess.HasValue)
         {
             _processError = true;
             _processMessage = "Please select both start and end dates.";
             return;
         }
 
-        _isProcessing = true;
+        _isProcessingAttendance = true;
         _processButtonText = "Processing...";
         _processMessage = null;
         _processError = false;
@@ -111,7 +231,7 @@
 
         try
         {
-            var url = $"{NavManager.BaseUri}api/attendance/calculate?fromDate={_fromDate.Value:yyyy-MM-dd}&toDate={_toDate.Value:yyyy-MM-dd}";
+            var url = $"{NavManager.BaseUri}api/attendance/calculate?fromDate={_fromDateProcess.Value:yyyy-MM-dd}&toDate={_toDateProcess.Value:yyyy-MM-dd}";
             var result = await Http.PostAsync(url, null);
             var content = await result.Content.ReadAsStringAsync();
 
@@ -121,7 +241,6 @@
                 _processMessage = content;
                 _processButtonText = "Processed!";
                 await Task.Delay(2000);
-                _processButtonText = "Process";
             }
             else
             {
@@ -129,7 +248,6 @@
                 _processMessage = content;
                 _processButtonText = "Failed";
                 await Task.Delay(3000);
-                _processButtonText = "Process";
             }
         }
         catch (Exception ex)
@@ -138,11 +256,11 @@
             _processMessage = ex.Message;
             _processButtonText = "Failed";
             await Task.Delay(3000);
-            _processButtonText = "Process";
         }
         finally
         {
-            _isProcessing = false;
+            _isProcessingAttendance = false;
+            _processButtonText = "Process Attendance";
             StateHasChanged();
         }
     }

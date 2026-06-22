@@ -54,6 +54,28 @@ namespace ERPHub.Controllers
             return Ok(summary);
         }
 
+        // GET /api/attendance/absent-counts?fromDate=2026-05-01&toDate=2026-05-31
+        // Returns { "EMP-001": 3, "EMP-002": 1, ... }
+        [HttpGet("absent-counts")]
+        public async Task<ActionResult<Dictionary<string, int>>> GetAbsentCounts(
+            [FromQuery] DateTime? fromDate,
+            [FromQuery] DateTime? toDate)
+        {
+            // Default: last full calendar month
+            var lastMonth = DateTime.Today.AddMonths(-1);
+            var from = fromDate?.Date ?? new DateTime(lastMonth.Year, lastMonth.Month, 1);
+            var to   = toDate?.Date   ?? new DateTime(lastMonth.Year, lastMonth.Month,
+                           DateTime.DaysInMonth(lastMonth.Year, lastMonth.Month));
+
+            var records = await _attendanceService.GetAttendanceRecordsAsync(from, to, null, null);
+            var counts  = records
+                .Where(r => r.AttendanceStatus == "Absent")
+                .GroupBy(r => r.EmployeeId)
+                .ToDictionary(g => g.Key, g => g.Count());
+
+            return Ok(counts);
+        }
+
         [HttpGet("holidays")]
         public async Task<ActionResult<IEnumerable<Holiday>>> GetHolidays()
         {

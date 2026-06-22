@@ -147,8 +147,53 @@ namespace ERPHub.Services
                 return CreateAbsentRecord(emp, date, "Absent", "All punches filtered as duplicates");
             }
 
-            var firstPunch = deduped.First();
-            var lastPunch = deduped.Last();
+            var shiftInTime = date.Date.Add(shift.InTime);
+            var shiftOutTime = date.Date.Add(shift.OutTime);
+            if (shift.OutTime < shift.InTime)
+                shiftOutTime = shiftOutTime.AddDays(1);
+
+            DateTime? actualInPunch = null;
+            DateTime? actualOutPunch = null;
+
+            if (deduped.Count == 1)
+            {
+                var p = deduped[0];
+                if (p <= shiftInTime)
+                {
+                    actualInPunch = p;
+                }
+                else if (p >= shiftOutTime)
+                {
+                    actualOutPunch = p;
+                }
+                else
+                {
+                    var midpoint = shiftInTime.AddMinutes((shiftOutTime - shiftInTime).TotalMinutes / 2);
+                    if (p <= midpoint)
+                        actualInPunch = p;
+                    else
+                        actualOutPunch = p;
+                }
+            }
+            else
+            {
+                var first = deduped.First();
+                var last = deduped.Last();
+
+                if (last <= shiftInTime)
+                {
+                    actualInPunch = first;
+                }
+                else if (first >= shiftOutTime)
+                {
+                    actualOutPunch = last;
+                }
+                else
+                {
+                    actualInPunch = first;
+                    actualOutPunch = last;
+                }
+            }
 
             var lateMinutes = 0;
             var earlyExitMinutes = 0;
@@ -156,53 +201,61 @@ namespace ERPHub.Services
             var status = "Present";
             var remarks = "";
 
-            var shiftInTime = date.Date.Add(shift.InTime);
-            var shiftOutTime = date.Date.Add(shift.OutTime);
-
-            if (shift.OutTime < shift.InTime)
-                shiftOutTime = shiftOutTime.AddDays(1);
-
             var attendanceInTime = shiftInTime;
             var attendanceOutTime = shiftOutTime;
 
-            if (firstPunch < shiftInTime)
+            if (actualInPunch.HasValue)
             {
-                attendanceInTime = shiftInTime;
-            }
-            else if (firstPunch <= shiftInTime.AddMinutes(shift.GraceInMinutes))
-            {
-                status = "Present";
-            }
-            else
-            {
-                lateMinutes = (int)(firstPunch - shiftInTime).TotalMinutes - shift.GraceInMinutes;
-                if (lateMinutes < 0) lateMinutes = 0;
-                status = "Late";
-            }
-
-            if (lastPunch < shiftOutTime)
-            {
-                earlyExitMinutes = (int)(shiftOutTime - lastPunch).TotalMinutes;
-                if (earlyExitMinutes < 0) earlyExitMinutes = 0;
-                attendanceOutTime = lastPunch;
-                status = "Early Exit";
-            }
-            else if (lastPunch > shiftOutTime)
-            {
-                overtimeMinutes = (int)(lastPunch - shiftOutTime).TotalMinutes;
-                attendanceOutTime = shiftOutTime;
-                if (overtimeMinutes < shift.MinimumOvertimeMinutes)
-                    overtimeMinutes = 0;
+                if (actualInPunch.Value < shiftInTime)
+                {
+                    attendanceInTime = shiftInTime;
+                }
+                else if (actualInPunch.Value <= shiftInTime.AddMinutes(shift.GraceInMinutes))
+                {
+                    status = "Present";
+                }
                 else
-                    status = "Present + Overtime";
+                {
+                    lateMinutes = (int)(actualInPunch.Value - shiftInTime).TotalMinutes - shift.GraceInMinutes;
+                    if (lateMinutes < 0) lateMinutes = 0;
+                    status = "Late";
+                }
             }
             else
             {
-                status = "Present";
+                status = "Missing In Punch";
             }
 
-            var workedMinutes = (int)(lastPunch - firstPunch).TotalMinutes - shift.BreakMinutes;
-            if (workedMinutes < 0) workedMinutes = 0;
+            if (actualOutPunch.HasValue)
+            {
+                if (actualOutPunch.Value < shiftOutTime)
+                {
+                    earlyExitMinutes = (int)(shiftOutTime - actualOutPunch.Value).TotalMinutes;
+                    if (earlyExitMinutes < 0) earlyExitMinutes = 0;
+                    attendanceOutTime = actualOutPunch.Value;
+                    if (status == "Present" || status == "Late") status = "Early Exit";
+                }
+                else if (actualOutPunch.Value > shiftOutTime)
+                {
+                    overtimeMinutes = (int)(actualOutPunch.Value - shiftOutTime).TotalMinutes;
+                    attendanceOutTime = shiftOutTime;
+                    if (overtimeMinutes < shift.MinimumOvertimeMinutes)
+                        overtimeMinutes = 0;
+                    else if (status == "Present")
+                        status = "Present + Overtime";
+                }
+            }
+            else
+            {
+                status = "Missing Out Punch";
+            }
+
+            var workedMinutes = 0;
+            if (actualInPunch.HasValue && actualOutPunch.HasValue)
+            {
+                workedMinutes = (int)(actualOutPunch.Value - actualInPunch.Value).TotalMinutes - shift.BreakMinutes;
+                if (workedMinutes < 0) workedMinutes = 0;
+            }
 
             if (isLeave)
             {
@@ -212,9 +265,11 @@ namespace ERPHub.Services
 
             if (isHoliday)
             {
-                if (workedMinutes > 0)
+                if (workedMinutes > 0 || actualInPunch.HasValue || actualOutPunch.HasValue)
                 {
-                    overtimeMinutes = workedMinutes;
+                    if (workedMinutes > 0)
+                        overtimeMinutes = workedMinutes;
+                    
                     status = emp.Shift?.OffDay?.Contains(date.DayOfWeek.ToString(), StringComparison.OrdinalIgnoreCase) ?? false
                         ? "Weekly Off Worked"
                         : "Holiday Worked";
@@ -226,25 +281,16 @@ namespace ERPHub.Services
                 }
             }
 
-            if (status == "Present" && workedMinutes < shift.HalfDayThresholdMinutes)
+            if (!isLeave && !isHoliday && status == "Present" && workedMinutes > 0 && workedMinutes < shift.HalfDayThresholdMinutes)
                 status = "Half Day";
-
-            if (deduped.Count == 1)
-            {
-                var midDay = date.Date.AddHours(12);
-                if (firstPunch < midDay)
-                    status = "Missing Out Punch";
-                else
-                    status = "Missing In Punch";
-            }
 
             return new AttendanceRecord
             {
                 EmployeeId = emp.EmployeeId,
                 AttendanceDate = date.Date,
                 ShiftId = shift.Id,
-                ActualInPunch = firstPunch,
-                ActualOutPunch = lastPunch,
+                ActualInPunch = actualInPunch,
+                ActualOutPunch = actualOutPunch,
                 AttendanceInTime = attendanceInTime.TimeOfDay,
                 AttendanceOutTime = attendanceOutTime.TimeOfDay,
                 LateMinutes = lateMinutes,
@@ -297,6 +343,76 @@ namespace ERPHub.Services
             }
 
             return await query.OrderByDescending(a => a.AttendanceDate).ThenBy(a => a.EmployeeId).ToListAsync();
+        }
+
+        public async Task<List<AbsentSummaryDto>> GetAbsentSummaryAsync(DateTime fromDate, DateTime toDate, string? employeeId = null, bool? activeEmployees = null)
+        {
+            var employeesQuery = _context.Employees
+                .Include(e => e.Department)
+                .Include(e => e.Designation)
+                .Include(e => e.Shift)
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(employeeId))
+                employeesQuery = employeesQuery.Where(e => e.EmployeeId == employeeId);
+            
+            if (activeEmployees.HasValue)
+            {
+                if (activeEmployees.Value)
+                    employeesQuery = employeesQuery.Where(e => e.EmployeeStatus == "Regular");
+                else
+                    employeesQuery = employeesQuery.Where(e => e.EmployeeStatus != "Regular");
+            }
+
+            var employees = await employeesQuery.ToListAsync();
+
+            var records = await _context.AttendanceRecords
+                .Where(a => a.AttendanceDate >= fromDate && a.AttendanceDate <= toDate)
+                .ToListAsync();
+
+            var result = new List<AbsentSummaryDto>();
+
+            foreach (var emp in employees)
+            {
+                var empRecords = records.Where(r => r.EmployeeId == emp.EmployeeId).OrderBy(r => r.AttendanceDate).ToList();
+                
+                int totalAbsent = empRecords.Count(r => r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus));
+                
+                int continuousAbsent = 0;
+                for (int i = empRecords.Count - 1; i >= 0; i--)
+                {
+                    if (empRecords[i].AttendanceStatus == "Absent" || string.IsNullOrEmpty(empRecords[i].AttendanceStatus))
+                    {
+                        continuousAbsent++;
+                    }
+                    else if (empRecords[i].AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
+                    {
+                        // Optional: skip these days without breaking the streak
+                        continue;
+                    }
+                    else
+                    {
+                        // Found a present/late record, break the continuous absent streak
+                        break;
+                    }
+                }
+
+                if (totalAbsent > 0)
+                {
+                    result.Add(new AbsentSummaryDto
+                    {
+                        EmployeeId = emp.EmployeeId,
+                        EmployeeName = emp.EmployeeName,
+                        Department = emp.Department?.NameEn ?? "Unknown",
+                        Designation = emp.Designation?.NameEn ?? "Unknown",
+                        Shift = emp.Shift?.ShiftName ?? "Unknown",
+                        TotalAbsentDays = totalAbsent,
+                        ContinuousAbsentDays = continuousAbsent
+                    });
+                }
+            }
+
+            return result.OrderByDescending(r => r.TotalAbsentDays).ThenBy(r => r.EmployeeId).ToList();
         }
 
         public record DepartmentSummary(string Name, int Headcount, int Present, int Absent, int Late, int Leave, double PresentRate, double AvgHours);

@@ -18,10 +18,16 @@ namespace ERPHub.Controllers
             _erpService = erpService ?? throw new ArgumentNullException(nameof(erpService));
         }
 
+        // GET /api/separations?type=Resignation&status=Settled&deptId=2&fromDate=2026-01-01&toDate=2026-06-30
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Separation>>> GetSeparations()
+        public async Task<ActionResult<IEnumerable<Separation>>> GetSeparations(
+            [FromQuery] string? type = null,
+            [FromQuery] string? status = null,
+            [FromQuery] int? deptId = null,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null)
         {
-            var separations = await _erpService.GetSeparationsAsync();
+            var separations = await _erpService.GetSeparationsAsync(type, status, deptId, fromDate, toDate);
             return Ok(separations);
         }
 
@@ -42,6 +48,19 @@ namespace ERPHub.Controllers
 
             await _erpService.AddSeparationAsync(separation);
             return CreatedAtAction(nameof(GetSeparation), new { id = separation.Id }, separation);
+        }
+
+        // POST /api/separations/bulk — create multiple separations at once
+        [HttpPost("bulk")]
+        public async Task<ActionResult> PostBulkSeparations([FromBody] List<Separation> separations)
+        {
+            if (separations == null || separations.Count == 0)
+                return BadRequest("No separation data provided.");
+
+            foreach (var sep in separations)
+                await _erpService.AddSeparationAsync(sep);
+
+            return Ok(new { Message = $"{separations.Count} separation(s) recorded successfully." });
         }
 
         [HttpPut("{id:int}")]
