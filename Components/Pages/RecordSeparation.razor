@@ -395,6 +395,7 @@
     private int    _empDesigFilter  = 0;
     private int    _empLineFilter   = 0;
     private string _empStatusFilter = "All";
+    private bool   _isAbsentFilterActive = false;
 
     // Selection
     private HashSet<string> _selectedEmpIds = new(StringComparer.OrdinalIgnoreCase);
@@ -422,6 +423,7 @@
         (_empDesigFilter   == 0 || e.DesignationId == _empDesigFilter)   &&
         (_empLineFilter    == 0 || e.LineId        == _empLineFilter)    &&
         (_empStatusFilter  == "All" || e.EmployeeStatus == _empStatusFilter) &&
+        (!_isAbsentFilterActive || (_absentCounts.TryGetValue(e.EmployeeId, out var c) && c > 0)) &&
         (string.IsNullOrWhiteSpace(_empSearch) ||
          e.EmployeeId.Contains(_empSearch, StringComparison.OrdinalIgnoreCase) ||
          e.EmployeeName.Contains(_empSearch, StringComparison.OrdinalIgnoreCase)));
@@ -490,6 +492,7 @@
         _empDesigFilter   = 0;
         _empLineFilter    = 0;
         _empStatusFilter  = "All";
+        _isAbsentFilterActive = false;
         
         var lastMonth = DateTime.Today.AddMonths(-1);
         _absentFrom = new DateTime(lastMonth.Year, lastMonth.Month, 1);
@@ -512,6 +515,8 @@
 
             var result = await Http.GetFromJsonAsync<Dictionary<string, int>>(url);
             _absentCounts = result ?? new(StringComparer.OrdinalIgnoreCase);
+            
+            _isAbsentFilterActive = true;
             
             if (_absentFrom.HasValue && _absentTo.HasValue) {
                 _lastMonthLabel = $"{_absentFrom.Value:MMM dd} - {_absentTo.Value:MMM dd}";

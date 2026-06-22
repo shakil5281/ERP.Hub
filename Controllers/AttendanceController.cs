@@ -69,7 +69,7 @@ namespace ERPHub.Controllers
 
             var records = await _attendanceService.GetAttendanceRecordsAsync(from, to, null, null);
             var counts  = records
-                .Where(r => r.AttendanceStatus == "Absent")
+                .Where(r => r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus))
                 .GroupBy(r => r.EmployeeId)
                 .ToDictionary(g => g.Key, g => g.Count());
 
