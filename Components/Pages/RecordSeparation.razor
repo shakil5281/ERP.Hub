@@ -4,6 +4,7 @@
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject ISnackbar Snackbar
+@inject ERPHub.Services.AttendanceService AttendanceService
 
 <PageTitle>ERPHub - Record Employee Separation</PageTitle>
 
@@ -109,7 +110,7 @@
                         <MudSelectItem Value="@("Inactive")">Inactive</MudSelectItem>
                     </MudSelect>
                 </MudItem>
-                <MudItem xs="12" sm="6" md="4">
+                <MudItem xs="12" sm="6" md="3">
                     <MudDatePicker Label="Absent From"
                                    Date="@_absentFrom"
                                    DateChanged="@(d => { if (d.HasValue) _absentFrom = d.Value; })"
@@ -119,7 +120,7 @@
                                    Margin="Margin.Dense"
                                    Variant="Variant.Outlined" />
                 </MudItem>
-                <MudItem xs="12" sm="6" md="4">
+                <MudItem xs="12" sm="6" md="3">
                     <MudDatePicker Label="Absent To"
                                    Date="@_absentTo"
                                    DateChanged="@(d => { if (d.HasValue) _absentTo = d.Value; })"
@@ -129,7 +130,14 @@
                                    Margin="Margin.Dense"
                                    Variant="Variant.Outlined" />
                 </MudItem>
-                <MudItem xs="12" sm="6" md="4" Class="d-flex align-center gap-2" Style="padding-top:20px;">
+                <MudItem xs="12" sm="6" md="3">
+                    <MudNumericField Label="Min Continuous Absent"
+                                     @bind-Value="_minContinuousAbsent"
+                                     Min="0"
+                                     Variant="Variant.Outlined"
+                                     Margin="Margin.Dense" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3" Class="d-flex align-center gap-2" Style="padding-top:20px;">
                     <MudButton Variant="Variant.Filled" Color="Color.Primary"
                                StartIcon="@Icons.Material.Filled.FilterAlt"
                                OnClick="ApplyAbsentFilter"
@@ -237,14 +245,14 @@
                         </MudTd>
                         <MudTd Style="text-align:center;" DataLabel="Last Month Absent">
                             @{
-                                var absentCount = _absentCounts.TryGetValue(context.EmployeeId, out var ac) ? ac : 0;
+                                _absentSummaries.TryGetValue(context.EmployeeId, out var summary);
                             }
-                            @if (absentCount > 0)
+                            @if (summary != null && summary.TotalAbsentDays > 0)
                             {
                                 <MudChip T="string" Color="Color.Error" Size="Size.Small"
                                          Variant="Variant.Filled"
-                                         Style="min-width:32px; height:22px; font-size:11px; font-weight:700;">
-                                    @absentCount
+                                         Style="height:22px; font-size:11px; font-weight:700;">
+                                    @(summary.TotalAbsentDays) Total / @(summary.ContinuousAbsentDays) Cont.
                                 </MudChip>
                             }
                             else
@@ -379,7 +387,7 @@
     private List<Line>        _lines        = new();
 
     // Last-month absent counts keyed by EmployeeId
-    private Dictionary<string, int> _absentCounts = new(StringComparer.OrdinalIgnoreCase);
+    private Dictionary<string, AbsentSummaryDto> _absentSummaries = new(StringComparer.OrdinalIgnoreCase);
     private string _lastMonthLabel = string.Empty;
     private DateTime? _absentFrom;
     private DateTime? _absentTo;
@@ -396,6 +404,7 @@
     private int    _empLineFilter   = 0;
     private string _empStatusFilter = "All";
     private bool   _isAbsentFilterActive = false;
+    private int    _minContinuousAbsent = 0;
 
     // Selection
     private HashSet<string> _selectedEmpIds = new(StringComparer.OrdinalIgnoreCase);
@@ -423,7 +432,7 @@
         (_empDesigFilter   == 0 || e.DesignationId == _empDesigFilter)   &&
         (_empLineFilter    == 0 || e.LineId        == _empLineFilter)    &&
         (_empStatusFilter  == "All" || e.EmployeeStatus == _empStatusFilter) &&
-        (!_isAbsentFilterActive || (_absentCounts.TryGetValue(e.EmployeeId, out var c) && c > 0)) &&
+        (!_isAbsentFilterActive || (_absentSummaries.TryGetValue(e.EmployeeId, out var sum) && sum.ContinuousAbsentDays >= _minContinuousAbsent)) &&
         (string.IsNullOrWhiteSpace(_empSearch) ||
          e.EmployeeId.Contains(_empSearch, StringComparison.OrdinalIgnoreCase) ||
          e.EmployeeName.Contains(_empSearch, StringComparison.OrdinalIgnoreCase)));
@@ -450,15 +459,13 @@
             _absentFrom = new DateTime(lastMonth.Year, lastMonth.Month, 1);
             _absentTo = new DateTime(lastMonth.Year, lastMonth.Month, DateTime.DaysInMonth(lastMonth.Year, lastMonth.Month));
             
-            var t6 = Http.GetFromJsonAsync<Dictionary<string, int>>(
-                         $"{b}api/attendance/absent-counts?fromDate={_absentFrom:yyyy-MM-dd}&toDate={_absentTo:yyyy-MM-dd}");
-            await Task.WhenAll(t1, t2, t3, t4, t5, t6);
+            await Task.WhenAll(t1, t2, t3, t4, t5);
             _employees    = await t1 ?? new();
             _departments  = await t2 ?? new();
             _sections     = await t3 ?? new();
             _designations = await t4 ?? new();
             _lines        = await t5 ?? new();
-            _absentCounts = await t6 ?? new(StringComparer.OrdinalIgnoreCase);
+            // Not loading _absentCounts on init anymore since we do it in ApplyAbsentFilter
         }
         catch (Exception ex)
         {
@@ -493,6 +500,7 @@
         _empLineFilter    = 0;
         _empStatusFilter  = "All";
         _isAbsentFilterActive = false;
+        _minContinuousAbsent = 0;
         
         var lastMonth = DateTime.Today.AddMonths(-1);
         _absentFrom = new DateTime(lastMonth.Year, lastMonth.Month, 1);
@@ -506,15 +514,12 @@
         _isAbsentLoading = true;
         try
         {
-            var b = NavManager.BaseUri;
-            var url = $"{b}api/attendance/absent-counts";
-            var query = new List<string>();
-            if (_absentFrom.HasValue) query.Add($"fromDate={_absentFrom:yyyy-MM-dd}");
-            if (_absentTo.HasValue) query.Add($"toDate={_absentTo:yyyy-MM-dd}");
-            if (query.Any()) url += "?" + string.Join("&", query);
-
-            var result = await Http.GetFromJsonAsync<Dictionary<string, int>>(url);
-            _absentCounts = result ?? new(StringComparer.OrdinalIgnoreCase);
+            if (_absentFrom.HasValue && _absentTo.HasValue)
+            {
+                await AttendanceService.CalculateAttendanceAsync(_absentFrom, _absentTo);
+                var summary = await AttendanceService.GetAbsentSummaryAsync(_absentFrom.Value, _absentTo.Value);
+                _absentSummaries = summary.ToDictionary(s => s.EmployeeId, s => s, StringComparer.OrdinalIgnoreCase);
+            }
             
             _isAbsentFilterActive = true;
             
