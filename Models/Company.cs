@@ -33,5 +33,8 @@ namespace ERPHub.Models
 
         [Required(ErrorMessage = "Signature is required")]
         public string Signature { get; set; } = string.Empty;
+
+        public int? BusinessGroupId { get; set; }
+        public BusinessGroup? BusinessGroup { get; set; }
     }
 }

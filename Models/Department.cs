@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace ERPHub.Models
 {
@@ -13,5 +14,7 @@ namespace ERPHub.Models
         [Required(ErrorMessage = "Department name (Bengali) is required")]
         [StringLength(100, ErrorMessage = "Department name is too long")]
         public string NameBn { get; set; } = string.Empty;
+
+        public ICollection<Section> Sections { get; set; } = new List<Section>();
     }
 }

@@ -20,11 +20,13 @@ namespace ERPHub.Services
     {
         private readonly ErpDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IPayrollService _payrollService;
 
-        public ErpService(ErpDbContext context, IConfiguration configuration)
+        public ErpService(ErpDbContext context, IConfiguration configuration, IPayrollService payrollService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _payrollService = payrollService ?? throw new ArgumentNullException(nameof(payrollService));
         }
 
         // --- Groups Operations ---
@@ -488,6 +490,7 @@ namespace ERPHub.Services
         public async Task<List<Employee>> GetEmployeesAsync()
         {
             return await _context.Employees
+                .AsNoTracking()
                 .Include(e => e.Department)
                 .Include(e => e.Section)
                 .Include(e => e.Designation)
@@ -495,6 +498,56 @@ namespace ERPHub.Services
                 .Include(e => e.Shift)
                 .OrderByDescending(e => e.Id)
                 .ToListAsync();
+        }
+
+        public async Task<List<Employee>> GetFilteredEmployeesAsync(EmployeeFilter filter)
+        {
+            IQueryable<Employee> query = _context.Employees
+                .AsNoTracking()
+                .Include(e => e.Department)
+                .Include(e => e.Section)
+                .Include(e => e.Designation)
+                .Include(e => e.Line)
+                .Include(e => e.Shift)
+                .Include(e => e.Company);
+
+            if (!string.IsNullOrWhiteSpace(filter.SearchQuery))
+            {
+                var q = filter.SearchQuery.Trim().ToLower();
+                query = query.Where(e =>
+                    e.EmployeeName.ToLower().Contains(q) ||
+                    e.Email.ToLower().Contains(q) ||
+                    (e.EmployeeId != null && e.EmployeeId.ToLower().Contains(q)));
+            }
+
+            if (!string.IsNullOrWhiteSpace(filter.EmployeeId))
+                query = query.Where(e => e.EmployeeId != null && e.EmployeeId == filter.EmployeeId);
+
+            if (!string.IsNullOrWhiteSpace(filter.Department))
+                query = query.Where(e => e.Department != null && e.Department.NameEn == filter.Department);
+
+            if (!string.IsNullOrWhiteSpace(filter.Section))
+                query = query.Where(e => e.Section != null && e.Section.NameEn == filter.Section);
+
+            if (!string.IsNullOrWhiteSpace(filter.Designation))
+                query = query.Where(e => e.Designation != null && e.Designation.NameEn == filter.Designation);
+
+            if (!string.IsNullOrWhiteSpace(filter.Line))
+                query = query.Where(e => e.Line != null && e.Line.NameEn == filter.Line);
+
+            if (!string.IsNullOrWhiteSpace(filter.Company))
+                query = query.Where(e => e.Company != null && e.Company.CompanyNameEn == filter.Company);
+
+            if (!string.IsNullOrWhiteSpace(filter.Status))
+                query = query.Where(e => e.Status == filter.Status);
+
+            if (!string.IsNullOrWhiteSpace(filter.Year))
+            {
+                var year = int.Parse(filter.Year);
+                query = query.Where(e => e.JoiningDate.Year == year);
+            }
+
+            return await query.OrderByDescending(e => e.Id).ToListAsync();
         }
 
         public async Task<Employee?> GetEmployeeByIdAsync(int id)
@@ -554,9 +607,25 @@ namespace ERPHub.Services
                 existing.JoiningDate = employee.JoiningDate;
                 existing.BasicSalary = employee.BasicSalary;
                 existing.GrossSalary = employee.GrossSalary;
+                existing.HouseRent = employee.HouseRent;
+                existing.MedicalAllowance = employee.MedicalAllowance;
+                existing.TransportAllowance = employee.TransportAllowance;
+                existing.FoodAllowance = employee.FoodAllowance;
+                existing.SpecialAllowance = employee.SpecialAllowance;
+                existing.AttendanceBonus = employee.AttendanceBonus;
+                existing.ProductionBonus = employee.ProductionBonus;
+                existing.BankName = employee.BankName;
+                existing.BranchName = employee.BranchName;
+                existing.RoutingNumber = employee.RoutingNumber;
                 existing.PhotoBase64 = employee.PhotoBase64;
                 existing.SignatureBase64 = employee.SignatureBase64;
-                existing.EmployeeStatus = employee.EmployeeStatus;
+                existing.Status = employee.Status;
+                existing.SeparationDate = employee.SeparationDate;
+                existing.SeparationType = employee.SeparationType;
+                existing.SeparationReason = employee.SeparationReason;
+                existing.SeparationRemarks = employee.SeparationRemarks;
+                existing.SeparationApprovedBy = employee.SeparationApprovedBy;
+                existing.SeparationApprovedDate = employee.SeparationApprovedDate;
                 existing.OverTimeStatus = employee.OverTimeStatus;
                 existing.EmployeeType = employee.EmployeeType;
                 await _context.SaveChangesAsync();
@@ -834,7 +903,12 @@ namespace ERPHub.Services
                         existing.GrossSalary = grossSalary;
                         existing.Gender = gender;
                         existing.DateOfBirth = dobStr;
-                        existing.EmployeeStatus = string.IsNullOrEmpty(status) ? "Regular" : status;
+                        existing.Status = EmploymentEligibility.NormalizeImportStatus(status, out var sepType);
+                        if (sepType != null)
+                        {
+                            existing.SeparationType = sepType;
+                            existing.SeparationDate ??= DateTime.Today;
+                        }
                         existing.EmployeeType = empType;
                         existing.OverTimeStatus = overTimeStatus;
 
@@ -861,7 +935,9 @@ namespace ERPHub.Services
                             GrossSalary = grossSalary,
                             Gender = gender,
                             DateOfBirth = dobStr,
-                            EmployeeStatus = string.IsNullOrEmpty(status) ? "Regular" : status,
+                            Status = EmploymentEligibility.NormalizeImportStatus(status, out var newSepType),
+                            SeparationType = newSepType,
+                            SeparationDate = newSepType != null ? DateTime.Today : null,
                             EmployeeType = empType,
                             OverTimeStatus = overTimeStatus
                         };
@@ -1596,81 +1672,7 @@ namespace ERPHub.Services
 
         public async Task CalculateDailySalariesAsync(DateTime date)
         {
-            var employees = await _context.Employees.Where(e => e.EmployeeStatus == "Regular").ToListAsync();
-            var attendanceRecords = await _context.AttendanceRecords
-                .Where(a => a.AttendanceDate == date.Date)
-                .ToListAsync();
-
-            var existingRecords = await _context.DailySalaryRecords
-                .Where(d => d.SalaryDate == date.Date)
-                .ToDictionaryAsync(d => d.EmployeeId);
-
-            int daysInMonth = DateTime.DaysInMonth(date.Year, date.Month);
-
-            foreach (var emp in employees)
-            {
-                var att = attendanceRecords.FirstOrDefault(a => a.EmployeeId == emp.EmployeeId);
-
-                decimal dailyBasic = Math.Round(emp.BasicSalary / daysInMonth, 2);
-                double otHours = att != null ? Math.Round(att.OvertimeMinutes / 60.0, 1) : 0.0;
-                decimal otPay = Math.Round((decimal)otHours * (dailyBasic / 8.0m) * 1.5m, 2);
-
-                decimal allowances = 0;
-                decimal deductions = 0;
-
-                if (att != null)
-                {
-                    if (att.AttendanceStatus == "Absent")
-                    {
-                        deductions = dailyBasic;
-                    }
-                    else
-                    {
-                        allowances = 10.00m;
-                        if (att.AttendanceStatus == "Late")
-                        {
-                            deductions = 10.00m;
-                        }
-                    }
-                }
-                else
-                {
-                    deductions = dailyBasic;
-                }
-
-                decimal netPay = dailyBasic + otPay + allowances - deductions;
-                if (netPay < 0) netPay = 0;
-
-                if (existingRecords.TryGetValue(emp.EmployeeId, out var existing))
-                {
-                    if (existing.Status != "Approved")
-                    {
-                        existing.DailyBasic = dailyBasic;
-                        existing.OtHours = otHours;
-                        existing.OtPay = otPay;
-                        existing.Allowances = allowances;
-                        existing.Deductions = deductions;
-                        existing.NetPay = netPay;
-                    }
-                }
-                else
-                {
-                    await _context.DailySalaryRecords.AddAsync(new DailySalaryRecord
-                    {
-                        EmployeeId = emp.EmployeeId,
-                        SalaryDate = date.Date,
-                        DailyBasic = dailyBasic,
-                        OtHours = otHours,
-                        OtPay = otPay,
-                        Allowances = allowances,
-                        Deductions = deductions,
-                        NetPay = netPay,
-                        Status = "Processed"
-                    });
-                }
-            }
-
-            await _context.SaveChangesAsync();
+            await _payrollService.CalculateDailyPayrollAsync(date);
         }
 
         public async Task UpdateDailySalaryRecordAsync(DailySalaryRecord record)
@@ -1679,9 +1681,17 @@ namespace ERPHub.Services
             if (existing != null)
             {
                 existing.DailyBasic = record.DailyBasic;
+                existing.DailyGross = record.DailyGross;
                 existing.OtHours = record.OtHours;
                 existing.OtPay = record.OtPay;
+                existing.NightBillPay = record.NightBillPay;
+                existing.HolidayBillPay = record.HolidayBillPay;
                 existing.Allowances = record.Allowances;
+                existing.AbsentDeduction = record.AbsentDeduction;
+                existing.LateDeduction = record.LateDeduction;
+                existing.LwopDeduction = record.LwopDeduction;
+                existing.AdvanceDeduction = record.AdvanceDeduction;
+                existing.LoanDeduction = record.LoanDeduction;
                 existing.Deductions = record.Deductions;
                 existing.NetPay = record.NetPay;
                 existing.Status = record.Status;
@@ -1705,7 +1715,7 @@ namespace ERPHub.Services
             var count = await _context.Manpowers.CountAsync();
             if (count == 0)
             {
-                var employees = await _context.Employees.Where(e => e.EmployeeStatus == "Regular").ToListAsync();
+                var employees = await _context.Employees.CurrentlyActive().ToListAsync();
                 var groups = employees.GroupBy(e => new { e.DepartmentId, e.SectionId, e.DesignationId }).ToList();
                 int idx = 1;
                 foreach (var g in groups)
@@ -1786,7 +1796,7 @@ namespace ERPHub.Services
 
         public async Task RecalculateManpowerAsync()
         {
-            var employees = await _context.Employees.Where(e => e.EmployeeStatus == "Regular").ToListAsync();
+            var employees = await _context.Employees.CurrentlyActive().ToListAsync();
             var manpowers = await _context.Manpowers.ToListAsync();
 
             foreach (var mp in manpowers)
@@ -1935,11 +1945,11 @@ namespace ERPHub.Services
             if (deptId.HasValue && deptId > 0)
                 query = query.Where(s => s.DepartmentId == deptId.Value);
             if (fromDate.HasValue)
-                query = query.Where(s => s.ResignDate >= fromDate.Value.Date);
+                query = query.Where(s => s.SeparationDate >= fromDate.Value.Date);
             if (toDate.HasValue)
-                query = query.Where(s => s.ResignDate <= toDate.Value.Date);
+                query = query.Where(s => s.SeparationDate <= toDate.Value.Date);
 
-            return await query.OrderByDescending(s => s.CreatedAt).ToListAsync();
+            return await query.OrderByDescending(s => s.CreatedDate).ToListAsync();
         }
 
         public async Task<Separation?> GetSeparationByIdAsync(int id)
@@ -1954,7 +1964,7 @@ namespace ERPHub.Services
         public async Task AddSeparationAsync(Separation separation)
         {
             separation.Id = 0;
-            separation.CreatedAt = DateTime.Now;
+            separation.CreatedDate = DateTime.UtcNow;
             await _context.Separations.AddAsync(separation);
             await _context.SaveChangesAsync();
         }
@@ -1964,20 +1974,23 @@ namespace ERPHub.Services
             var existing = await _context.Separations.FindAsync(separation.Id);
             if (existing != null)
             {
+                existing.EmployeeRefId = separation.EmployeeRefId;
                 existing.EmployeeId = separation.EmployeeId;
                 existing.EmployeeName = separation.EmployeeName;
                 existing.DepartmentId = separation.DepartmentId;
                 existing.SectionId = separation.SectionId;
                 existing.DesignationId = separation.DesignationId;
+                existing.CompanyId = separation.CompanyId;
                 existing.SeparationType = separation.SeparationType;
-                existing.ResignDate = separation.ResignDate;
-                existing.LastWorkingDay = separation.LastWorkingDay;
+                existing.SeparationDate = separation.SeparationDate;
                 existing.ExitInterviewDate = separation.ExitInterviewDate;
                 existing.Reason = separation.Reason;
-                existing.HandoverNotes = separation.HandoverNotes;
+                existing.Remarks = separation.Remarks;
                 existing.Status = separation.Status;
                 existing.ClearanceProgress = separation.ClearanceProgress;
-                existing.UpdatedAt = DateTime.Now;
+                existing.IsCancelled = separation.IsCancelled;
+                existing.IsSettled = separation.IsSettled;
+                existing.UpdatedAt = DateTime.UtcNow;
                 existing.ApprovedBy = separation.ApprovedBy;
                 existing.ApprovedDate = separation.ApprovedDate;
                 await _context.SaveChangesAsync();
@@ -2081,6 +2094,18 @@ namespace ERPHub.Services
 
         public async Task AddLeaveApplicationAsync(LeaveApplication application)
         {
+            var employee = await _context.Employees
+                .FirstOrDefaultAsync(e => e.EmployeeId == application.EmployeeId);
+
+            if (employee == null)
+                throw new InvalidOperationException("Employee not found.");
+
+            if (employee.Status == EmployeeStatuses.Separation)
+                throw new InvalidOperationException("Separated employees cannot apply for leave.");
+
+            if (!EmploymentEligibility.IsEligibleForProcessing(employee, application.LeaveDate))
+                throw new InvalidOperationException("Leave cannot be applied after separation date.");
+
             application.Id = 0;
             application.CreatedAt = DateTime.Now;
             application.Status = "Pending";
@@ -2113,6 +2138,15 @@ namespace ERPHub.Services
             var existing = await _context.LeaveApplications.FindAsync(id);
             if (existing != null)
             {
+                var employee = await _context.Employees
+                    .FirstOrDefaultAsync(e => e.EmployeeId == existing.EmployeeId);
+
+                if (employee?.Status == EmployeeStatuses.Separation)
+                    throw new InvalidOperationException("Cannot approve leave for a separated employee.");
+
+                if (employee != null && !EmploymentEligibility.IsEligibleForProcessing(employee, existing.LeaveDate))
+                    throw new InvalidOperationException("Cannot approve leave after employee separation date.");
+
                 existing.Status      = "Approved";
                 existing.ApprovedBy  = approvedBy;
                 existing.ApprovedDate = DateTime.Now;

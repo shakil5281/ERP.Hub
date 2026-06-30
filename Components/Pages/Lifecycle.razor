@@ -14,28 +14,55 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_events" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SystemEvent, object>(x=>x.EventName)">Event Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SystemEvent, object>(x=>x.Details)">Details</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SystemEvent, object>(x=>x.Timestamp)">Timestamp</MudTableSortLabel></MudTh>
-                        <MudTh>Severity</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Event Name">@context.EventName</MudTd>
-                        <MudTd DataLabel="Details">@context.Details</MudTd>
-                        <MudTd DataLabel="Timestamp">@context.Timestamp</MudTd>
-                        <MudTd DataLabel="Severity">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @context.BadgeClass">@context.Severity</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <div class="table-responsive-wrapper">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Event Name <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Details <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Timestamp <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Severity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (_events.Any())
+                            {
+                                @foreach (var item in _events)
+                                {
+                                    <tr>
+                                        <td data-label="Event Name">@item.EventName</td>
+                                        <td data-label="Details">@item.Details</td>
+                                        <td data-label="Timestamp">@item.Timestamp</td>
+                                        <td data-label="Severity">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @item.BadgeClass">@item.Severity</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-8 text-muted">Data Not Available</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="flex items-center gap-3">
+                        <span class="pagination-info">Rows per page:</span>
+                        <select class="page-size-select">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn" disabled>‹</button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn" disabled>›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>

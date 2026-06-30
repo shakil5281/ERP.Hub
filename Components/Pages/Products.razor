@@ -33,53 +33,84 @@
     </div>
 
     <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-        <MudTable Items="@FilteredProducts" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-            <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Name)">Header</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Sku)">SKU</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Category)">Category</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.Price)">Unit Price</MudTableSortLabel></MudTh>
-                <MudTh>Status</MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Product, object>(x=>x.LastUpdated)">Last Updated</MudTableSortLabel></MudTh>
-                <MudTh>Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Header">
-                    <div>@context.Name</div>
-                    <div class="text-[11px] font-normal text-zinc-400 mt-0.5">@context.Description</div>
-                </MudTd>
-                <MudTd DataLabel="SKU"><code class="text-indigo-600 font-bold text-xs bg-indigo-50/50 px-2 py-1 rounded">@context.Sku</code></MudTd>
-                <MudTd DataLabel="Category">@context.Category</MudTd>
-                <MudTd DataLabel="Unit Price">@context.Price.ToString("C")</MudTd>
-                <MudTd DataLabel="Status">
-                    @if (context.Stock < 10)
+        <div class="table-responsive-wrapper">
+            <table class="w-full">
+                <thead>
+                    <tr>
+                        <th>Header <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                        <th>SKU <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                        <th>Category <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                        <th>Unit Price <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                        <th>Status</th>
+                        <th>Last Updated <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (FilteredProducts.Any())
                     {
-                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-zinc-600 border-zinc-200">
-                            <span class="w-1.5 h-1.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></span>
-                            In Process
-                        </span>
+                        @foreach (var item in FilteredProducts)
+                        {
+                            <tr>
+                                <td data-label="Header">
+                                    <div>@item.Name</div>
+                                    <div class="text-[11px] font-normal text-zinc-400 mt-0.5">@item.Description</div>
+                                </td>
+                                <td data-label="SKU"><code class="text-indigo-600 font-bold text-xs bg-indigo-50/50 px-2 py-1 rounded">@item.Sku</code></td>
+                                <td data-label="Category">@item.Category</td>
+                                <td data-label="Unit Price">@item.Price.ToString("C")</td>
+                                <td data-label="Status">
+                                    @if (item.Stock < 10)
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-zinc-600 border-zinc-200">
+                                            <span class="w-1.5 h-1.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></span>
+                                            In Process
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-green-700 border-green-200">
+                                            <span class="text-green-600 font-bold text-[10px] mr-0.5">✓</span>
+                                            Done
+                                        </span>
+                                    }
+                                </td>
+                                <td data-label="Last Updated">@item.LastUpdated.ToString("yyyy-MM-dd")</td>
+                                <td data-label="Actions">
+                                    <button class="btn-icon btn-icon-sm" title="Edit" @onclick="() => OpenEditModal(item)">
+                                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    </button>
+                                    <button class="btn-icon btn-icon-sm" title="Delete" @onclick="() => ConfirmDelete(item.Id)">
+                                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
                     }
                     else
                     {
-                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-green-700 border-green-200">
-                            <span class="text-green-600 font-bold text-[10px] mr-0.5">✓</span>
-                            Done
-                        </span>
+                        <tr>
+                            <td colspan="7" class="text-center py-8 text-muted">Data Not Available</td>
+                        </tr>
                     }
-                </MudTd>
-                <MudTd DataLabel="Last Updated">@context.LastUpdated.ToString("yyyy-MM-dd")</MudTd>
-                <MudTd DataLabel="Actions">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditModal(context)" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)" />
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-            </PagerContent>
-        <NoRecordsContent>
-            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-        </NoRecordsContent>
-        </MudTable>
+                </tbody>
+            </table>
+        </div>
+        <div class="table-footer">
+            <div class="flex items-center gap-3">
+                <span class="pagination-info">Rows per page:</span>
+                <select class="page-size-select">
+                    <option>10</option>
+                    <option>25</option>
+                    <option>50</option>
+                </select>
+            </div>
+            <div class="pagination">
+                <button class="pagination-btn" disabled>‹</button>
+                <button class="pagination-btn active">1</button>
+                <button class="pagination-btn" disabled>›</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -136,14 +167,8 @@
 
                     <!-- Date Picker -->
                     <div class="flex flex-col gap-1.5">
-                        <MudDatePicker Date="@_editingProduct.LastUpdated"
-                                       DateChanged="@(d => { if (d.HasValue) _editingProduct.LastUpdated = d.Value; })"
-                                       Label="Last Updated Date"
-                                       Editable="true"
-                                       Placeholder="Select Date"
-                                       DateFormat="yyyy-MM-dd"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense" />
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Last Updated Date</label>
+                        <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-[13.5px] outline-none focus:border-black transition-colors" @bind="_editingProduct.LastUpdated" />
                     </div>
 
                     <div class="flex flex-col gap-1.5">

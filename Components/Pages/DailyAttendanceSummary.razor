@@ -1,11 +1,13 @@
-@page "/attendance/daily-summary"
+﻿@page "/attendance/daily-summary"
 @using ERPHub.Models
 @using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject IExportService ExportService
 @inject IJSRuntime JS
-@inject ISnackbar Snackbar
+@inject ToastService Toast
+@inject LookupDataService LookupData
+@inject EmployeeFilterService EmployeeFilterSvc
 
 <PageTitle>ERPHub - Daily Attendance Summary</PageTitle>
 
@@ -18,20 +20,14 @@
                 <p class="text-zinc-500 text-xs mt-0.5 font-body">Overview of department attendance metrics, average working hours, and punctuality distributions.</p>
             </div>
             <div class="d-flex gap-2">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default"
-                           Disabled="@(_filteredSummaries.Count == 0 || _isExporting)"
-                           OnClick="ExportToExcel"
-                           StartIcon="@Icons.Material.Filled.TableChart"
-                           Size="Size.Small">
+                <button class="btn btn-outlined btn-sm" disabled="@(_filteredSummaries.Count == 0 || _isExporting)" @onclick="ExportToExcel">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
                     Excel
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                           Disabled="@(_filteredSummaries.Count == 0 || _isExporting)"
-                           OnClick="ExportToPdf"
-                           StartIcon="@Icons.Material.Filled.PictureAsPdf"
-                           Size="Size.Small">
+                </button>
+                <button class="btn btn-primary btn-sm" disabled="@(_filteredSummaries.Count == 0 || _isExporting)" @onclick="ExportToPdf">
+                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/></svg>
                     PDF
-                </MudButton>
+                </button>
             </div>
         </div>
 
@@ -57,90 +53,95 @@
             </div>
 
             <!-- Collapsible Filter Content -->
-            <MudCollapse Expanded="!_isFilterCollapsed">
+            <div class="collapse @(!_isFilterCollapsed ? "open" : "")">
                 <div class="p-5 bg-zinc-50/50">
-                    <MudGrid Spacing="3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         <!-- Date Picker -->
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudDatePicker Label="Select Date"
-                                           Date="@_selectedDate"
-                                           DateChanged="OnDateChanged"
-                                           Editable="true"
-                                           Placeholder="Select Date"
-                                           DateFormat="yyyy-MM-dd"
-                                           Variant="Variant.Outlined"
-                                           Margin="Margin.Dense" />
-                        </MudItem>
+                        <div>
+                            <label class="form-label">Select Date</label>
+                            <input type="date" class="form-control" @bind="_selectedDate" @bind:format="yyyy-MM-dd" />
+                        </div>
 
                         <!-- Company Filter -->
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudSelect T="int" Value="_companyIdFilter" ValueChanged="OnCompanyFilterChanged" Label="Company" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                <MudSelectItem Value="0">All Companies</MudSelectItem>
+                        <div>
+                            <label class="form-label">Company</label>
+                            <select class="form-control" @bind="_companyIdFilter">
+                                <option value="0">All Companies</option>
                                 @foreach (var c in _companies)
                                 {
-                                    <MudSelectItem Value="@c.Id">@c.CompanyNameEn</MudSelectItem>
+                                    <option value="@c.Id">@c.CompanyNameEn</option>
                                 }
-                            </MudSelect>
-                        </MudItem>
+                            </select>
+                        </div>
 
                         <!-- Department Filter -->
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudSelect T="int" Value="_departmentIdFilter" ValueChanged="OnDepartmentFilterChanged" Label="Department" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                <MudSelectItem Value="0">All Departments</MudSelectItem>
+                        <div>
+                            <label class="form-label">Department</label>
+                            <select class="form-control" @bind="_departmentIdFilter">
+                                <option value="0">All Departments</option>
                                 @foreach (var d in _departmentsLookup)
                                 {
-                                    <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                                    <option value="@d.Id">@d.NameEn</option>
                                 }
-                            </MudSelect>
-                        </MudItem>
+                            </select>
+                        </div>
 
                         <!-- Section Filter -->
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudSelect T="int" Value="_sectionIdFilter" ValueChanged="OnSectionFilterChanged" Label="Section" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Disabled="@(_filteredSections.Count == 0)">
-                                <MudSelectItem Value="0">All Sections</MudSelectItem>
+                        <div>
+                            <label class="form-label">Section</label>
+                            <select class="form-control" @bind="_sectionIdFilter" disabled="@(_filteredSections.Count == 0)">
+                                <option value="0">All Sections</option>
                                 @foreach (var s in _filteredSections)
                                 {
-                                    <MudSelectItem Value="@s.Id">@s.NameEn</MudSelectItem>
+                                    <option value="@s.Id">@s.NameEn</option>
                                 }
-                            </MudSelect>
-                        </MudItem>
+                            </select>
+                        </div>
 
                         <!-- Line Filter -->
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudSelect T="int" Value="_lineIdFilter" ValueChanged="OnLineFilterChanged" Label="Line" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                <MudSelectItem Value="0">All Lines</MudSelectItem>
+                        <div>
+                            <label class="form-label">Line</label>
+                            <select class="form-control" @bind="_lineIdFilter">
+                                <option value="0">All Lines</option>
                                 @foreach (var l in _lines)
                                 {
-                                    <MudSelectItem Value="@l.Id">@l.NameEn</MudSelectItem>
+                                    <option value="@l.Id">@l.NameEn</option>
                                 }
-                            </MudSelect>
-                        </MudItem>
+                            </select>
+                        </div>
 
                         <!-- Shift Filter -->
-                        <MudItem xs="12" sm="6" md="4" lg="3">
-                            <MudSelect T="int" Value="_shiftIdFilter" ValueChanged="OnShiftFilterChanged" Label="Shift" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                <MudSelectItem Value="0">All Shifts</MudSelectItem>
+                        <div>
+                            <label class="form-label">Shift</label>
+                            <select class="form-control" @bind="_shiftIdFilter">
+                                <option value="0">All Shifts</option>
                                 @foreach (var sh in _shifts)
                                 {
-                                    <MudSelectItem Value="@sh.Id">@sh.ShiftName</MudSelectItem>
+                                    <option value="@sh.Id">@sh.ShiftName</option>
                                 }
-                            </MudSelect>
-                        </MudItem>
+                            </select>
+                        </div>
 
                         <!-- Clear/Reset Buttons -->
-                        <MudItem xs="12" Class="flex justify-end gap-2.5 pt-2">
-                            <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="ResetFilters" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh">Reset</MudButton>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Size="Size.Small" StartIcon="@Icons.Material.Filled.FilterList">Apply Filters</MudButton>
-                        </MudItem>
-                    </MudGrid>
+                        <div class="flex justify-end gap-2.5 pt-2" style="align-self:end;">
+                            <button class="btn btn-outlined btn-sm" @onclick="ResetFilters">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                                Reset
+                            </button>
+                            <button class="btn btn-primary btn-sm" @onclick="ApplyFilters">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M10 18h4v-2h-4v2zM3 6v2h18V6H3zm3 7h12v-2H6v2z"/></svg>
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </MudCollapse>
+            </div>
         </div>
 
         @if (_isLoading)
         {
             <div class="flex justify-center items-center py-16">
-                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <span class="spinner spinner-lg"></span>
             </div>
         }
         else if (_filteredSummaries.Count > 0)
@@ -156,157 +157,181 @@
             var worstDept = _filteredSummaries.OrderBy(d => d.PresentRate).FirstOrDefault();
 
             @* Stats Highlight Cards *@
-            <MudGrid Spacing="6" Class="mb-6">
-                <MudItem xs="12" sm="6" md="3">
-                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-5 hover:shadow-md transition-all duration-300" Style="border-radius:12px; border: 1px solid var(--mud-palette-lines); border-left: 4px solid var(--mud-palette-success);">
-                        <div class="d-flex flex-column">
-                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase font-heading" Style="letter-spacing:0.05em;">Average Present Rate</MudText>
-                            <MudText Typo="Typo.h5" Class="fw-extrabold mt-1 text-success font-heading">@overallPresentRate.ToString("F1")%</MudText>
-                        </div>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-5 hover:shadow-md transition-all duration-300" Style="border-radius:12px; border: 1px solid var(--mud-palette-lines); border-left: 4px solid var(--mud-palette-info);">
-                        <div class="d-flex flex-column">
-                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase font-heading" Style="letter-spacing:0.05em;">Average Working Hours</MudText>
-                            <MudText Typo="Typo.h5" Class="fw-extrabold mt-1 text-info font-heading">@overallAvgHours.ToString("F1") Hrs</MudText>
-                        </div>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-5 hover:shadow-md transition-all duration-300" Style="border-radius:12px; border: 1px solid var(--mud-palette-lines); border-left: 4px solid var(--mud-palette-primary);">
-                        <div class="d-flex flex-column">
-                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase font-heading" Style="letter-spacing:0.05em;">Punctuality Index</MudText>
-                            <MudText Typo="Typo.h5" Class="fw-extrabold mt-1 text-primary font-heading">@totalPunctual / @totalHeadcount</MudText>
-                        </div>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="12" sm="6" md="3">
-                    <MudPaper Elevation="0" Outlined="true" Class="d-flex align-items-center justify-content-between pa-5 hover:shadow-md transition-all duration-300" Style="border-radius:12px; border: 1px solid var(--mud-palette-lines); border-left: 4px solid var(--mud-palette-secondary);">
-                        <div class="d-flex flex-column">
-                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color fw-bold text-uppercase font-heading" Style="letter-spacing:0.05em;">Leaves Registered</MudText>
-                            <MudText Typo="Typo.h5" Class="fw-extrabold mt-1 text-secondary font-heading">@totalLeaves</MudText>
-                        </div>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                <div class="card stat-card hover:shadow-md transition-all duration-300" style="border-left: 4px solid var(--mud-palette-success);">
+                    <div class="d-flex flex-column">
+                        <span class="text-xs mud-secondary-text-color fw-bold text-uppercase font-heading" style="letter-spacing:0.05em;">Average Present Rate</span>
+                        <h5 class="fw-extrabold mt-1 text-success font-heading" style="font-size:1.25rem;">@overallPresentRate.ToString("F1")%</h5>
+                    </div>
+                </div>
+                <div class="card stat-card hover:shadow-md transition-all duration-300" style="border-left: 4px solid var(--mud-palette-info);">
+                    <div class="d-flex flex-column">
+                        <span class="text-xs mud-secondary-text-color fw-bold text-uppercase font-heading" style="letter-spacing:0.05em;">Average Working Hours</span>
+                        <h5 class="fw-extrabold mt-1 text-info font-heading" style="font-size:1.25rem;">@overallAvgHours.ToString("F1") Hrs</h5>
+                    </div>
+                </div>
+                <div class="card stat-card hover:shadow-md transition-all duration-300" style="border-left: 4px solid var(--mud-palette-primary);">
+                    <div class="d-flex flex-column">
+                        <span class="text-xs mud-secondary-text-color fw-bold text-uppercase font-heading" style="letter-spacing:0.05em;">Punctuality Index</span>
+                        <h5 class="fw-extrabold mt-1 text-indigo-500 font-heading" style="font-size:1.25rem;">@totalPunctual / @totalHeadcount</h5>
+                    </div>
+                </div>
+                <div class="card stat-card hover:shadow-md transition-all duration-300" style="border-left: 4px solid var(--mud-palette-secondary);">
+                    <div class="d-flex flex-column">
+                        <span class="text-xs mud-secondary-text-color fw-bold text-uppercase font-heading" style="letter-spacing:0.05em;">Leaves Registered</span>
+                        <h5 class="fw-extrabold mt-1 text-zinc-600 font-heading" style="font-size:1.25rem;">@totalLeaves</h5>
+                    </div>
+                </div>
+            </div>
 
             @* Dashboard Split Section *@
-            <MudGrid Spacing="6" Class="mb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <!-- Progress rates & Table column -->
-                <MudItem xs="12" lg="8" Class="d-flex flex-column gap-6">
+                <div class="d-flex flex-column gap-6" style="grid-column:span 2;">
                     <!-- Progress Card -->
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-6" Style="border-radius:12px; border: 1px solid var(--mud-palette-lines);">
-                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-4 font-heading">Department Attendance Breakdown</MudText>
+                    <div class="card p-6">
+                        <span class="text-sm fw-bold mb-4 font-heading d-block">Department Attendance Breakdown</span>
                         <div class="d-flex flex-column" style="gap:16px;">
                             @foreach (var dept in _filteredSummaries.Take(5))
                             {
                                 <div>
                                     <div class="d-flex justify-content-between mb-1">
-                                        <MudText Typo="Typo.body2" Class="fw-semibold text-zinc-700 font-body">@dept.Name (@dept.Headcount Staff)</MudText>
-                                        <MudText Typo="Typo.body2" Class="fw-bold font-body">@dept.PresentRate%</MudText>
+                                        <span class="text-sm fw-semibold text-zinc-700 font-body">@dept.Name (@dept.Headcount Staff)</span>
+                                        <span class="text-sm fw-bold font-body">@dept.PresentRate%</span>
                                     </div>
-                                    <MudProgressLinear Value="@dept.PresentRate" Color="@(dept.PresentRate >= 90 ? Color.Success : dept.PresentRate >= 75 ? Color.Warning : Color.Error)" Size="Size.Small" Style="border-radius:9999px;" />
+                                    <div class="w-full bg-zinc-150 h-2 rounded-full overflow-hidden" style="border-radius:9999px;">
+                                        <div class="h-full rounded-full @(dept.PresentRate >= 90 ? "bg-emerald-500" : dept.PresentRate >= 75 ? "bg-amber-500" : "bg-red-500")" style="width:@dept.PresentRate%;border-radius:9999px;"></div>
+                                    </div>
                                 </div>
                             }
                         </div>
-                    </MudPaper>
+                    </div>
 
                     <!-- Enhanced Data Table -->
-                    <MudPaper Elevation="0" Outlined="true" Style="border-radius:12px; overflow:hidden; border: 1px solid var(--mud-palette-lines);">
-                        <MudTable Items="@_filteredSummaries" Bordered="true" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Elevation="0" Outlined="false" Filter="new Func<DepartmentSummary, bool>(FilterFunc)">
-                            <ToolBarContent>
-                                <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Department Summary Table</MudText>
-                                <MudSpacer />
-                                <MudTextField @bind-Value="_searchString"
-                                              Placeholder="Search department..."
-                                              Adornment="Adornment.Start"
-                                              AdornmentIcon="@Icons.Material.Filled.Search"
-                                              IconSize="Size.Small"
-                                              Class="mt-0"
-                                              Variant="Variant.Outlined"
-                                              Margin="Margin.Dense"
-                                              Clearable="true" />
-                            </ToolBarContent>
-                            <HeaderContent>
-                                <MudTh><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Name)">Department</MudTableSortLabel></MudTh>
-                                <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Headcount)">Headcount</MudTableSortLabel></MudTh>
-                                <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Present)">Present</MudTableSortLabel></MudTh>
-                                <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Absent)">Absent</MudTableSortLabel></MudTh>
-                                <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Late)">Late</MudTableSortLabel></MudTh>
-                                <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.Leave)">Leave</MudTableSortLabel></MudTh>
-                                <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.PresentRate)">Present Rate</MudTableSortLabel></MudTh>
-                                <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<DepartmentSummary, object>(x => x.AvgHours)">Avg Hours</MudTableSortLabel></MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Department"><span class="fw-semibold text-zinc-800 font-body">@context.Name</span></MudTd>
-                                <MudTd Style="text-align: center;" DataLabel="Headcount"><span class="font-mono">@context.Headcount</span></MudTd>
-                                <MudTd Style="text-align: center;" DataLabel="Present"><span class="font-mono fw-medium">@context.Present</span></MudTd>
-                                <MudTd Style="text-align: center;" DataLabel="Absent"><span class="font-mono">@context.Absent</span></MudTd>
-                                <MudTd Style="text-align: center;" DataLabel="Late"><span class="font-mono">@context.Late</span></MudTd>
-                                <MudTd Style="text-align: center;" DataLabel="Leave"><span class="font-mono">@context.Leave</span></MudTd>
-                                <MudTd Style="text-align: center;" DataLabel="Present Rate">
-                                    <span class="fw-bold">
-                                        @context.PresentRate%
-                                    </span>
-                                </MudTd>
-                                <MudTd Style="text-align: center;" DataLabel="Avg Hours"><span class="font-mono">@context.AvgHours Hrs</span></MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                            </PagerContent>
-                            <NoRecordsContent>
-                                <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8 font-body">No matching departments found</MudText>
-                            </NoRecordsContent>
-                        </MudTable>
-                    </MudPaper>
-                </MudItem>
+                    <div class="card" style="border-radius:12px; overflow:hidden;">
+                        <div class="table-toolbar">
+                            <span class="text-sm fw-bold font-heading">Department Summary Table</span>
+                            <div class="flex-grow-1"></div>
+                            <input type="text" class="form-control" @bind="_searchString" @bind:event="oninput" placeholder="Search department..." style="max-width:220px;" />
+                        </div>
+                        <div class="table-body">
+                            <table class="w-full border-collapse" style="font-size:0.875rem;">
+                                <thead>
+                                    <tr>
+                                        <th><button class="sort-btn" @onclick="() => {}">Department</button></th>
+                                        <th style="text-align: center;"><button class="sort-btn" @onclick="() => {}">Headcount</button></th>
+                                        <th style="text-align: center;"><button class="sort-btn" @onclick="() => {}">Present</button></th>
+                                        <th style="text-align: center;"><button class="sort-btn" @onclick="() => {}">Absent</button></th>
+                                        <th style="text-align: center;"><button class="sort-btn" @onclick="() => {}">Late</button></th>
+                                        <th style="text-align: center;"><button class="sort-btn" @onclick="() => {}">Leave</button></th>
+                                        <th style="text-align: center;"><button class="sort-btn" @onclick="() => {}">Present Rate</button></th>
+                                        <th style="text-align: center;"><button class="sort-btn" @onclick="() => {}">Avg Hours</button></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var dept in _filteredSummaries.Where(FilterFunc))
+                                    {
+                                        <tr>
+                                            <td data-label="Department"><span class="fw-semibold text-zinc-800 font-body">@dept.Name</span></td>
+                                            <td style="text-align: center;" data-label="Headcount"><span class="font-mono">@dept.Headcount</span></td>
+                                            <td style="text-align: center;" data-label="Present"><span class="font-mono fw-medium">@dept.Present</span></td>
+                                            <td style="text-align: center;" data-label="Absent"><span class="font-mono">@dept.Absent</span></td>
+                                            <td style="text-align: center;" data-label="Late"><span class="font-mono">@dept.Late</span></td>
+                                            <td style="text-align: center;" data-label="Leave"><span class="font-mono">@dept.Leave</span></td>
+                                            <td style="text-align: center;" data-label="Present Rate">
+                                                <span class="fw-bold">@dept.PresentRate%</span>
+                                            </td>
+                                            <td style="text-align: center;" data-label="Avg Hours"><span class="font-mono">@dept.AvgHours Hrs</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (!_filteredSummaries.Where(FilterFunc).Any())
+                        {
+                            <div class="table-empty">
+                                <span class="text-sm mud-secondary-text-color font-body">No matching departments found</span>
+                            </div>
+                        }
+                        <div class="table-footer">
+                            <div class="pagination">
+                                <select class="page-size-select">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                                <span class="pagination-info">1-@_filteredSummaries.Count of @_filteredSummaries.Count</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Right Side Column (Charts & Quick Stats) -->
-                <MudItem xs="12" lg="4" Class="d-flex flex-column gap-6">
+                <div class="d-flex flex-column gap-6">
                     <!-- Donut Chart Card -->
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-6" Style="border-radius:12px; border: 1px solid var(--mud-palette-lines);">
-                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-4 font-heading">Attendance Distribution</MudText>
-                        <div class="flex justify-center items-center py-2">
-                            <MudChart T="double" ChartType="ChartType.Donut" Width="100%" Height="180px" ChartSeries="@_chartSeries" ChartLabels="@_chartLabels" />
+                    <div class="card p-6">
+                        <span class="text-sm fw-bold mb-4 font-heading d-block">Attendance Distribution</span>
+                        <div class="flex justify-center items-center py-2 flex-col">
+                            <div class="d-flex flex-wrap justify-center gap-4 mb-3">
+                                @for (int i = 0; i < _chartLabels.Length; i++)
+                                {
+                                    var colors = new[] { "bg-emerald-500", "bg-red-500", "bg-amber-500", "bg-indigo-500" };
+                                    var idx = i < colors.Length ? i : 0;
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="w-3 h-3 rounded-full @colors[idx] d-inline-block"></span>
+                                        <span class="text-xs text-zinc-600">@_chartLabels[i]</span>
+                                    </div>
+                                }
+                            </div>
+                            <div class="flex gap-6">
+                                @for (int i = 0; i < _chartLabels.Length; i++)
+                                {
+                                    var dataValues = _chartSeries.FirstOrDefault()?.Data ?? new double[] { 0, 0, 0, 0 };
+                                    var val = i < dataValues.Length ? dataValues[i] : 0;
+                                    <div class="d-flex flex-column items-center">
+                                        <span class="fw-bold text-sm">@val</span>
+                                        <span class="text-[10px] text-zinc-400">@_chartLabels[i]</span>
+                                    </div>
+                                }
+                            </div>
                         </div>
-                    </MudPaper>
+                    </div>
 
                     <!-- Quick Statistics Card -->
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-6" Style="border-radius:12px; border: 1px solid var(--mud-palette-lines);">
-                        <MudText Typo="Typo.subtitle2" Class="fw-bold mb-4 font-heading">Quick Statistics</MudText>
+                    <div class="card p-6">
+                        <span class="text-sm fw-bold mb-4 font-heading d-block">Quick Statistics</span>
                         <div class="d-flex flex-column" style="gap:12px;">
                             <div class="d-flex justify-content-between pb-2" style="border-bottom:1px solid var(--mud-palette-table-lines);">
-                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color font-body">Most Punctual Dept</MudText>
-                                <MudText Typo="Typo.body2" Class="text-success fw-bold font-body">
+                                <span class="text-sm mud-secondary-text-color font-body">Most Punctual Dept</span>
+                                <span class="text-sm text-success fw-bold font-body">
                                     @(bestDept != null ? $"{bestDept.Name} ({bestDept.PresentRate}%)" : "N/A")
-                                </MudText>
+                                </span>
                             </div>
                             <div class="d-flex justify-content-between pb-2" style="border-bottom:1px solid var(--mud-palette-table-lines);">
-                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color font-body">Lowest Present Rate</MudText>
-                                <MudText Typo="Typo.body2" Class="text-error fw-bold font-body">
+                                <span class="text-sm mud-secondary-text-color font-body">Lowest Present Rate</span>
+                                <span class="text-sm text-error fw-bold font-body">
                                     @(worstDept != null ? $"{worstDept.Name} ({worstDept.PresentRate}%)" : "N/A")
-                                </MudText>
+                                </span>
                             </div>
                             <div class="d-flex justify-content-between pb-2" style="border-bottom:1px solid var(--mud-palette-table-lines);">
-                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color font-body">Total Late Records</MudText>
-                                <MudText Typo="Typo.body2" Class="text-warning fw-bold font-body">@totalLateCount Staff</MudText>
+                                <span class="text-sm mud-secondary-text-color font-body">Total Late Records</span>
+                                <span class="text-sm text-warning fw-bold font-body">@totalLateCount Staff</span>
                             </div>
                             <div class="d-flex justify-content-between">
-                                <MudText Typo="Typo.body2" Class="mud-secondary-text-color font-body">Report Date</MudText>
-                                <MudText Typo="Typo.body2" Class="fw-bold font-body">@_selectedDate.ToString("yyyy-MM-dd")</MudText>
+                                <span class="text-sm mud-secondary-text-color font-body">Report Date</span>
+                                <span class="text-sm fw-bold font-body">@_selectedDate.ToString("yyyy-MM-dd")</span>
                             </div>
                         </div>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
+                    </div>
+                </div>
+            </div>
         }
         else
         {
             <div class="bg-white border border-zinc-200 rounded-xl p-8 text-center shadow-sm">
-                <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Large" Color="Color.Warning" Class="mb-3" />
-                <MudText Typo="Typo.body1" Class="fw-semibold text-zinc-700 font-heading">No Attendance Records Found</MudText>
-                <MudText Typo="Typo.body2" Class="text-zinc-400 mt-1 font-body">Please select another date or change your active filters.</MudText>
+                <svg class="w-8 h-8 text-amber-500 mb-3 mx-auto" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                <span class="text-base fw-semibold text-zinc-700 font-heading d-block">No Attendance Records Found</span>
+                <span class="text-sm text-zinc-400 mt-1 font-body d-block">Please select another date or change your active filters.</span>
             </div>
         }
     </Authorized>
@@ -366,22 +391,21 @@
     {
         try
         {
-            var baseUri = NavManager.BaseUri;
-            var companiesTask = Http.GetFromJsonAsync<List<Company>>($"{baseUri}api/companies");
-            var departmentsTask = Http.GetFromJsonAsync<List<Department>>($"{baseUri}api/departments");
-            var sectionsTask = Http.GetFromJsonAsync<List<Section>>($"{baseUri}api/sections");
-            var linesTask = Http.GetFromJsonAsync<List<Line>>($"{baseUri}api/lines");
-            var shiftsTask = Http.GetFromJsonAsync<List<ERPHub.Models.Shift>>($"{baseUri}api/shifts");
-            var employeesTask = Http.GetFromJsonAsync<List<Employee>>($"{baseUri}api/employees");
+            var companiesTask = LookupData.GetCompaniesAsync();
+            var departmentsTask = LookupData.GetDepartmentsAsync();
+            var sectionsTask = LookupData.GetSectionsAsync();
+            var linesTask = LookupData.GetLinesAsync();
+            var shiftsTask = LookupData.GetShiftsAsync();
+            var employeesTask = LookupData.GetEmployeesAsync();
 
             await Task.WhenAll(companiesTask, departmentsTask, sectionsTask, linesTask, shiftsTask, employeesTask);
 
-            _companies = await companiesTask ?? new();
-            _departmentsLookup = await departmentsTask ?? new();
-            _sections = await sectionsTask ?? new();
-            _lines = await linesTask ?? new();
-            _shifts = await shiftsTask ?? new();
-            _employees = await employeesTask ?? new();
+            _companies = await companiesTask;
+            _departmentsLookup = await departmentsTask;
+            _sections = await sectionsTask;
+            _lines = await linesTask;
+            _shifts = await shiftsTask;
+            _employees = await employeesTask;
 
             _filteredSections = _sections;
         }
@@ -391,40 +415,43 @@
         }
     }
 
-    private async Task LoadSummary()
-    {
-        _isLoading = true;
-        StateHasChanged();
-
-        try
+private async Task LoadSummary()
         {
-            var url = $"{NavManager.BaseUri}api/attendance/records?fromDate={_selectedDate:yyyy-MM-dd}&toDate={_selectedDate:yyyy-MM-dd}";
-            _allRecords = await Http.GetFromJsonAsync<List<AttendanceRecord>>(url) ?? new();
-            ApplyFilters();
-        }
-        catch
-        {
-            _allRecords = new();
-            _filteredSummaries = new();
-        }
-        finally
-        {
-            _isLoading = false;
+            _isLoading = true;
             StateHasChanged();
+
+            try
+            {
+                // Default to active employees only (exclude Resign, Left, Close)
+                var url = $"{NavManager.BaseUri}api/attendance/records?fromDate={_selectedDate:yyyy-MM-dd}&toDate={_selectedDate:yyyy-MM-dd}&activeEmployees=true";
+                _allRecords = await Http.GetFromJsonAsync<List<AttendanceRecord>>(url) ?? new();
+                ApplyFilters();
+            }
+            catch
+            {
+                _allRecords = new();
+                _filteredSummaries = new();
+            }
+            finally
+            {
+                _isLoading = false;
+                StateHasChanged();
+            }
         }
-    }
 
     private void ApplyFilters()
     {
         // 1. Filter employees based on selected filters
-        var filteredEmployees = _employees.Where(e =>
-            (_companyIdFilter == 0 || e.CompanyId == _companyIdFilter) &&
-            (_departmentIdFilter == 0 || e.DepartmentId == _departmentIdFilter) &&
-            (_sectionIdFilter == 0 || e.SectionId == _sectionIdFilter) &&
-            (_shiftIdFilter == 0 || e.ShiftId == _shiftIdFilter) &&
-            (_lineIdFilter == 0 || e.LineId == _lineIdFilter)
-        ).ToList();
+        var criteria = new EmployeeFilterCriteria
+        {
+            CompanyIdFilter = _companyIdFilter,
+            DepartmentIdFilter = _departmentIdFilter,
+            SectionIdFilter = _sectionIdFilter,
+            LineIdFilter = _lineIdFilter,
+            ShiftIdFilter = _shiftIdFilter
+        };
 
+        var filteredEmployees = EmployeeFilterSvc.FilterEmployees(_employees, criteria);
         var employeeIds = filteredEmployees.Select(e => e.EmployeeId).ToHashSet(StringComparer.OrdinalIgnoreCase);
 
         // Group employees by Department
@@ -455,20 +482,19 @@
             {
                 if (recordsByEmployee.TryGetValue(emp.EmployeeId, out var rec))
                 {
-                    if (rec.AttendanceStatus is "Present" or "Present + Overtime" or "Half Day" or "Holiday Worked" or "Weekly Off Worked" or "Missing In Punch" or "Missing Out Punch")
+                    if (AttendanceAnalytics.IsPresent(rec.AttendanceStatus))
                     {
                         present++;
                     }
-                    else if (rec.AttendanceStatus == "Absent")
+                    if (AttendanceAnalytics.IsAbsent(rec.AttendanceStatus))
                     {
                         absent++;
                     }
-                    else if (rec.AttendanceStatus is "Late" or "Early Exit")
+                    if (AttendanceAnalytics.IsLate(rec.AttendanceStatus))
                     {
-                        present++;
                         late++;
                     }
-                    else if (rec.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
+                    if (AttendanceAnalytics.IsLeave(rec.AttendanceStatus))
                     {
                         leave++;
                     }
@@ -586,11 +612,11 @@
             var fileName = $"DailyAttendanceSummary_{_selectedDate:yyyyMMdd}.xlsx";
 
             await JS.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            Snackbar.Add("Excel exported successfully", Severity.Success);
+            await Toast.ShowSuccessAsync("Excel exported successfully");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Export failed: {ex.Message}");
         }
         finally
         {
@@ -614,11 +640,11 @@
             var fileName = $"DailyAttendanceSummary_{_selectedDate:yyyyMMdd}.pdf";
 
             await JS.InvokeVoidAsync("downloadFile", fileName, base64, "application/pdf");
-            Snackbar.Add("PDF exported successfully", Severity.Success);
+            await Toast.ShowSuccessAsync("PDF exported successfully");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Export failed: {ex.Message}");
         }
         finally
         {

@@ -1,9 +1,26 @@
-<MudNavGroup Title="@Title" Icon="@Icon" Expanded="false" ExpandIcon="@Icons.Material.Filled.ExpandMore">
-    @ChildContent
-</MudNavGroup>
+<div class="nav-group">
+    <button class="nav-group-header" @onclick="Toggle">
+        @if (!string.IsNullOrEmpty(Icon))
+        {
+            <span class="material-icons nav-icon">@Icon</span>
+        }
+        <span>@Title</span>
+        <span class="material-icons nav-group-toggle @(_expanded ? "expanded" : "")">chevron_right</span>
+    </button>
+    <div class="nav-group-children @(_expanded ? "expanded" : "")">
+        @ChildContent
+    </div>
+</div>
 
 @code {
     [Parameter] [EditorRequired] public string Title { get; set; } = string.Empty;
     [Parameter] public string? Icon { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private bool _expanded;
+
+    private void Toggle()
+    {
+        _expanded = !_expanded;
+    }
 }

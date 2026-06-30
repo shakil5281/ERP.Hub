@@ -1,79 +1,178 @@
-@page "/payroll/process"
+﻿@page "/payroll/process"
+@using ERPHub.Models
+@using ERPHub.Services
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ToastService Toast
 
 <PageTitle>ERPHub - Salary Process</PageTitle>
 
-<AuthorizeView Context="authContext">
+<AuthorizeView Context="authCtx">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header Block -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                 <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Salary Process Wizard</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Execute direct deposits, reconcile pay cycles, and authorize monthly salary transfers.</p>
+                    <h2 class="text-[22px] font-extrabold text-black font-heading">Monthly Payroll Process</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5">12-step payroll workflow — calculate, verify, approve, and lock.</p>
                 </div>
             </div>
 
-            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_steps" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>Step</MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ProcessStep, object>(x=>x.PhaseName)">Phase Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ProcessStep, object>(x=>x.Description)">Description</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ProcessStep, object>(x=>x.Dependency)">Dependency</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ProcessStep, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Step">
-                            <span class="bg-zinc-900 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">@context.StepNo</span>
-                        </MudTd>
-                        <MudTd DataLabel="Phase Name">@context.PhaseName</MudTd>
-                        <MudTd DataLabel="Description">@context.Description</MudTd>
-                        <MudTd DataLabel="Dependency">@context.Dependency</MudTd>
-                        <MudTd DataLabel="Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @context.BadgeClass">@context.Status</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+            <div class="bg-white border border-zinc-200 rounded-lg p-4 mb-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 items-end">
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Company</label>
+                        <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @bind="_companyId">
+                            @foreach (var c in _companies)
+                            {
+                                <option value="@c.Id">@c.CompanyNameEn</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Month</label>
+                        <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @bind="_month">
+                            @for (int m = 1; m <= 12; m++)
+                            {
+                                var month = m;
+                                <option value="@month">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(month)</option>
+                            }
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Year</label>
+                        <input type="number" class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @bind="_year" />
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">&nbsp;</label>
+                        <button type="button" class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed w-full" disabled="@_busy" @onclick="InitRun">Load / Create Run</button>
+                    </div>
+                </div>
             </div>
 
-            <!-- Action Panel -->
-            <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6 flex justify-between items-center mt-6 max-sm:flex-col max-sm:items-stretch gap-4">
-                <div>
-                    <h4 class="font-bold text-sm text-zinc-900 font-heading">Run Final Payroll Batch</h4>
-                    <p class="text-xs text-zinc-500 mt-0.5 font-body">This will lock the payroll cycle for June 2026 and generate PDF pay stubs.</p>
+            @if (_run != null)
+            {
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                    <div class="bg-white border border-zinc-200 rounded-lg p-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Status</p>
+                        <p class="text-lg font-bold text-zinc-900">@_run.Status</p>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Employees</p>
+                        <p class="text-lg font-bold text-zinc-900">@_run.TotalEmployees</p>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Net Payroll</p>
+                        <p class="text-lg font-bold text-emerald-600">@_run.TotalNet.ToString("N2")</p>
+                    </div>
+                    <div class="bg-white border border-zinc-200 rounded-lg p-3">
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Deductions</p>
+                        <p class="text-lg font-bold text-red-600">@_run.TotalDeductions.ToString("N2")</p>
+                    </div>
                 </div>
-                <button type="button" class="bg-black text-white text-xs font-semibold py-2 px-4 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer max-sm:text-center">
-                    Execute Batch
-                </button>
-            </div>
+
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden mb-4">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="bg-zinc-50 border-b border-zinc-100">
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Step</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Phase</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Description</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var step in _steps)
+                                {
+                                    <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                        <td class="px-4 py-3">@step.StepNo</td>
+                                        <td class="px-4 py-3 font-semibold">@step.PhaseName</td>
+                                        <td class="px-4 py-3">@step.Description</td>
+                                        <td class="px-4 py-3">
+                                            <span class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold @GetBadge(step.Status)">@step.Status</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-50 border border-zinc-200 rounded-lg p-6 flex flex-wrap gap-2 items-center">
+                    <button type="button" class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" disabled="@(_busy || _run.Status == PayrollRunStatus.Locked)" @onclick="Calculate">Calculate Payroll</button>
+                    <button type="button" class="px-4 py-2 border border-zinc-200 text-blue-600 rounded-lg text-xs font-bold hover:bg-zinc-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" disabled="@(_busy || _run.Status != PayrollRunStatus.Calculated)" @onclick="Verify">Verify</button>
+                    <button type="button" class="px-4 py-2 border border-zinc-200 text-emerald-600 rounded-lg text-xs font-bold hover:bg-zinc-50 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" disabled="@(_busy || _run.Status != PayrollRunStatus.Verified)" @onclick="Approve">Approve</button>
+                    <button type="button" class="px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" disabled="@(_busy || _run.Status != PayrollRunStatus.Approved)" @onclick="Lock">Lock Payroll</button>
+                    <div class="flex-1"></div>
+                    <a href="@($"/payroll/salary-sheet?runId={_run.Id}")" class="px-4 py-2 text-indigo-600 rounded-lg text-xs font-bold hover:bg-indigo-50 transition-colors cursor-pointer no-underline">View Salary Sheet</a>
+                </div>
+            }
         </div>
     </Authorized>
-    <NotAuthorized>
-        <RedirectToLogin />
-    </NotAuthorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
 </AuthorizeView>
 
 @code {
-    public class ProcessStep
+    private List<Company> _companies = new();
+    private PayrollRun? _run;
+    private List<PayrollProcessStepDto> _steps = new();
+    private int _companyId;
+    private int _month = DateTime.Today.Month;
+    private int _year = DateTime.Today.Year;
+    private bool _busy;
+
+    protected override async Task OnInitializedAsync()
     {
-        public int StepNo { get; set; }
-        public string PhaseName { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string Dependency { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string BadgeClass { get; set; } = string.Empty;
+        _companies = await Http.GetFromJsonAsync<List<Company>>($"{NavManager.BaseUri}api/companies") ?? new();
+        if (_companies.Any()) _companyId = _companies.First().Id;
     }
 
-    private List<ProcessStep> _steps = new()
+    private async Task InitRun()
     {
-        new ProcessStep { StepNo = 1, PhaseName = "Sync Time Sheets", Description = "Gather and compile all daily attendance logs, overtime hours, and night bills.", Dependency = "None", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
-        new ProcessStep { StepNo = 2, PhaseName = "Deduction & Tax Review", Description = "Apply advanced loans, tax rate tiers, and unpaid leave deduction flags.", Dependency = "Step 1", Status = "Completed", BadgeClass = "bg-green-50 text-green-700" },
-        new ProcessStep { StepNo = 3, PhaseName = "Release Direct Deposit", Description = "Commit the finalized register and transfer salary payouts to banking API.", Dependency = "Step 2", Status = "Ready", BadgeClass = "bg-amber-50 text-amber-700" }
+        _busy = true;
+        try
+        {
+            var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/payroll/runs",
+                new { CompanyId = _companyId, Year = _year, Month = _month });
+            resp.EnsureSuccessStatusCode();
+            _run = await resp.Content.ReadFromJsonAsync<PayrollRun>();
+            await LoadSteps();
+            await Toast.ShowSuccessAsync("Payroll run loaded.");
+        }
+        catch (Exception ex) { await Toast.ShowErrorAsync(ex.Message); }
+        finally { _busy = false; }
+    }
+
+    private async Task LoadSteps()
+    {
+        if (_run == null) return;
+        _steps = await Http.GetFromJsonAsync<List<PayrollProcessStepDto>>($"{NavManager.BaseUri}api/payroll/runs/{_run.Id}/steps") ?? new();
+    }
+
+    private async Task Calculate() => await RunAction($"runs/{_run!.Id}/calculate", "Payroll calculated.");
+    private async Task Verify() => await RunAction($"runs/{_run!.Id}/verify", "Payroll verified.");
+    private async Task Approve() => await RunAction($"runs/{_run!.Id}/approve", "Payroll approved.");
+    private async Task Lock() => await RunAction($"runs/{_run!.Id}/lock", "Payroll locked.");
+
+    private async Task RunAction(string path, string msg)
+    {
+        _busy = true;
+        try
+        {
+            var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/payroll/{path}", new { UserId = "Payroll" });
+            resp.EnsureSuccessStatusCode();
+            _run = await resp.Content.ReadFromJsonAsync<PayrollRun>();
+            await LoadSteps();
+            await Toast.ShowSuccessAsync(msg);
+        }
+        catch (Exception ex) { await Toast.ShowErrorAsync(ex.Message); }
+        finally { _busy = false; }
+    }
+
+    private static string GetBadge(string status) => status switch
+    {
+        "Completed" => "bg-green-50 text-green-700",
+        "Ready" => "bg-amber-50 text-amber-700",
+        _ => "bg-zinc-100 text-zinc-600"
     };
 }

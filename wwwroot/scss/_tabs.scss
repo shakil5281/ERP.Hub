@@ -1,0 +1,82 @@
+@use 'variables' as *;
+
+/* ============================================================
+   TABS
+   ============================================================ */
+
+.tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.tabs-header {
+  display: flex;
+  border-bottom: 1px solid $border;
+  background: $surface;
+  overflow-x: auto;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-secondary;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: all $transition-fast;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+
+.tab:hover {
+  color: $text-primary;
+  background: $bg-hover;
+}
+
+.tab.active {
+  color: $text-primary;
+  border-bottom-color: $primary;
+  font-weight: 600;
+}
+
+.tabs-content {
+  padding: 16px 0;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+/* Organogram Tabs */
+.organogram-tabs .tabs-header {
+  background: $surface;
+  color: $text-primary;
+  border-color: $border;
+}
+
+.organogram-tabs .tab:hover {
+  background: $bg-hover;
+}
+
+.organogram-tabs .tab.active {
+  border-bottom-color: $text-primary;
+}
+
+.organogram-tabs .tabs-content {
+  background: transparent;
+}
+
+/* Add Employee Tabs */
+.add-employee-tabs .tab {
+  text-transform: capitalize;
+}

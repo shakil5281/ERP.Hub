@@ -18,18 +18,26 @@
             </div>
 
             <!-- Tabs -->
-            <MudTabs ActivePanelIndex="_activeTabIndex"
-                     ActivePanelIndexChanged="OnTabChanged"
-                     Color="Color.Default"
-                     Rounded="true"
-                     Class="organogram-tabs mb-4"
-                     Style="background-color: white; color: black;"
-                     KeepPanelsAlive="true">
-                <MudTabPanel Text="Department" Icon="@Icons.Material.Filled.Business" />
-                <MudTabPanel Text="Section" Icon="@Icons.Material.Filled.Dns" />
-                <MudTabPanel Text="Designation" Icon="@Icons.Material.Filled.Work" />
-                <MudTabPanel Text="Line" Icon="@Icons.Material.Filled.LinearScale" />
-            </MudTabs>
+            <div class="tabs organogram-tabs mb-4">
+                <div class="tabs-header">
+                    <button class="tab @(_activeTab == "department" ? "active" : "")" @onclick="() => OnTabChanged(0)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/></svg>
+                        Department
+                    </button>
+                    <button class="tab @(_activeTab == "section" ? "active" : "")" @onclick="() => OnTabChanged(1)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+                        Section
+                    </button>
+                    <button class="tab @(_activeTab == "designation" ? "active" : "")" @onclick="() => OnTabChanged(2)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                        Designation
+                    </button>
+                    <button class="tab @(_activeTab == "line" ? "active" : "")" @onclick="() => OnTabChanged(3)">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                        Line
+                    </button>
+                </div>
+            </div>
 
             <!-- ==================== DEPARTMENT TAB ==================== -->
             @if (_activeTab == "department")
@@ -47,29 +55,44 @@
                     </div>
 
                     <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                        <MudTable Items="@FilteredDepartments" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                            <HeaderContent>
-                                <MudTh>Sl</MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Department, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Department, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
-                                <MudTh>Actions</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Sl">@(FilteredDepartments.ToList().IndexOf(context) + 1)</MudTd>
-                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
-                                <MudTd DataLabel="Actions">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditDept(context)" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteDept(context.Id)" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                            </PagerContent>
-                        <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                        </NoRecordsContent>
-                        </MudTable>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sl</th>
+                                        <th>Name (EN)</th>
+                                        <th>Name (BN)</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in FilteredDepartments)
+                                    {
+                                        <tr>
+                                            <td data-label="Sl">@(FilteredDepartments.ToList().IndexOf(item) + 1)</td>
+                                            <td data-label="Name (EN)">@item.NameEn</td>
+                                            <td data-label="Name (BN)" class="font-sutonnymj">@item.NameBn</td>
+                                            <td data-label="Actions">
+                                                <button class="btn-icon btn-icon-sm text-indigo-500" @onclick="() => OpenEditDept(item)" title="Edit">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                </button>
+                                                <button class="btn-icon btn-icon-sm text-red-500" @onclick="() => ConfirmDeleteDept(item.Id)" title="Delete">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                @if (!FilteredDepartments.Any())
+                                {
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="4" class="text-center py-8 text-muted">Data Not Available</td>
+                                        </tr>
+                                    </tbody>
+                                }
+                            </table>
+                        </div>
                     </div>
                 </div>
             }
@@ -87,46 +110,61 @@
                         <div class="flex gap-4 items-center max-sm:flex-col max-sm:items-stretch">
                             <div class="flex gap-2 items-center max-sm:justify-between">
                                 <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department:</span>
-                                <MudSelect T="int" @bind-Value="_sectionDeptFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@(0)">All Departments</MudSelectItem>
+                                <select class="form-control" @bind="_sectionDeptFilter">
+                                    <option value="0">All Departments</option>
                                     @foreach (var dept in _departments)
                                     {
-                                        <MudSelectItem Value="@dept.Id">@dept.NameEn</MudSelectItem>
+                                        <option value="@dept.Id">@dept.NameEn</option>
                                     }
-                                </MudSelect>
+                                </select>
                             </div>
                             <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddSection">+ Add Section</button>
                         </div>
                     </div>
 
                     <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                        <MudTable Items="@FilteredSections" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                            <HeaderContent>
-                                <MudTh>Sl</MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Section, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Section, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Section, object>(x=>x.DepartmentNameEn)">Department</MudTableSortLabel></MudTh>
-                                <MudTh>Actions</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Sl">@(FilteredSections.ToList().IndexOf(context) + 1)</MudTd>
-                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
-                                <MudTd DataLabel="Department">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">@context.DepartmentNameEn</span>
-                                </MudTd>
-                                <MudTd DataLabel="Actions">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditSection(context)" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteSection(context.Id)" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                            </PagerContent>
-                        <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                        </NoRecordsContent>
-                        </MudTable>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sl</th>
+                                        <th>Name (EN)</th>
+                                        <th>Name (BN)</th>
+                                        <th>Department</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in FilteredSections)
+                                    {
+                                        <tr>
+                                            <td data-label="Sl">@(FilteredSections.ToList().IndexOf(item) + 1)</td>
+                                            <td data-label="Name (EN)">@item.NameEn</td>
+                                            <td data-label="Name (BN)" class="font-sutonnymj">@item.NameBn</td>
+                                            <td data-label="Department">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700">@item.DepartmentNameEn</span>
+                                            </td>
+                                            <td data-label="Actions">
+                                                <button class="btn-icon btn-icon-sm text-indigo-500" @onclick="() => OpenEditSection(item)" title="Edit">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                </button>
+                                                <button class="btn-icon btn-icon-sm text-red-500" @onclick="() => ConfirmDeleteSection(item.Id)" title="Delete">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                @if (!FilteredSections.Any())
+                                {
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="5" class="text-center py-8 text-muted">Data Not Available</td>
+                                        </tr>
+                                    </tbody>
+                                }
+                            </table>
+                        </div>
                     </div>
                 </div>
             }
@@ -144,46 +182,61 @@
                         <div class="flex gap-4 items-center max-sm:flex-col max-sm:items-stretch">
                             <div class="flex gap-2 items-center max-sm:justify-between">
                                 <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
-                                <MudSelect T="int" @bind-Value="_desigSectionFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@(0)">All Sections</MudSelectItem>
+                                <select class="form-control" @bind="_desigSectionFilter">
+                                    <option value="0">All Sections</option>
                                     @foreach (var sec in _sections)
                                     {
-                                        <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
+                                        <option value="@sec.Id">@sec.NameEn</option>
                                     }
-                                </MudSelect>
+                                </select>
                             </div>
                             <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddDesig">+ Add Designation</button>
                         </div>
                     </div>
 
                     <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                        <MudTable Items="@FilteredDesignations" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                            <HeaderContent>
-                                <MudTh>Sl</MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Designation, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Designation, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Designation, object>(x=>x.SectionNameEn)">Section</MudTableSortLabel></MudTh>
-                                <MudTh>Actions</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Sl">@(FilteredDesignations.ToList().IndexOf(context) + 1)</MudTd>
-                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
-                                <MudTd DataLabel="Section">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">@context.SectionNameEn</span>
-                                </MudTd>
-                                <MudTd DataLabel="Actions">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditDesig(context)" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteDesig(context.Id)" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                            </PagerContent>
-                        <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                        </NoRecordsContent>
-                        </MudTable>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sl</th>
+                                        <th>Name (EN)</th>
+                                        <th>Name (BN)</th>
+                                        <th>Section</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in FilteredDesignations)
+                                    {
+                                        <tr>
+                                            <td data-label="Sl">@(FilteredDesignations.ToList().IndexOf(item) + 1)</td>
+                                            <td data-label="Name (EN)">@item.NameEn</td>
+                                            <td data-label="Name (BN)" class="font-sutonnymj">@item.NameBn</td>
+                                            <td data-label="Section">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700">@item.SectionNameEn</span>
+                                            </td>
+                                            <td data-label="Actions">
+                                                <button class="btn-icon btn-icon-sm text-indigo-500" @onclick="() => OpenEditDesig(item)" title="Edit">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                </button>
+                                                <button class="btn-icon btn-icon-sm text-red-500" @onclick="() => ConfirmDeleteDesig(item.Id)" title="Delete">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                @if (!FilteredDesignations.Any())
+                                {
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="5" class="text-center py-8 text-muted">Data Not Available</td>
+                                        </tr>
+                                    </tbody>
+                                }
+                            </table>
+                        </div>
                     </div>
                 </div>
             }
@@ -201,46 +254,61 @@
                         <div class="flex gap-4 items-center max-sm:flex-col max-sm:items-stretch">
                             <div class="flex gap-2 items-center max-sm:justify-between">
                                 <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section:</span>
-                                <MudSelect T="int" @bind-Value="_lineSectionFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@(0)">All Sections</MudSelectItem>
+                                <select class="form-control" @bind="_lineSectionFilter">
+                                    <option value="0">All Sections</option>
                                     @foreach (var sec in _sections)
                                     {
-                                        <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
+                                        <option value="@sec.Id">@sec.NameEn</option>
                                     }
-                                </MudSelect>
+                                </select>
                             </div>
                             <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white text-xs font-semibold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="OpenAddLine">+ Add Line</button>
                         </div>
                     </div>
 
                     <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                        <MudTable Items="@FilteredLines" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                            <HeaderContent>
-                                <MudTh>Sl</MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Line, object>(x=>x.NameEn)">Name (EN)</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Line, object>(x=>x.NameBn)">Name (BN)</MudTableSortLabel></MudTh>
-                                <MudTh><MudTableSortLabel SortBy="new Func<Line, object>(x=>x.SectionNameEn)">Section</MudTableSortLabel></MudTh>
-                                <MudTh>Actions</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Sl">@(FilteredLines.ToList().IndexOf(context) + 1)</MudTd>
-                                <MudTd DataLabel="Name (EN)">@context.NameEn</MudTd>
-                                <MudTd DataLabel="Name (BN)" Class="font-sutonnymj">@context.NameBn</MudTd>
-                                <MudTd DataLabel="Section">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">@context.SectionNameEn</span>
-                                </MudTd>
-                                <MudTd DataLabel="Actions">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditLine(context)" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDeleteLine(context.Id)" />
-                                </MudTd>
-                            </RowTemplate>
-                            <PagerContent>
-                                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                            </PagerContent>
-                        <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                        </NoRecordsContent>
-                        </MudTable>
+                        <div class="table-container">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Sl</th>
+                                        <th>Name (EN)</th>
+                                        <th>Name (BN)</th>
+                                        <th>Section</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in FilteredLines)
+                                    {
+                                        <tr>
+                                            <td data-label="Sl">@(FilteredLines.ToList().IndexOf(item) + 1)</td>
+                                            <td data-label="Name (EN)">@item.NameEn</td>
+                                            <td data-label="Name (BN)" class="font-sutonnymj">@item.NameBn</td>
+                                            <td data-label="Section">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700">@item.SectionNameEn</span>
+                                            </td>
+                                            <td data-label="Actions">
+                                                <button class="btn-icon btn-icon-sm text-indigo-500" @onclick="() => OpenEditLine(item)" title="Edit">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                                </button>
+                                                <button class="btn-icon btn-icon-sm text-red-500" @onclick="() => ConfirmDeleteLine(item.Id)" title="Delete">
+                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                @if (!FilteredLines.Any())
+                                {
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="5" class="text-center py-8 text-muted">Data Not Available</td>
+                                        </tr>
+                                    </tbody>
+                                }
+                            </table>
+                        </div>
                     </div>
                 </div>
             }
@@ -286,13 +354,13 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department</label>
-                                <MudSelect T="int" @bind-Value="_editingSection.DepartmentId" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@(0)">-- Select Department --</MudSelectItem>
+                                <select class="form-control" @bind="_editingSection.DepartmentId">
+                                    <option value="0">-- Select Department --</option>
                                     @foreach (var dept in _departments)
                                     {
-                                        <MudSelectItem Value="@dept.Id">@dept.NameEn</MudSelectItem>
+                                        <option value="@dept.Id">@dept.NameEn</option>
                                     }
-                                </MudSelect>
+                                </select>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
@@ -323,13 +391,13 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
-                                <MudSelect T="int" @bind-Value="_editingDesig.SectionId" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@(0)">-- Select Section --</MudSelectItem>
+                                <select class="form-control" @bind="_editingDesig.SectionId">
+                                    <option value="0">-- Select Section --</option>
                                     @foreach (var sec in _sections)
                                     {
-                                        <MudSelectItem Value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</MudSelectItem>
+                                        <option value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</option>
                                     }
-                                </MudSelect>
+                                </select>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>
@@ -360,13 +428,13 @@
                         <div class="p-5 flex flex-col gap-4">
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
-                                <MudSelect T="int" @bind-Value="_editingLine.SectionId" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                    <MudSelectItem Value="@(0)">-- Select Section --</MudSelectItem>
+                                <select class="form-control" @bind="_editingLine.SectionId">
+                                    <option value="0">-- Select Section --</option>
                                     @foreach (var sec in _sections)
                                     {
-                                        <MudSelectItem Value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</MudSelectItem>
+                                        <option value="@sec.Id">@sec.NameEn (@sec.DepartmentNameEn)</option>
                                     }
-                                </MudSelect>
+                                </select>
                             </div>
                             <div class="flex flex-col gap-1.5">
                                 <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Name (English)</label>

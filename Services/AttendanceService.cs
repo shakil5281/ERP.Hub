@@ -23,17 +23,27 @@ namespace ERPHub.Services
 
             var employees = employeeId != null
                 ? await _context.Employees.Include(e => e.Shift).Where(e => e.EmployeeId == employeeId).ToListAsync()
-                : await _context.Employees.Include(e => e.Shift).Where(e => e.EmployeeStatus == "Regular").ToListAsync();
+                : await _context.Employees.Include(e => e.Shift).ToListAsync();
 
             var punchRecords = await _context.PunchRecords
                 .Where(p => p.LogDateTime >= from.AddHours(-2) && p.LogDateTime <= to.Date.AddDays(1).AddHours(2))
-                .OrderBy(p => p.LogDateTime)
                 .ToListAsync();
 
-            var holidays = await _context.Holidays.ToListAsync();
+            // Pre-group punches by PunchNumber for O(1) employee lookup
+            var punchesByNumber = punchRecords
+                .GroupBy(p => p.PunchNumber)
+                .ToDictionary(g => g.Key, g => g.OrderBy(p => p.LogDateTime).ToList());
+
+            // Pre-group leave applications by EmployeeId
             var leaves = await _context.LeaveApplications
                 .Where(l => l.Status == "Approved" && l.LeaveDate >= from && l.LeaveDate <= to)
                 .ToListAsync();
+            var leavesByEmployee = leaves
+                .GroupBy(l => l.EmployeeId)
+                .ToDictionary(g => g.Key, g => g.ToList(), StringComparer.OrdinalIgnoreCase);
+
+            var holidays = await _context.Holidays.ToListAsync();
+            var holidayDates = holidays.Select(h => h.HolidayDate.Date).ToHashSet();
 
             // Batch-load existing attendance records to avoid N+1 queries
             var existingRecords = await _context.AttendanceRecords
@@ -46,11 +56,18 @@ namespace ERPHub.Services
 
             int calculatedCount = 0;
 
-            for (var date = from; date <= to; date = date.AddDays(1))
+            foreach (var emp in employees)
             {
-                foreach (var emp in employees)
+                var empPunches = punchesByNumber.TryGetValue(emp.PunchNumber, out var punches)
+                    ? punches
+                    : [];
+
+                for (var date = from; date <= to; date = date.AddDays(1))
                 {
-                    var result = CalculateForEmployee(emp, date, punchRecords, holidays, leaves);
+                    if (!EmploymentEligibility.IsEligibleForProcessing(emp, date))
+                        continue;
+
+                    var result = CalculateForEmployee(emp, date, empPunches, holidayDates, leavesByEmployee);
                     if (result == null) continue;
 
                     var key = (emp.EmployeeId, date);
@@ -81,13 +98,14 @@ namespace ERPHub.Services
             return calculatedCount;
         }
 
-        private AttendanceRecord? CalculateForEmployee(Employee emp, DateTime date, List<PunchRecord> allPunches,
-            List<Holiday> holidays, List<LeaveApplication> leaves)
+        private AttendanceRecord? CalculateForEmployee(Employee emp, DateTime date, List<PunchRecord> empPunches,
+            HashSet<DateTime> holidayDates, Dictionary<string, List<LeaveApplication>> leavesByEmployee)
         {
-            var isHoliday = holidays.Any(h => h.HolidayDate.Date == date.Date) ||
+            var isHoliday = holidayDates.Contains(date.Date) ||
                 (emp.Shift?.OffDay?.Contains(date.DayOfWeek.ToString(), StringComparison.OrdinalIgnoreCase) ?? false);
 
-            var isLeave = leaves.Any(l => l.EmployeeId == emp.EmployeeId && l.LeaveDate.Date == date.Date);
+            var isLeave = leavesByEmployee.TryGetValue(emp.EmployeeId, out var empLeaves) &&
+                empLeaves.Any(l => l.LeaveDate.Date == date.Date);
 
             if (emp.Shift == null)
             {
@@ -107,14 +125,11 @@ namespace ERPHub.Services
             if (shift.OutTime < shift.InTime)
                 windowOutTime = windowOutTime.AddDays(1);
 
-            var empPunches = allPunches
-                .Where(p => p.PunchNumber == emp.PunchNumber
-                    && p.LogDateTime >= windowInTime
-                    && p.LogDateTime <= windowOutTime)
-                .OrderBy(p => p.LogDateTime)
+            var filteredPunches = empPunches
+                .Where(p => p.LogDateTime >= windowInTime && p.LogDateTime <= windowOutTime)
                 .ToList();
 
-            if (empPunches.Count == 0)
+            if (filteredPunches.Count == 0)
             {
                 if (isLeave)
                     return CreateAbsentRecord(emp, date, "Leave", "Approved leave");
@@ -127,11 +142,11 @@ namespace ERPHub.Services
                 return CreateAbsentRecord(emp, date, "Absent", "No punch records found");
             }
 
-            var deduped = new List<DateTime> { empPunches[0].LogDateTime };
-            for (int i = 1; i < empPunches.Count; i++)
+            var deduped = new List<DateTime> { filteredPunches[0].LogDateTime };
+            for (int i = 1; i < filteredPunches.Count; i++)
             {
-                if ((empPunches[i].LogDateTime - deduped[^1]).TotalMinutes >= shift.DuplicateIntervalMinutes)
-                    deduped.Add(empPunches[i].LogDateTime);
+                if ((filteredPunches[i].LogDateTime - deduped[^1]).TotalMinutes >= shift.DuplicateIntervalMinutes)
+                    deduped.Add(filteredPunches[i].LogDateTime);
             }
 
             if (deduped.Count == 0)
@@ -333,14 +348,13 @@ namespace ERPHub.Services
                 query = query.Where(a => a.AttendanceDate <= toDate.Value);
             if (!string.IsNullOrEmpty(employeeId))
                 query = query.Where(a => a.EmployeeId == employeeId);
-            if (activeEmployees.HasValue)
-            {
-                var filteredEmpIds = await _context.Employees
-                    .Where(e => activeEmployees.Value ? e.EmployeeStatus == "Regular" : e.EmployeeStatus != "Regular")
-                    .Select(e => e.EmployeeId)
-                    .ToListAsync();
-                query = query.Where(a => filteredEmpIds.Contains(a.EmployeeId));
-            }
+
+            // Default to active employees only (exclude Resign, Left, Close)
+            var includeActive = activeEmployees ?? true;
+            var filteredEmpIds = includeActive
+                ? await _context.Employees.CurrentlyActive().Select(e => e.EmployeeId).ToListAsync()
+                : await _context.Employees.SeparatedOnly().Select(e => e.EmployeeId).ToListAsync();
+            query = query.Where(a => filteredEmpIds.Contains(a.EmployeeId));
 
             return await query.OrderByDescending(a => a.AttendanceDate).ThenBy(a => a.EmployeeId).ToListAsync();
         }
@@ -358,10 +372,13 @@ namespace ERPHub.Services
             
             if (activeEmployees.HasValue)
             {
-                if (activeEmployees.Value)
-                    employeesQuery = employeesQuery.Where(e => e.EmployeeStatus == "Regular");
-                else
-                    employeesQuery = employeesQuery.Where(e => e.EmployeeStatus != "Regular");
+                employeesQuery = activeEmployees.Value
+                    ? employeesQuery.CurrentlyActive()
+                    : employeesQuery.SeparatedOnly();
+            }
+            else
+            {
+                employeesQuery = employeesQuery.Where(e => e.Status == EmployeeStatuses.Active);
             }
 
             var employees = await employeesQuery.ToListAsync();
@@ -424,17 +441,22 @@ namespace ERPHub.Services
                 .Where(a => a.AttendanceDate == date.Date)
                 .ToListAsync();
 
+            // Load all employee-department mappings in a single query (fix N+1)
+            var employeesByDept = await _context.Employees
+                .GroupBy(e => e.DepartmentId)
+                .ToDictionaryAsync(g => g.Key, g => g.Select(e => e.EmployeeId).ToList());
+
+            var recordsByEmployee = records
+                .GroupBy(r => r.EmployeeId)
+                .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
             var result = new List<DepartmentSummary>();
             foreach (var dept in departments)
             {
-                var empIds = await _context.Employees
-                    .Where(e => e.DepartmentId == dept.Id)
-                    .Select(e => e.EmployeeId)
-                    .ToListAsync();
+                if (!employeesByDept.TryGetValue(dept.Id, out var empIds))
+                    continue;
 
-                var deptRecords = records.Where(r => empIds.Contains(r.EmployeeId)).ToList();
                 var headcount = empIds.Count;
-
                 int present = 0;
                 int absent = 0;
                 int late = 0;
@@ -442,25 +464,16 @@ namespace ERPHub.Services
 
                 foreach (var empId in empIds)
                 {
-                    var r = deptRecords.FirstOrDefault(rec => rec.EmployeeId == empId);
-                    if (r != null)
+                    if (recordsByEmployee.TryGetValue(empId, out var r))
                     {
-                        if (r.AttendanceStatus is "Present" or "Present + Overtime" or "Late" or "Early Exit" or "Half Day" or "Holiday Worked" or "Weekly Off Worked" or "Missing In Punch" or "Missing Out Punch")
-                        {
+                        if (AttendanceAnalytics.IsPresent(r.AttendanceStatus))
                             present++;
-                        }
-                        if (r.AttendanceStatus is "Late" or "Early Exit")
-                        {
+                        if (AttendanceAnalytics.IsLate(r.AttendanceStatus))
                             late++;
-                        }
-                        if (r.AttendanceStatus is "Leave" or "Holiday" or "Weekly Off")
-                        {
+                        if (AttendanceAnalytics.IsLeave(r.AttendanceStatus))
                             leave++;
-                        }
-                        if (r.AttendanceStatus == "Absent" || string.IsNullOrEmpty(r.AttendanceStatus))
-                        {
+                        if (AttendanceAnalytics.IsAbsent(r.AttendanceStatus))
                             absent++;
-                        }
                     }
                     else
                     {
@@ -469,6 +482,7 @@ namespace ERPHub.Services
                 }
 
                 var presentRate = headcount > 0 ? Math.Round((double)present / headcount * 100, 1) : 0;
+                var deptRecords = records.Where(r => empIds.Contains(r.EmployeeId)).ToList();
                 var avgHours = deptRecords.Count > 0
                     ? Math.Round(deptRecords.Average(r => r.WorkedMinutes) / 60.0, 1)
                     : 0;

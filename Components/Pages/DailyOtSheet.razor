@@ -49,75 +49,89 @@
                            placeholder="Search by ID or Name..." 
                            @bind="_searchQuery" @bind:event="oninput" />
                     
-                    <MudSelect T="string" @bind-Value="_deptFilter" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                        <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
-                        <MudSelectItem Value="@("Production")">Production</MudSelectItem>
-                        <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
-                        <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
-                    </MudSelect>
+                    <select class="form-control" @bind="_deptFilter" style="width:auto;min-width:160px;">
+                        <option value="@((string?)null)">All Departments</option>
+                        <option value="Production">Production</option>
+                        <option value="IT">IT & Dev</option>
+                        <option value="Finance">Finance</option>
+                    </select>
                 </div>
                 <div class="flex gap-2 items-center">
                     <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
-                    <MudDatePicker Date="@_otDate"
-                                   DateChanged="OnDateChanged"
-                                   Label="Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
+                    <input type="date" class="form-control" @bind="_otDate" @bind:format="yyyy-MM-dd" style="width:auto;" />
                 </div>
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@FilteredRecords" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.EmpId)">Emp ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Name)">Employee Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Department)">Department</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.RegularHours)">Regular Hrs</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.OtHours)">OT Hrs</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.OtRate)">OT Rate</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.OtAmount)">OT Amount</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Approver)">Approver</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<OtRecord, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                        <MudTh>Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Emp ID">@context.EmpId</MudTd>
-                        <MudTd DataLabel="Employee Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Department">@context.Department</MudTd>
-                        <MudTd DataLabel="Regular Hrs">@context.RegularHours hrs</MudTd>
-                        <MudTd DataLabel="OT Hrs">@context.OtHours hrs</MudTd>
-                        <MudTd DataLabel="OT Rate">@context.OtRate.ToString("F1")x</MudTd>
-                        <MudTd DataLabel="OT Amount">@context.OtAmount.ToString("C")</MudTd>
-                        <MudTd DataLabel="Approver">@context.Approver</MudTd>
-                        <MudTd DataLabel="Status">
-                            @if (context.Status == "Approved")
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
-                            }
-                            else if (context.Status == "Pending")
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
-                            }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">Rejected</span>
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Actions">
-                            <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="@Size.Small" Color="Color.Primary" OnClick="() => ApproveOt(context)" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Cancel" Size="@Size.Small" Color="Color.Error" OnClick="() => RejectOt(context)" />
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <table class="w-full border-collapse" style="font-size:0.875rem;">
+                    <thead>
+                        <tr>
+                            <th><button class="sort-btn" @onclick="() => {}">Emp ID</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Employee Name</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Department</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Regular Hrs</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">OT Hrs</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">OT Rate</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">OT Amount</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Approver</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Status</button></th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ot in FilteredRecords)
+                        {
+                            <tr>
+                                <td data-label="Emp ID">@ot.EmpId</td>
+                                <td data-label="Employee Name">@ot.Name</td>
+                                <td data-label="Department">@ot.Department</td>
+                                <td data-label="Regular Hrs">@ot.RegularHours hrs</td>
+                                <td data-label="OT Hrs">@ot.OtHours hrs</td>
+                                <td data-label="OT Rate">@ot.OtRate.ToString("F1")x</td>
+                                <td data-label="OT Amount">@ot.OtAmount.ToString("C")</td>
+                                <td data-label="Approver">@ot.Approver</td>
+                                <td data-label="Status">
+                                    @if (ot.Status == "Approved")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                                    }
+                                    else if (ot.Status == "Pending")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">Rejected</span>
+                                    }
+                                </td>
+                                <td data-label="Actions">
+                                    <button class="btn-icon btn-icon-sm" title="Approve" @onclick="() => ApproveOt(ot)">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                    </button>
+                                    <button class="btn-icon btn-icon-sm" title="Reject" @onclick="() => RejectOt(ot)">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm5 13.59L15.59 17 12 13.41 8.41 17 7 15.59 10.59 12 7 8.41 8.41 7 12 10.59 15.59 7 17 8.41 13.41 12 17 15.59z"/></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (!FilteredRecords.Any())
+                {
+                    <div class="table-empty">
+                        <span class="text-sm mud-secondary-text-color">Data Not Available</span>
+                    </div>
+                }
+                <div class="table-footer">
+                    <div class="pagination">
+                        <select class="page-size-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="pagination-info">1-@FilteredRecords.Count() of @FilteredRecords.Count()</span>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>

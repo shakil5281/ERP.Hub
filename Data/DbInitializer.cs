@@ -169,42 +169,6 @@ namespace ERPHub.Data
                 });
             }
 
-            // Create Users table via raw SQL if it doesn't exist
-            await context.Database.ExecuteSqlRawAsync(@"
-                IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'Users')
-                BEGIN
-                    CREATE TABLE Users (
-                        Id INT IDENTITY(1,1) PRIMARY KEY,
-                        Username NVARCHAR(100) NOT NULL,
-                        PasswordHash NVARCHAR(255) NOT NULL,
-                        FullName NVARCHAR(200) NOT NULL,
-                        Role NVARCHAR(50) NOT NULL
-                    );
-                    CREATE UNIQUE INDEX IX_Users_Username ON Users(Username);
-                END
-            ");
-
-            // Seed Users if empty
-            if (!await context.Users.AnyAsync())
-            {
-                await context.Users.AddRangeAsync(new List<User>
-                {
-                    new User
-                    {
-                        Username = "admin",
-                        PasswordHash = HashPassword("admin123"),
-                        FullName = "System Administrator",
-                        Role = "Admin"
-                    },
-                    new User
-                    {
-                        Username = "user",
-                        PasswordHash = HashPassword("user123"),
-                        FullName = "Staff User",
-                        Role = "User"
-                    }
-                });
-            }
 
             // Seed Departments if empty
             if (!await context.Departments.AnyAsync())

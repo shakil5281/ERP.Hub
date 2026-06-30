@@ -79,6 +79,8 @@ namespace ERPHub.Migrations
 
                     b.HasIndex("AttendanceDate");
 
+                    b.HasIndex("AttendanceDate", "EmployeeId");
+
                     b.HasIndex("EmployeeId", "AttendanceDate")
                         .IsUnique();
 
@@ -121,6 +123,9 @@ namespace ERPHub.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
 
+                    b.Property<int?>("BusinessGroupId")
+                        .HasColumnType("int");
+
                     b.Property<string>("CompanyNameBn")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -145,6 +150,8 @@ namespace ERPHub.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("BusinessGroupId");
+
                     b.ToTable("Companies");
                 });
 
@@ -156,11 +163,20 @@ namespace ERPHub.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<decimal>("AbsentDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AdvanceDeduction")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("Allowances")
                         .HasColumnType("decimal(18, 2)");
 
                     b.Property<decimal>("DailyBasic")
                         .HasColumnType("decimal(18, 2)");
+
+                    b.Property<decimal>("DailyGross")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<decimal>("Deductions")
                         .HasColumnType("decimal(18, 2)");
@@ -170,8 +186,23 @@ namespace ERPHub.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<decimal>("HolidayBillPay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LateDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LoanDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LwopDeduction")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<decimal>("NetPay")
                         .HasColumnType("decimal(18, 2)");
+
+                    b.Property<decimal>("NightBillPay")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<double>("OtHours")
                         .HasColumnType("float");
@@ -188,6 +219,9 @@ namespace ERPHub.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "SalaryDate")
+                        .IsUnique();
 
                     b.ToTable("dailysalaryrecords");
                 });
@@ -263,8 +297,24 @@ namespace ERPHub.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("AttendanceBonus")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<decimal>("BasicSalary")
                         .HasColumnType("decimal(18, 2)");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("BusinessGroupId")
+                        .HasColumnType("int");
 
                     b.Property<int>("ChildrenCount")
                         .HasColumnType("int");
@@ -288,13 +338,9 @@ namespace ERPHub.Migrations
 
                     b.Property<string>("EmployeeId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("EmployeeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EmployeeStatus")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -306,6 +352,9 @@ namespace ERPHub.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("FoodAllowance")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Gender")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -313,11 +362,17 @@ namespace ERPHub.Migrations
                     b.Property<decimal>("GrossSalary")
                         .HasColumnType("decimal(18, 2)");
 
+                    b.Property<decimal>("HouseRent")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<DateTime>("JoiningDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("LineId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("MedicalAllowance")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("MobileNo")
                         .IsRequired()
@@ -380,11 +435,41 @@ namespace ERPHub.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("ProductionBonus")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("PunchNumber")
                         .HasColumnType("int");
 
+                    b.Property<string>("RoutingNumber")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
                     b.Property<int>("SectionId")
                         .HasColumnType("int");
+
+                    b.Property<string>("SeparationApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("SeparationApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("SeparationDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SeparationReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("SeparationRemarks")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("SeparationType")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("ShiftId")
                         .HasColumnType("int");
@@ -393,17 +478,32 @@ namespace ERPHub.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<decimal>("SpecialAllowance")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("SpouseName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<decimal>("TransportAllowance")
+                        .HasColumnType("decimal(18,2)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("BusinessGroupId");
 
                     b.HasIndex("CompanyId");
 
                     b.HasIndex("DepartmentId");
 
                     b.HasIndex("DesignationId");
+
+                    b.HasIndex("EmployeeId")
+                        .IsUnique();
 
                     b.HasIndex("LineId");
 
@@ -412,9 +512,147 @@ namespace ERPHub.Migrations
 
                     b.HasIndex("SectionId");
 
+                    b.HasIndex("SeparationDate");
+
                     b.HasIndex("ShiftId");
 
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Status", "JoiningDate", "SeparationDate");
+
                     b.ToTable("Employees");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.EmployeeLoan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DisbursedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("EmployeeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EmployeeRefId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstallmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("InterestRate")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LoanAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("LoanDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("MonthlyEmi")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("RemainingBalance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeRefId");
+
+                    b.ToTable("employee_loans");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.EmployeeSalaryAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("AttendanceBonus")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("BasicSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeRefId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("FoodAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("GradeId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("GrossSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("HouseRent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MedicalAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ProductionBonus")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SpecialAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("TransportAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeRefId", "EffectiveFrom");
+
+                    b.ToTable("employee_salary_assignments");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Holiday", b =>
@@ -442,6 +680,35 @@ namespace ERPHub.Migrations
                         .IsUnique();
 
                     b.ToTable("Holidays");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.HolidayBillEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("BillDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("HolidayPay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("holiday_bill_entries");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Invoice", b =>
@@ -639,6 +906,8 @@ namespace ERPHub.Migrations
                     b.HasIndex("LeaveTypeId");
 
                     b.HasIndex("Status");
+
+                    b.HasIndex("EmployeeId", "LeaveDate", "Status");
 
                     b.ToTable("leaveapplications");
                 });
@@ -881,6 +1150,38 @@ namespace ERPHub.Migrations
                     b.ToTable("manualpunchlogs");
                 });
 
+            modelBuilder.Entity("ERPHub.Models.NightBillEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("BillDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<decimal>("NightHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("NightPay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("night_bill_entries");
+                });
+
             modelBuilder.Entity("ERPHub.Models.OvertimeDeduction", b =>
                 {
                     b.Property<int>("Id")
@@ -916,6 +1217,250 @@ namespace ERPHub.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("overtimedeductions");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.PayrollLine", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("AbsentDays")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AbsentDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AdvanceDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("AttendanceBonus")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BankAccountNumber")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("BankName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("BasicSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("BranchName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DesignationId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("EmployeeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EmployeeRefId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("FoodAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("GrossEarnings")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("HolidayBillPay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("HouseRent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LateDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LeaveDays")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LoanDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("LwopDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MedicalAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("NetSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("NightBillPay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OtHours")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OtherDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("OvertimePay")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("PayrollRunId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("PresentDays")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("ProductionBonus")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("RoutingNumber")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("SpecialAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("TaxDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalDeductions")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TransportAllowance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("WorkingDays")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PayrollRunId");
+
+                    b.ToTable("payroll_lines");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.PayrollRun", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CalculatedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("CalculatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("LockedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("LockedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PayrollMonth")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PayrollYear")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("PeriodFrom")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PeriodTo")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("TotalDeductions")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("TotalEmployees")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalGross")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalHolidayBill")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalNet")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalNightBill")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("TotalOvertime")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("VerifiedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("VerifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId", "PayrollYear", "PayrollMonth")
+                        .IsUnique();
+
+                    b.ToTable("payroll_runs");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Permission", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Module")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Permission");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Product", b =>
@@ -1025,10 +1570,210 @@ namespace ERPHub.Migrations
 
                     b.HasIndex("PunchNumber");
 
+                    b.HasIndex("PunchNumber", "LogDateTime");
+
                     b.HasIndex("UserPunchId", "LogDateTime")
                         .IsUnique();
 
                     b.ToTable("punchrecords");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Role", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.RolePermission", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PermissionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("RoleId", "PermissionId");
+
+                    b.HasIndex("PermissionId");
+
+                    b.ToTable("RolePermission");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.SalaryAdvance", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("AdvanceDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("EmployeeName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("EmployeeRefId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstallmentCount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("MonthlyDeduction")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("PaidDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<decimal>("RemainingBalance")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeRefId");
+
+                    b.ToTable("salary_advances");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.SalaryHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("BasicSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ChangeType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("EmployeeRefId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("GrossSalary")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("SourceRefId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("salary_history");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.SalaryIncrement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ApprovedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("EffectiveDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("EmployeeId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("EmployeeRefId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("IncrementAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("IncrementPercent")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("IncrementType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<decimal>("NewBasic")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("NewGross")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PreviousBasic")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("PreviousGross")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeRefId");
+
+                    b.ToTable("salary_increments");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Section", b =>
@@ -1073,7 +1818,8 @@ namespace ERPHub.Migrations
 
                     b.Property<string>("ApprovedBy")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<DateTime?>("ApprovedDate")
                         .HasColumnType("datetime2");
@@ -1081,7 +1827,15 @@ namespace ERPHub.Migrations
                     b.Property<int>("ClearanceProgress")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CreatedAt")
+                    b.Property<int>("CompanyId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("DepartmentId")
@@ -1100,27 +1854,33 @@ namespace ERPHub.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("EmployeeRefId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ExitInterviewDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("HandoverNotes")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("bit");
 
-                    b.Property<DateTime>("LastWorkingDay")
-                        .HasColumnType("datetime2");
+                    b.Property<bool>("IsSettled")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
 
-                    b.Property<DateTime>("ResignDate")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<int?>("SectionId")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("SeparationDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("SeparationType")
                         .IsRequired()
@@ -1143,11 +1903,17 @@ namespace ERPHub.Migrations
 
                     b.HasIndex("EmployeeId");
 
-                    b.HasIndex("ResignDate");
+                    b.HasIndex("EmployeeRefId");
 
                     b.HasIndex("SectionId");
 
+                    b.HasIndex("SeparationDate");
+
                     b.HasIndex("Status");
+
+                    b.HasIndex("CompanyId", "SeparationDate");
+
+                    b.HasIndex("SeparationType", "SeparationDate");
 
                     b.ToTable("separations");
                 });
@@ -1207,6 +1973,9 @@ namespace ERPHub.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("int");
+
                     b.Property<string>("FullName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -1217,11 +1986,6 @@ namespace ERPHub.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -1229,20 +1993,54 @@ namespace ERPHub.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("EmployeeId");
+
                     b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.UserRole", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRoles");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Company", b =>
+                {
+                    b.HasOne("ERPHub.Models.BusinessGroup", "BusinessGroup")
+                        .WithMany()
+                        .HasForeignKey("BusinessGroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("BusinessGroup");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Designation", b =>
                 {
-                    b.HasOne("ERPHub.Models.Section", null)
-                        .WithMany()
+                    b.HasOne("ERPHub.Models.Section", "Section")
+                        .WithMany("Designations")
                         .HasForeignKey("SectionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Section");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Employee", b =>
                 {
+                    b.HasOne("ERPHub.Models.BusinessGroup", "BusinessGroup")
+                        .WithMany()
+                        .HasForeignKey("BusinessGroupId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("ERPHub.Models.Company", "Company")
                         .WithMany()
                         .HasForeignKey("CompanyId")
@@ -1279,6 +2077,8 @@ namespace ERPHub.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("BusinessGroup");
+
                     b.Navigation("Company");
 
                     b.Navigation("Department");
@@ -1290,6 +2090,28 @@ namespace ERPHub.Migrations
                     b.Navigation("Section");
 
                     b.Navigation("Shift");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.EmployeeLoan", b =>
+                {
+                    b.HasOne("ERPHub.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeRefId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.EmployeeSalaryAssignment", b =>
+                {
+                    b.HasOne("ERPHub.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeRefId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
                 });
 
             modelBuilder.Entity("ERPHub.Models.InvoiceItem", b =>
@@ -1315,7 +2137,7 @@ namespace ERPHub.Migrations
                     b.HasOne("ERPHub.Models.LeaveType", "LeaveTypeNav")
                         .WithMany()
                         .HasForeignKey("LeaveTypeId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Department");
 
@@ -1326,11 +2148,13 @@ namespace ERPHub.Migrations
 
             modelBuilder.Entity("ERPHub.Models.Line", b =>
                 {
-                    b.HasOne("ERPHub.Models.Section", null)
-                        .WithMany()
+                    b.HasOne("ERPHub.Models.Section", "Section")
+                        .WithMany("Lines")
                         .HasForeignKey("SectionId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Section");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Manpower", b =>
@@ -1383,13 +2207,78 @@ namespace ERPHub.Migrations
                     b.Navigation("Section");
                 });
 
+            modelBuilder.Entity("ERPHub.Models.PayrollLine", b =>
+                {
+                    b.HasOne("ERPHub.Models.PayrollRun", "PayrollRun")
+                        .WithMany("Lines")
+                        .HasForeignKey("PayrollRunId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PayrollRun");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.PayrollRun", b =>
+                {
+                    b.HasOne("ERPHub.Models.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.RolePermission", b =>
+                {
+                    b.HasOne("ERPHub.Models.Permission", "Permission")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("PermissionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ERPHub.Models.Role", "Role")
+                        .WithMany("RolePermissions")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Permission");
+
+                    b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.SalaryAdvance", b =>
+                {
+                    b.HasOne("ERPHub.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeRefId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.SalaryIncrement", b =>
+                {
+                    b.HasOne("ERPHub.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeRefId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Employee");
+                });
+
             modelBuilder.Entity("ERPHub.Models.Section", b =>
                 {
-                    b.HasOne("ERPHub.Models.Department", null)
-                        .WithMany()
+                    b.HasOne("ERPHub.Models.Department", "Department")
+                        .WithMany("Sections")
                         .HasForeignKey("DepartmentId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Department");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Separation", b =>
@@ -1405,6 +2294,12 @@ namespace ERPHub.Migrations
                         .HasForeignKey("DesignationId")
                         .OnDelete(DeleteBehavior.Restrict);
 
+                    b.HasOne("ERPHub.Models.Employee", "Employee")
+                        .WithMany("Separations")
+                        .HasForeignKey("EmployeeRefId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("ERPHub.Models.Section", "Section")
                         .WithMany()
                         .HasForeignKey("SectionId")
@@ -1414,12 +2309,81 @@ namespace ERPHub.Migrations
 
                     b.Navigation("Designation");
 
+                    b.Navigation("Employee");
+
                     b.Navigation("Section");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.User", b =>
+                {
+                    b.HasOne("ERPHub.Models.Employee", "Employee")
+                        .WithMany()
+                        .HasForeignKey("EmployeeId");
+
+                    b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.UserRole", b =>
+                {
+                    b.HasOne("ERPHub.Models.Role", "Role")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ERPHub.Models.User", "User")
+                        .WithMany("UserRoles")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Department", b =>
+                {
+                    b.Navigation("Sections");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Employee", b =>
+                {
+                    b.Navigation("Separations");
                 });
 
             modelBuilder.Entity("ERPHub.Models.Invoice", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.PayrollRun", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Permission", b =>
+                {
+                    b.Navigation("RolePermissions");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Role", b =>
+                {
+                    b.Navigation("RolePermissions");
+
+                    b.Navigation("UserRoles");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.Section", b =>
+                {
+                    b.Navigation("Designations");
+
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("ERPHub.Models.User", b =>
+                {
+                    b.Navigation("UserRoles");
                 });
 #pragma warning restore 612, 618
         }

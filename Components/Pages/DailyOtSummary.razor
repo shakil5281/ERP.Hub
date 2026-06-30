@@ -79,11 +79,11 @@
                     <h3 class="text-sm font-bold text-zinc-955 mb-4">Budget Risk Audits</h3>
                     <div class="flex flex-col gap-3.5">
                         <div class="bg-red-500/10 border border-red-500/30 rounded-xl p-3 flex gap-2 text-red-700 text-sm font-semibold">
-                            <span class="font-extrabold">🚨 Production Alert:</span>
+                            <span class="font-extrabold">Production Alert:</span>
                             <span>Cost has reached 92% of the budget threshold.</span>
                         </div>
                         <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-3 flex gap-2 text-emerald-700 text-sm font-semibold">
-                            <span class="font-extrabold">✓ Finance:</span>
+                            <span class="font-extrabold">Finance:</span>
                             <span>OT hours are perfectly inside the standard budget.</span>
                         </div>
                     </div>
@@ -91,43 +91,60 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_departments" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentOtSummary, object>(x=>x.Name)">Department</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentOtSummary, object>(x=>x.OtHeadcount)">OT Headcount</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentOtSummary, object>(x=>x.TotalOtHours)">Total OT Hours</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentOtSummary, object>(x=>x.CostAccrued)">Cost Accrued</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DepartmentOtSummary, object>(x=>x.BudgetLimit)">Budget Limit</MudTableSortLabel></MudTh>
-                        <MudTh>Status</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Department">@context.Name</MudTd>
-                        <MudTd DataLabel="OT Headcount">@context.OtHeadcount</MudTd>
-                        <MudTd DataLabel="Total OT Hours">@context.TotalOtHours hrs</MudTd>
-                        <MudTd DataLabel="Cost Accrued">@context.CostAccrued.ToString("C")</MudTd>
-                        <MudTd DataLabel="Budget Limit">@context.BudgetLimit.ToString("C")</MudTd>
-                        <MudTd DataLabel="Status">
-                            @if ((context.CostAccrued / context.BudgetLimit) > 0.9m)
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">Over Budget Risk</span>
-                            }
-                            else if ((context.CostAccrued / context.BudgetLimit) > 0.7m)
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Warning</span>
-                            }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Safe</span>
-                            }
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <table class="w-full border-collapse" style="font-size:0.875rem;">
+                    <thead>
+                        <tr>
+                            <th><button class="sort-btn" @onclick="() => {}">Department</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">OT Headcount</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Total OT Hours</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Cost Accrued</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Budget Limit</button></th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var dept in _departments)
+                        {
+                            <tr>
+                                <td data-label="Department">@dept.Name</td>
+                                <td data-label="OT Headcount">@dept.OtHeadcount</td>
+                                <td data-label="Total OT Hours">@dept.TotalOtHours hrs</td>
+                                <td data-label="Cost Accrued">@dept.CostAccrued.ToString("C")</td>
+                                <td data-label="Budget Limit">@dept.BudgetLimit.ToString("C")</td>
+                                <td data-label="Status">
+                                    @if ((dept.CostAccrued / dept.BudgetLimit) > 0.9m)
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-red-50 text-red-700 border border-red-200">Over Budget Risk</span>
+                                    }
+                                    else if ((dept.CostAccrued / dept.BudgetLimit) > 0.7m)
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Warning</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Safe</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (_departments.Count == 0)
+                {
+                    <div class="table-empty">
+                        <span class="text-sm mud-secondary-text-color">Data Not Available</span>
+                    </div>
+                }
+                <div class="table-footer">
+                    <div class="pagination">
+                        <select class="page-size-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="pagination-info">1-@_departments.Count of @_departments.Count</span>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>

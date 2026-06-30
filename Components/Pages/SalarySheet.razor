@@ -1,71 +1,131 @@
-@page "/payroll/salary-sheet"
+﻿@page "/payroll/salary-sheet"
+@using ERPHub.Models
+@using ERPHub.Services
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ToastService Toast
 
 <PageTitle>ERPHub - Salary Sheets</PageTitle>
 
-<AuthorizeView Context="authContext">
+<AuthorizeView Context="authCtx">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header Block -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+            <div class="flex justify-between items-center mb-6 flex-wrap gap-3">
                 <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Salary Register Sheets</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Browse, search, and export monthly salary ledgers and registers.</p>
+                    <h2 class="text-[22px] font-extrabold text-black font-heading">Monthly Salary Register</h2>
+                    <p class="text-zinc-500 text-xs mt-0.5">Browse payroll runs and export salary sheets.</p>
+                </div>
+                @if (_selectedRunId > 0)
+                {
+                    <div class="flex gap-2">
+                        <a href="@($"{NavManager.BaseUri}api/payroll/export/salary-sheet/{_selectedRunId}")" target="_blank" class="px-3 py-1.5 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer no-underline inline-flex items-center">Export Excel</a>
+                        <a href="@($"{NavManager.BaseUri}api/payroll/export/bank-sheet/{_selectedRunId}")" target="_blank" class="px-3 py-1.5 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer no-underline inline-flex items-center">Bank Sheet</a>
+                    </div>
+                }
+            </div>
+
+            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden mb-4">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="bg-zinc-50 border-b border-zinc-100">
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Period</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Employees</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Gross</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Deductions</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Net Paid</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var run in _runs)
+                            {
+                                <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="() => OnRunClick(run)">
+                                    <td class="px-4 py-3">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(run.PayrollMonth) @run.PayrollYear</td>
+                                    <td class="px-4 py-3">@run.TotalEmployees</td>
+                                    <td class="px-4 py-3">@run.TotalGross.ToString("N2")</td>
+                                    <td class="px-4 py-3">@run.TotalDeductions.ToString("N2")</td>
+                                    <td class="px-4 py-3 font-bold">@run.TotalNet.ToString("N2")</td>
+                                    <td class="px-4 py-3"><span class="text-xs font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700">@run.Status</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_sheets" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.PayPeriod)">Pay Period</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.StaffCount)">Staff Count</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.GrossPayroll)">Gross Payroll</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.Deductions)">Deductions</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.NetPaid)">Net Paid</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.PaymentDate)">Payment Date</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryRegister, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Pay Period">@context.PayPeriod</MudTd>
-                        <MudTd DataLabel="Staff Count">@context.StaffCount</MudTd>
-                        <MudTd DataLabel="Gross Payroll">@context.GrossPayroll</MudTd>
-                        <MudTd DataLabel="Deductions">@context.Deductions</MudTd>
-                        <MudTd DataLabel="Net Paid">@context.NetPaid</MudTd>
-                        <MudTd DataLabel="Payment Date">@context.PaymentDate</MudTd>
-                        <MudTd DataLabel="Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@context.Status</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
-            </div>
+            @if (_lines.Any())
+            {
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="bg-zinc-50 border-b border-zinc-100">
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Employee ID</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Name</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Gross</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">OT</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Night</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Holiday</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Deductions</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Net Salary</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Payslip</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var line in _lines)
+                                {
+                                    <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                        <td class="px-4 py-3 font-mono text-[10px]">@line.EmployeeId</td>
+                                        <td class="px-4 py-3">@line.EmployeeName</td>
+                                        <td class="px-4 py-3">@line.GrossEarnings.ToString("N2")</td>
+                                        <td class="px-4 py-3">@line.OvertimePay.ToString("N2")</td>
+                                        <td class="px-4 py-3">@line.NightBillPay.ToString("N2")</td>
+                                        <td class="px-4 py-3">@line.HolidayBillPay.ToString("N2")</td>
+                                        <td class="px-4 py-3 text-red-600">@line.TotalDeductions.ToString("N2")</td>
+                                        <td class="px-4 py-3 font-bold">@line.NetSalary.ToString("N2")</td>
+                                        <td class="px-4 py-3">
+                                            <a href="@($"{NavManager.BaseUri}api/payroll/export/payslip/{line.Id}")" target="_blank" class="btn-icon btn-icon-sm" title="Download Payslip PDF">
+                                                <span class="material-icons text-sm">picture_as_pdf</span>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            }
         </div>
     </Authorized>
-    <NotAuthorized>
-        <RedirectToLogin />
-    </NotAuthorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
 </AuthorizeView>
 
 @code {
-    public class SalaryRegister
+    private List<PayrollRun> _runs = new();
+    private List<PayrollLine> _lines = new();
+    private int _selectedRunId;
+
+    protected override async Task OnInitializedAsync()
     {
-        public string PayPeriod { get; set; } = string.Empty;
-        public int StaffCount { get; set; }
-        public string GrossPayroll { get; set; } = string.Empty;
-        public string Deductions { get; set; } = string.Empty;
-        public string NetPaid { get; set; } = string.Empty;
-        public string PaymentDate { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        _runs = await Http.GetFromJsonAsync<List<PayrollRun>>($"{NavManager.BaseUri}api/payroll/runs") ?? new();
+        var uri = NavManager.ToAbsoluteUri(NavManager.Uri);
+        if (Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query).TryGetValue("runId", out var rid)
+            && int.TryParse(rid, out var id))
+        {
+            _selectedRunId = id;
+            await LoadLines(id);
+        }
     }
 
-    private List<SalaryRegister> _sheets = new()
+    private async Task OnRunClick(PayrollRun run)
     {
-        new SalaryRegister { PayPeriod = "June 2026", StaffCount = 142, GrossPayroll = "$420,500.00", Deductions = "-$12,450.00", NetPaid = "$408,050.00", PaymentDate = "2026-06-01", Status = "Paid" },
-        new SalaryRegister { PayPeriod = "May 2026", StaffCount = 139, GrossPayroll = "$410,200.00", Deductions = "-$9,800.00", NetPaid = "$400,400.00", PaymentDate = "2026-05-01", Status = "Paid" },
-        new SalaryRegister { PayPeriod = "April 2026", StaffCount = 138, GrossPayroll = "$405,000.00", Deductions = "-$10,150.00", NetPaid = "$394,850.00", PaymentDate = "2026-04-01", Status = "Paid" }
-    };
+        _selectedRunId = run?.Id ?? 0;
+        if (_selectedRunId > 0) await LoadLines(_selectedRunId);
+    }
+
+    private async Task LoadLines(int runId)
+    {
+        _lines = await Http.GetFromJsonAsync<List<PayrollLine>>($"{NavManager.BaseUri}api/payroll/runs/{runId}/lines") ?? new();
+    }
 }

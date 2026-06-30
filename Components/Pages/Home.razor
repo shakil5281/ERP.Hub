@@ -4,67 +4,67 @@
 
 <AuthorizeView Context="authContext">
     <Authorized>
-        <MudGrid Spacing="6">
-            @* Stat Cards *@
-            <MudItem xs="12" sm="6" lg="3">
-                <MudPaper Class="pa-6 d-flex align-items-center justify-content-between" Elevation="0" Outlined="true" Style="border-radius:8px;">
-                    <div class="d-flex flex-column">
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold" Style="letter-spacing:0.05em;">Total Revenue</MudText>
-                        <MudText Typo="Typo.h5" Class="fw-extrabold">@_totalRevenue.ToString("C")</MudText>
+        @* Stat Cards *@
+        <div class="flex flex-wrap" style="gap:24px;">
+            <div class="flex-grow-1" style="flex-basis:0;min-width:200px;">
+                <div class="stat-card card">
+                    <div class="flex flex-col">
+                        <span class="text-muted text-uppercase fw-bold text-xs" style="letter-spacing:0.05em;">Total Revenue</span>
+                        <span class="font-extrabold text-xl">@_totalRevenue.ToString("C")</span>
                     </div>
-                    <MudPaper Class="d-flex align-items-center justify-content-center flex-shrink-0" Style="width:40px;height:40px;border-radius:8px;background-color:var(--mud-palette-info-hover);" Elevation="0">
-                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Color="Color.Info" Size="Size.Medium" />
-                    </MudPaper>
-                </MudPaper>
-            </MudItem>
+                    <div class="stat-card-icon" style="background-color:var(--mud-palette-info-hover);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    </div>
+                </div>
+            </div>
 
-            <MudItem xs="12" sm="6" lg="3">
-                <MudPaper Class="pa-6 d-flex align-items-center justify-content-between" Elevation="0" Outlined="true" Style="border-radius:8px;">
-                    <div class="d-flex flex-column">
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold" Style="letter-spacing:0.05em;">Inventory In Stock</MudText>
-                        <MudText Typo="Typo.h5" Class="fw-extrabold">@_totalStock Items</MudText>
+            <div class="flex-grow-1" style="flex-basis:0;min-width:200px;">
+                <div class="stat-card card">
+                    <div class="flex flex-col">
+                        <span class="text-muted text-uppercase fw-bold text-xs" style="letter-spacing:0.05em;">Inventory In Stock</span>
+                        <span class="font-extrabold text-xl">@_totalStock Items</span>
                     </div>
-                    <MudPaper Class="d-flex align-items-center justify-content-center flex-shrink-0" Style="width:40px;height:40px;border-radius:8px;background-color:var(--mud-palette-success-hover);" Elevation="0">
-                        <MudIcon Icon="@Icons.Material.Filled.Inventory2" Color="Color.Success" Size="Size.Medium" />
-                    </MudPaper>
-                </MudPaper>
-            </MudItem>
+                    <div class="stat-card-icon" style="background-color:var(--mud-palette-success-hover);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+                    </div>
+                </div>
+            </div>
 
-            <MudItem xs="12" sm="6" lg="3">
-                <MudPaper Class="pa-6 d-flex align-items-center justify-content-between" Elevation="0" Outlined="true" Style="border-radius:8px;">
-                    <div class="d-flex flex-column">
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold" Style="letter-spacing:0.05em;">Pending Tasks</MudText>
-                        <MudText Typo="Typo.h5" Class="fw-extrabold">@_pendingTasks Count</MudText>
+            <div class="flex-grow-1" style="flex-basis:0;min-width:200px;">
+                <div class="stat-card card">
+                    <div class="flex flex-col">
+                        <span class="text-muted text-uppercase fw-bold text-xs" style="letter-spacing:0.05em;">Pending Tasks</span>
+                        <span class="font-extrabold text-xl">@_pendingTasks Count</span>
                     </div>
-                    <MudPaper Class="d-flex align-items-center justify-content-center flex-shrink-0" Style="width:40px;height:40px;border-radius:8px;background-color:var(--mud-palette-warning-hover);" Elevation="0">
-                        <MudIcon Icon="@Icons.Material.Filled.EventNote" Color="Color.Warning" Size="Size.Medium" />
-                    </MudPaper>
-                </MudPaper>
-            </MudItem>
+                    <div class="stat-card-icon" style="background-color:var(--mud-palette-warning-hover);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 14l2 2 4-4"/></svg>
+                    </div>
+                </div>
+            </div>
 
-            <MudItem xs="12" sm="6" lg="3">
-                <MudPaper Class="pa-6 d-flex align-items-center justify-content-between" Elevation="0" Outlined="true" Style="border-radius:8px;">
-                    <div class="d-flex flex-column">
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold" Style="letter-spacing:0.05em;">Paid Invoices</MudText>
-                        <MudText Typo="Typo.h5" Class="fw-extrabold">@_paidInvoices Count</MudText>
+            <div class="flex-grow-1" style="flex-basis:0;min-width:200px;">
+                <div class="stat-card card">
+                    <div class="flex flex-col">
+                        <span class="text-muted text-uppercase fw-bold text-xs" style="letter-spacing:0.05em;">Paid Invoices</span>
+                        <span class="font-extrabold text-xl">@_paidInvoices Count</span>
                     </div>
-                    <MudPaper Class="d-flex align-items-center justify-content-center flex-shrink-0" Style="width:40px;height:40px;border-radius:8px;background-color:var(--mud-palette-error-hover);" Elevation="0">
-                        <MudIcon Icon="@Icons.Material.Filled.ReceiptLong" Color="Color.Error" Size="Size.Medium" />
-                    </MudPaper>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
+                    <div class="stat-card-icon" style="background-color:var(--mud-palette-error-hover);">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         @* Charts & Details *@
-        <MudGrid Spacing="6" Class="mt-4">
+        <div class="flex flex-wrap mt-4" style="gap:24px;">
             @* Revenue Chart *@
-            <MudItem xs="12" lg="8">
-                <MudPaper Class="pa-6 d-flex flex-column" Elevation="0" Outlined="true" Style="border-radius:8px;">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <MudText Typo="Typo.subtitle1" Class="fw-bold">Sales Revenue Analytics</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color">Active Invoices Breakdown</MudText>
+            <div class="flex-grow-1" style="flex-basis:0;min-width:300px;">
+                <div class="card pa-6 flex flex-col" style="border-radius:8px;">
+                    <div class="flex justify-between items-center mb-4">
+                        <h6 class="fw-bold text-base">Sales Revenue Analytics</h6>
+                        <span class="text-muted text-xs">Active Invoices Breakdown</span>
                     </div>
-                    <div class="d-flex align-items-end justify-content-around" style="height:220px; padding-top:10px; padding-bottom:6px; border-bottom:1px solid var(--mud-palette-table-lines);">
+                    <div class="flex items-end justify-around" style="height:220px; padding-top:10px; padding-bottom:6px; border-bottom:1px solid var(--mud-palette-table-lines);">
                         @if (_invoices != null && _invoices.Any())
                         {
                             decimal maxTotal = _invoices.Max(i => i.GrandTotal);
@@ -75,85 +75,97 @@
                                 var percentage = (int)((invoice.GrandTotal / maxTotal) * 100);
                                 var barHeight = Math.Max(15, percentage);
 
-                                <div class="d-flex flex-column align-items-center justify-content-end" style="width:12%;height:100%;">
+                                <div class="flex flex-col items-center justify-end" style="width:12%;height:100%;">
                                     <div class="bg-black" style="min-height:10px; flex-shrink:0; width:100%; height:@(barHeight)%; border-top-left-radius:6px; border-top-right-radius:6px;"
                                          title="Total: @invoice.GrandTotal.ToString("C")"
                                          @onmouseover="() => {}"></div>
-                                    <MudText Typo="Typo.caption" Class="text-truncate mud-secondary-text-color" Style="width:100%;" title="@invoice.InvoiceNumber">
+                                    <span class="text-muted text-xs truncate" style="width:100%;" title="@invoice.InvoiceNumber">
                                         @invoice.InvoiceNumber
-                                    </MudText>
+                                    </span>
                                 </div>
                             }
                         }
                         else
                         {
-                            <MudText Typo="Typo.body2" Class="mud-secondary-text-color align-self-center">No invoice data available to chart.</MudText>
+                            <span class="text-muted text-sm self-center">No invoice data available to chart.</span>
                         }
                     </div>
-                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-center mt-3">* Hover over bars to view invoice details.</MudText>
-                </MudPaper>
-            </MudItem>
+                    <span class="text-muted text-xs text-center mt-3">* Hover over bars to view invoice details.</span>
+                </div>
+            </div>
 
             @* Activity Feed *@
-            <MudItem xs="12" lg="4">
-                <MudPaper Class="pa-6 d-flex flex-column" Elevation="0" Outlined="true" Style="border-radius:8px;">
-                    <MudText Typo="Typo.subtitle1" Class="fw-bold mb-4">System Activity</MudText>
-                    <div class="d-flex flex-column" style="gap:14px;">
+            <div class="flex-grow-1" style="flex-basis:0;min-width:240px;">
+                <div class="card pa-6 flex flex-col" style="border-radius:8px;">
+                    <h6 class="fw-bold text-base mb-4">System Activity</h6>
+                    <div class="flex flex-col" style="gap:14px;">
                         @foreach (var activity in _activities)
                         {
-                            <div class="d-flex" style="gap:12px; padding-bottom:14px; border-bottom:1px solid var(--mud-palette-table-lines);">
+                            <div class="flex" style="gap:12px; padding-bottom:14px; border-bottom:1px solid var(--mud-palette-table-lines);">
                                 <div style="width:10px; height:10px; border-radius:50%; margin-top:6px; flex-shrink:0; background-color:@activity.Color;"></div>
                                 <div class="flex-grow-1">
-                                    <MudText Typo="Typo.body2" Class="fw-semibold">@activity.Title</MudText>
-                                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@activity.TimeDescription</MudText>
+                                    <span class="fw-semibold text-sm">@activity.Title</span>
+                                    <span class="text-muted text-xs block">@activity.TimeDescription</span>
                                 </div>
                             </div>
                         }
                     </div>
-                </MudPaper>
-            </MudItem>
-        </MudGrid>
+                </div>
+            </div>
+        </div>
 
         @* Recent Invoices Table *@
-        <MudPaper Class="pa-6 mt-4" Elevation="0" Outlined="true" Style="border-radius:8px;">
-            <MudText Typo="Typo.subtitle1" Class="fw-bold mb-4">Recent Sales Orders</MudText>
-            <MudTable Items="@_invoices?.Take(4).ToList()" Hover="true" Elevation="0" Outlined="false" Class="mud-table-no-border">
-                <ColGroup>
-                    <col />
-                    <col />
-                    <col />
-                    <col />
-                    <col />
-                    <col style="width:100px;" />
-                </ColGroup>
-                <HeaderContent>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x => x.InvoiceNumber)">Invoice No</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x => x.ClientName)">Client</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x => x.IssueDate)">Issue Date</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x => x.DueDate)">Due Date</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x => x.GrandTotal)">Amount</MudTableSortLabel></MudTh>
-                    <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
-                </HeaderContent>
-                <RowTemplate>
-                    <MudTd DataLabel="Invoice No"><MudText Typo="Typo.body2" Class="fw-bold">@context.InvoiceNumber</MudText></MudTd>
-                    <MudTd DataLabel="Client">
-                        <MudText Typo="Typo.body2" Class="fw-medium">@context.ClientName</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@context.ClientEmail</MudText>
-                    </MudTd>
-                    <MudTd DataLabel="Issue Date"><MudText Typo="Typo.body2" Class="mud-secondary-text-color">@context.IssueDate.ToShortDateString()</MudText></MudTd>
-                    <MudTd DataLabel="Due Date"><MudText Typo="Typo.body2" Class="mud-secondary-text-color">@context.DueDate.ToShortDateString()</MudText></MudTd>
-                    <MudTd DataLabel="Amount"><MudText Typo="Typo.body2" Class="fw-bold">@context.GrandTotal.ToString("C")</MudText></MudTd>
-                    <MudTd DataLabel="Status">
-                        <MudChip Size="Size.Small" Color="@GetStatusColor(context.Status)" Class="fw-bold" T="string">
-                            @context.Status.ToString()
-                        </MudChip>
-                    </MudTd>
-                </RowTemplate>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No invoices found.</MudText>
-                </NoRecordsContent>
-            </MudTable>
-        </MudPaper>
+        <div class="card pa-6 mt-4" style="border-radius:8px;">
+            <h6 class="fw-bold text-base mb-4">Recent Sales Orders</h6>
+            <div class="table-container">
+                <table>
+                    <colgroup>
+                        <col />
+                        <col />
+                        <col />
+                        <col />
+                        <col />
+                        <col style="width:100px;" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th>Invoice No</th>
+                            <th>Client</th>
+                            <th>Issue Date</th>
+                            <th>Due Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in _invoices?.Take(4).ToList() ?? new())
+                        {
+                            <tr>
+                                <td data-label="Invoice No"><span class="fw-bold text-sm">@item.InvoiceNumber</span></td>
+                                <td data-label="Client">
+                                    <span class="fw-medium text-sm">@item.ClientName</span>
+                                    <span class="text-muted text-xs block">@item.ClientEmail</span>
+                                </td>
+                                <td data-label="Issue Date"><span class="text-muted text-sm">@item.IssueDate.ToShortDateString()</span></td>
+                                <td data-label="Due Date"><span class="text-muted text-sm">@item.DueDate.ToShortDateString()</span></td>
+                                <td data-label="Amount"><span class="fw-bold text-sm">@item.GrandTotal.ToString("C")</span></td>
+                                <td data-label="Status">
+                                    <span class="chip @GetStatusColor(item.Status)">@item.Status.ToString()</span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                    @if (_invoices == null || !_invoices.Any())
+                    {
+                        <tbody>
+                            <tr>
+                                <td colspan="6" class="text-center py-8 text-muted">No invoices found.</td>
+                            </tr>
+                        </tbody>
+                    }
+                </table>
+            </div>
+        </div>
     </Authorized>
     <NotAuthorized>
         <RedirectToLogin />

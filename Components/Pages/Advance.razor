@@ -14,34 +14,65 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_advances" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryAdvance, object>(x=>x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryAdvance, object>(x=>x.LoanAmount)">Loan Amount</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryAdvance, object>(x=>x.Installments)">Installments</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryAdvance, object>(x=>x.MonthlyDeduction)">Monthly Deduction</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryAdvance, object>(x=>x.TotalPaid)">Total Paid</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryAdvance, object>(x=>x.Remaining)">Remaining</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<SalaryAdvance, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Employee Name">@context.EmployeeName</MudTd>
-                        <MudTd DataLabel="Loan Amount">@context.LoanAmount</MudTd>
-                        <MudTd DataLabel="Installments">@context.Installments</MudTd>
-                        <MudTd DataLabel="Monthly Deduction">@context.MonthlyDeduction</MudTd>
-                        <MudTd DataLabel="Total Paid">@context.TotalPaid</MudTd>
-                        <MudTd DataLabel="Remaining">@context.Remaining</MudTd>
-                        <MudTd DataLabel="Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@context.Status</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="bg-zinc-50 border-b border-zinc-100">
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">
+                                    <button type="button" class="bg-none border-none cursor-pointer inline-flex items-center gap-1 font-inherit text-inherit p-0 hover:text-zinc-900 font-bold text-zinc-500 uppercase tracking-wider text-xs">Employee Name</button>
+                                </th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">
+                                    <button type="button" class="bg-none border-none cursor-pointer inline-flex items-center gap-1 font-inherit text-inherit p-0 hover:text-zinc-900 font-bold text-zinc-500 uppercase tracking-wider text-xs">Loan Amount</button>
+                                </th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">
+                                    <button type="button" class="bg-none border-none cursor-pointer inline-flex items-center gap-1 font-inherit text-inherit p-0 hover:text-zinc-900 font-bold text-zinc-500 uppercase tracking-wider text-xs">Installments</button>
+                                </th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">
+                                    <button type="button" class="bg-none border-none cursor-pointer inline-flex items-center gap-1 font-inherit text-inherit p-0 hover:text-zinc-900 font-bold text-zinc-500 uppercase tracking-wider text-xs">Monthly Deduction</button>
+                                </th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">
+                                    <button type="button" class="bg-none border-none cursor-pointer inline-flex items-center gap-1 font-inherit text-inherit p-0 hover:text-zinc-900 font-bold text-zinc-500 uppercase tracking-wider text-xs">Total Paid</button>
+                                </th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">
+                                    <button type="button" class="bg-none border-none cursor-pointer inline-flex items-center gap-1 font-inherit text-inherit p-0 hover:text-zinc-900 font-bold text-zinc-500 uppercase tracking-wider text-xs">Remaining</button>
+                                </th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">
+                                    <button type="button" class="bg-none border-none cursor-pointer inline-flex items-center gap-1 font-inherit text-inherit p-0 hover:text-zinc-900 font-bold text-zinc-500 uppercase tracking-wider text-xs">Status</button>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in _advances)
+                            {
+                                <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                    <td data-label="Employee Name" class="px-4 py-3">@item.EmployeeName</td>
+                                    <td data-label="Loan Amount" class="px-4 py-3">@item.LoanAmount</td>
+                                    <td data-label="Installments" class="px-4 py-3">@item.Installments</td>
+                                    <td data-label="Monthly Deduction" class="px-4 py-3">@item.MonthlyDeduction</td>
+                                    <td data-label="Total Paid" class="px-4 py-3">@item.TotalPaid</td>
+                                    <td data-label="Remaining" class="px-4 py-3">@item.Remaining</td>
+                                    <td data-label="Status" class="px-4 py-3">
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@item.Status</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex items-center justify-between px-4 py-3 border-t border-zinc-100">
+                    <div class="flex items-center gap-2 text-xs text-zinc-500">
+                        <span>Rows per page:</span>
+                        <select class="border border-zinc-200 rounded px-2 py-1 text-xs bg-white outline-none">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <div class="text-xs text-zinc-400">1-1 of 1</div>
+                </div>
+                <div class="flex items-center justify-center gap-1 px-4 py-3 border-t border-zinc-100">
+                    <span class="text-xs text-zinc-400">No records to display</span>
+                </div>
             </div>
         </div>
     </Authorized>

@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 using ERPHub.Models;
 
 namespace ERPHub.Data
@@ -17,6 +18,8 @@ namespace ERPHub.Data
         public DbSet<InvoiceItem> InvoiceItems => Set<InvoiceItem>();
         public DbSet<Employee> Employees => Set<Employee>();
         public DbSet<User> Users => Set<User>();
+        public DbSet<Role> Roles => Set<Role>();
+        public DbSet<UserRole> UserRoles => Set<UserRole>();
         public DbSet<Department> Departments => Set<Department>();
         public DbSet<Section> Sections => Set<Section>();
         public DbSet<Designation> Designations => Set<Designation>();
@@ -33,11 +36,27 @@ namespace ERPHub.Data
         public DbSet<Manpower> Manpowers => Set<Manpower>();
         public DbSet<ManpowerRequirement> ManpowerRequirements => Set<ManpowerRequirement>();
         public DbSet<Separation> Separations => Set<Separation>();
+        public DbSet<EmployeeSalaryAssignment> EmployeeSalaryAssignments => Set<EmployeeSalaryAssignment>();
+        public DbSet<PayrollRun> PayrollRuns => Set<PayrollRun>();
+        public DbSet<PayrollLine> PayrollLines => Set<PayrollLine>();
+        public DbSet<SalaryAdvance> SalaryAdvances => Set<SalaryAdvance>();
+        public DbSet<EmployeeLoan> EmployeeLoans => Set<EmployeeLoan>();
+        public DbSet<SalaryIncrement> SalaryIncrements => Set<SalaryIncrement>();
+        public DbSet<SalaryHistory> SalaryHistories => Set<SalaryHistory>();
+        public DbSet<NightBillEntry> NightBillEntries => Set<NightBillEntry>();
+        public DbSet<HolidayBillEntry> HolidayBillEntries => Set<HolidayBillEntry>();
         public DbSet<LeaveType> LeaveTypes => Set<LeaveType>();
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure RBAC Composite Keys
+            modelBuilder.Entity<UserRole>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
+
+            modelBuilder.Entity<RolePermission>()
+                .HasKey(rp => new { rp.RoleId, rp.PermissionId });
 
             // Configure Invoice -> InvoiceItems one-to-many cascading delete relationship
             modelBuilder.Entity<Invoice>()
@@ -64,24 +83,24 @@ namespace ERPHub.Data
                 .Property(ii => ii.UnitPrice)
                 .HasColumnType("decimal(18, 2)");
 
-            // Configure Section -> Department relationship
+            // Configure Section <-> Department relationship (single relationship with both navigations)
             modelBuilder.Entity<Section>()
-                .HasOne<Department>()
-                .WithMany()
+                .HasOne(s => s.Department)
+                .WithMany(d => d.Sections)
                 .HasForeignKey(s => s.DepartmentId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure Designation -> Section relationship
+            // Configure Designation <-> Section relationship (single relationship with both navigations)
             modelBuilder.Entity<Designation>()
-                .HasOne<Section>()
-                .WithMany()
+                .HasOne(d => d.Section)
+                .WithMany(s => s.Designations)
                 .HasForeignKey(d => d.SectionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            // Configure Line -> Section relationship
+            // Configure Line <-> Section relationship (single relationship with both navigations)
             modelBuilder.Entity<Line>()
-                .HasOne<Section>()
-                .WithMany()
+                .HasOne(l => l.Section)
+                .WithMany(s => s.Lines)
                 .HasForeignKey(l => l.SectionId)
                 .OnDelete(DeleteBehavior.Restrict);
 
@@ -131,12 +150,62 @@ namespace ERPHub.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Employee>()
+                .HasOne(e => e.BusinessGroup)
+                .WithMany()
+                .HasForeignKey(e => e.BusinessGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Company>()
+                .HasOne(c => c.BusinessGroup)
+                .WithMany()
+                .HasForeignKey(c => c.BusinessGroupId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.EmployeeId)
+                .IsUnique();
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.CompanyId);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.DepartmentId);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => new { e.Status, e.JoiningDate, e.SeparationDate });
+
+            modelBuilder.Entity<Employee>()
                 .HasIndex(e => e.PunchNumber)
                 .IsUnique();
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.Status);
+
+            modelBuilder.Entity<Employee>()
+                .HasIndex(e => e.SeparationDate);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.SeparationType)
+                .HasMaxLength(30);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.SeparationReason)
+                .HasMaxLength(1000);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.SeparationRemarks)
+                .HasMaxLength(500);
+
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.SeparationApprovedBy)
+                .HasMaxLength(100);
 
             modelBuilder.Entity<PunchRecord>()
                 .HasIndex(p => new { p.UserPunchId, p.LogDateTime })
                 .IsUnique();
+
+            modelBuilder.Entity<PunchRecord>()
+                .HasIndex(p => new { p.PunchNumber, p.LogDateTime });
 
             modelBuilder.Entity<PunchRecord>()
                 .HasIndex(p => p.PunchNumber);
@@ -150,6 +219,9 @@ namespace ERPHub.Data
             modelBuilder.Entity<AttendanceRecord>()
                 .HasIndex(a => new { a.EmployeeId, a.AttendanceDate })
                 .IsUnique();
+
+            modelBuilder.Entity<AttendanceRecord>()
+                .HasIndex(a => new { a.AttendanceDate, a.EmployeeId });
 
             modelBuilder.Entity<AttendanceRecord>()
                 .HasIndex(a => a.AttendanceDate);
@@ -173,6 +245,10 @@ namespace ERPHub.Data
             modelBuilder.Entity<DailySalaryRecord>()
                 .Property(d => d.NetPay)
                 .HasColumnType("decimal(18, 2)");
+
+            modelBuilder.Entity<DailySalaryRecord>()
+                .HasIndex(d => new { d.EmployeeId, d.SalaryDate })
+                .IsUnique();
 
             modelBuilder.Entity<Manpower>()
                 .HasOne(m => m.Department)
@@ -221,6 +297,12 @@ namespace ERPHub.Data
                 .HasIndex(m => m.Priority);
 
             modelBuilder.Entity<Separation>()
+                .HasOne(s => s.Employee)
+                .WithMany(e => e.Separations)
+                .HasForeignKey(s => s.EmployeeRefId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Separation>()
                 .HasOne(s => s.Department)
                 .WithMany()
                 .HasForeignKey(s => s.DepartmentId)
@@ -242,10 +324,21 @@ namespace ERPHub.Data
                 .HasIndex(s => s.EmployeeId);
 
             modelBuilder.Entity<Separation>()
+                .HasIndex(s => s.EmployeeRefId);
+
+            modelBuilder.Entity<Separation>()
                 .HasIndex(s => s.Status);
 
             modelBuilder.Entity<Separation>()
-                .HasIndex(s => s.ResignDate);
+                .HasIndex(s => s.SeparationDate);
+
+            modelBuilder.Entity<Separation>()
+                .HasIndex(s => new { s.SeparationType, s.SeparationDate });
+
+            modelBuilder.Entity<Separation>()
+                .HasIndex(s => new { s.CompanyId, s.SeparationDate });
+
+            ConfigurePayrollEntities(modelBuilder);
 
             // LeaveApplication relationships
             modelBuilder.Entity<LeaveApplication>()
@@ -264,7 +357,10 @@ namespace ERPHub.Data
                 .HasOne(la => la.LeaveTypeNav)
                 .WithMany()
                 .HasForeignKey(la => la.LeaveTypeId)
-                .OnDelete(DeleteBehavior.SetNull);
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<LeaveApplication>()
+                .HasIndex(la => new { la.EmployeeId, la.LeaveDate, la.Status });
 
             modelBuilder.Entity<LeaveApplication>()
                 .HasIndex(la => la.EmployeeId);
@@ -274,6 +370,79 @@ namespace ERPHub.Data
 
             modelBuilder.Entity<LeaveApplication>()
                 .HasIndex(la => la.LeaveDate);
+        }
+
+        private static void ConfigurePayrollEntities(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.HouseRent).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.MedicalAllowance).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.TransportAllowance).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.FoodAllowance).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.SpecialAllowance).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.AttendanceBonus).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<Employee>()
+                .Property(e => e.ProductionBonus).HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.DailyGross).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.NightBillPay).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.HolidayBillPay).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.AbsentDeduction).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.LateDeduction).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.LwopDeduction).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.AdvanceDeduction).HasColumnType("decimal(18,2)");
+            modelBuilder.Entity<DailySalaryRecord>()
+                .Property(d => d.LoanDeduction).HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<EmployeeSalaryAssignment>()
+                .HasOne(a => a.Employee).WithMany().HasForeignKey(a => a.EmployeeRefId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<EmployeeSalaryAssignment>()
+                .HasIndex(a => new { a.EmployeeRefId, a.EffectiveFrom });
+
+            modelBuilder.Entity<PayrollRun>()
+                .HasOne(p => p.Company).WithMany().HasForeignKey(p => p.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<PayrollRun>()
+                .HasIndex(p => new { p.CompanyId, p.PayrollYear, p.PayrollMonth }).IsUnique();
+
+            modelBuilder.Entity<PayrollLine>()
+                .HasOne(l => l.PayrollRun).WithMany(r => r.Lines).HasForeignKey(l => l.PayrollRunId)
+                .OnDelete(DeleteBehavior.Cascade);
+            modelBuilder.Entity<PayrollLine>()
+                .HasIndex(l => l.PayrollRunId);
+
+            modelBuilder.Entity<SalaryAdvance>()
+                .HasOne(a => a.Employee).WithMany().HasForeignKey(a => a.EmployeeRefId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<EmployeeLoan>()
+                .HasOne(l => l.Employee).WithMany().HasForeignKey(l => l.EmployeeRefId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<SalaryIncrement>()
+                .HasOne(i => i.Employee).WithMany().HasForeignKey(i => i.EmployeeRefId)
+                .OnDelete(DeleteBehavior.Restrict);
+            modelBuilder.Entity<SalaryIncrement>()
+                .HasIndex(i => i.EmployeeRefId);
+
+            foreach (var entity in new[] { typeof(PayrollRun), typeof(PayrollLine), typeof(EmployeeSalaryAssignment),
+                typeof(SalaryAdvance), typeof(EmployeeLoan), typeof(SalaryIncrement), typeof(SalaryHistory),
+                typeof(NightBillEntry), typeof(HolidayBillEntry) })
+            {
+                foreach (var prop in entity.GetProperties().Where(p => p.PropertyType == typeof(decimal)))
+                    modelBuilder.Entity(entity).Property(prop.Name).HasColumnType("decimal(18,2)");
+            }
         }
     }
 }

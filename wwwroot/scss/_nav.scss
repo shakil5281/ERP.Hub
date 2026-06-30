@@ -1,0 +1,115 @@
+@use 'variables' as *;
+
+/* ============================================================
+   SIDEBAR NAVIGATION
+   ============================================================ */
+
+.app-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-section {
+  margin-bottom: 2px;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: $radius-sm;
+  font-size: 13px;
+  font-weight: 500;
+  color: $text-secondary;
+  transition: all $transition-fast;
+  min-height: 36px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nav-link:hover {
+  background: $bg-hover;
+  color: $text-primary;
+}
+
+.nav-link.active {
+  background: $primary-bg;
+  color: $primary-dark;
+  font-weight: 600;
+}
+
+.nav-link .nav-icon {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-link.active .nav-icon {
+  color: $primary-dark;
+}
+
+/* Nav Group (collapsible) */
+.nav-group {
+  margin-bottom: 2px;
+}
+
+.nav-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: $radius-sm;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #3f3f46;
+  min-height: 36px;
+  cursor: pointer;
+  transition: background $transition-fast;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+
+.nav-group-header:hover {
+  background: $bg-hover;
+}
+
+.nav-group-header .nav-icon {
+  font-size: 18px;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-group-toggle {
+  margin-left: auto;
+  font-size: 16px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.nav-group-toggle.expanded {
+  transform: rotate(90deg);
+}
+
+.nav-group-children {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.25s ease;
+}
+
+.nav-group-children.expanded {
+  max-height: 1000px;
+}
+
+.nav-group .nav-link {
+  padding-left: 10px !important;
+  font-size: 12.5px;
+  min-height: 32px;
+  margin-bottom: 0;
+}

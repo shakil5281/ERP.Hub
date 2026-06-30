@@ -1,71 +1,135 @@
-@page "/payroll/increment"
+﻿@page "/payroll/increment"
+@using ERPHub.Models
+@using ERPHub.Services
+@inject HttpClient Http
+@inject NavigationManager NavManager
+@inject ToastService Toast
 
 <PageTitle>ERPHub - Increment Tracker</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header Block -->
-            <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
+            <div class="flex justify-between items-center mb-6">
                 <div>
-                    <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Increment Tracker</h2>
-                    <p class="text-zinc-500 text-xs mt-0.5 font-body">Manage salary appraisal policies, effective dates, and grade level promotions.</p>
+                    <h2 class="text-[22px] font-extrabold font-heading">Salary Increment</h2>
+                    <p class="text-zinc-500 text-xs">Manage increments with salary history preservation.</p>
                 </div>
+                <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick="() => _showForm = true">
+                    <span class="material-icons text-sm mr-1">add</span>
+                    New Increment
+                </button>
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_appraisals" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AppraisalCycle, object>(x=>x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AppraisalCycle, object>(x=>x.PreviousPay)">Previous Pay</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AppraisalCycle, object>(x=>x.NewPay)">New Pay</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AppraisalCycle, object>(x=>x.IncrementAmount)">Increment</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AppraisalCycle, object>(x=>x.Percentage)">Percentage</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AppraisalCycle, object>(x=>x.EffectiveDate)">Effective Date</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AppraisalCycle, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Employee Name">@context.EmployeeName</MudTd>
-                        <MudTd DataLabel="Previous Pay">@context.PreviousPay</MudTd>
-                        <MudTd DataLabel="New Pay">@context.NewPay</MudTd>
-                        <MudTd DataLabel="Increment">@context.IncrementAmount</MudTd>
-                        <MudTd DataLabel="Percentage">@context.Percentage</MudTd>
-                        <MudTd DataLabel="Effective Date">@context.EffectiveDate</MudTd>
-                        <MudTd DataLabel="Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @context.BadgeClass">@context.Status</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="bg-zinc-50 border-b border-zinc-100">
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Employee</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Type</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Previous</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">New</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Increment</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">%</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Effective</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Status</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var inc in _increments)
+                            {
+                                <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                    <td class="px-4 py-3">@inc.EmployeeId</td>
+                                    <td class="px-4 py-3">@inc.IncrementType</td>
+                                    <td class="px-4 py-3">@inc.PreviousGross.ToString("N2")</td>
+                                    <td class="px-4 py-3">@inc.NewGross.ToString("N2")</td>
+                                    <td class="px-4 py-3">@inc.IncrementAmount.ToString("N2")</td>
+                                    <td class="px-4 py-3">@inc.IncrementPercent.ToString("F1")%</td>
+                                    <td class="px-4 py-3">@inc.EffectiveDate.ToString("yyyy-MM-dd")</td>
+                                    <td class="px-4 py-3">@inc.Status</td>
+                                    <td class="px-4 py-3">
+                                        @if (inc.Status == PayrollApprovalStatus.Pending)
+                                        {
+                                            <button type="button" class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="() => Approve(inc.Id)">Approve</button>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
+
+        @if (_showForm)
+        {
+            <div class="fixed inset-0 bg-black/40 z-[1000]" @onclick="() => _showForm = false"></div>
+            <div class="fixed inset-0 flex items-center justify-center z-[1001] pointer-events-none">
+                <div class="bg-white border border-zinc-200 rounded-lg p-6 shadow-xl pointer-events-auto" style="min-width:420px;">
+                    <h3 class="text-base font-bold text-zinc-950 font-heading mb-4">New Increment</h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Employee Ref ID</label>
+                            <input type="number" class="w-full border border-zinc-200 rounded-lg p-2 text-sm outline-none focus:border-black" @bind="_form.EmployeeRefId" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Type</label>
+                            <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @bind="_form.IncrementType">
+                                <option value="Annual">Annual</option>
+                                <option value="Promotion">Promotion</option>
+                                <option value="Special">Special</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Effective Date</label>
+                            <input type="date" class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @bind="_effectiveDate" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Increment Amount</label>
+                            <input type="number" step="0.01" class="w-full border border-zinc-200 rounded-lg p-2 text-sm outline-none focus:border-black" @bind="_form.IncrementAmount" />
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button type="button" class="px-4 py-2 border border-zinc-200 rounded-lg text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition-colors cursor-pointer" @onclick="() => _showForm = false">Cancel</button>
+                        <button type="button" class="px-4 py-2 bg-black text-white rounded-lg text-xs font-bold hover:bg-zinc-800 transition-colors cursor-pointer" @onclick="Save">Save</button>
+                    </div>
+                </div>
+            </div>
+        }
     </Authorized>
-    <NotAuthorized>
-        <RedirectToLogin />
-    </NotAuthorized>
+    <NotAuthorized><RedirectToLogin /></NotAuthorized>
 </AuthorizeView>
 
 @code {
-    public class AppraisalCycle
+    private List<SalaryIncrement> _increments = new();
+    private SalaryIncrement _form = new() { IncrementType = "Annual" };
+    private DateTime? _effectiveDate = DateTime.Today;
+    private bool _showForm;
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    private async Task Load() =>
+        _increments = await Http.GetFromJsonAsync<List<SalaryIncrement>>($"{NavManager.BaseUri}api/payroll/increments") ?? new();
+
+    private async Task Save()
     {
-        public string EmployeeName { get; set; } = string.Empty;
-        public string PreviousPay { get; set; } = string.Empty;
-        public string NewPay { get; set; } = string.Empty;
-        public string IncrementAmount { get; set; } = string.Empty;
-        public string Percentage { get; set; } = string.Empty;
-        public string EffectiveDate { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
-        public string BadgeClass { get; set; } = string.Empty;
+        _form.EffectiveDate = _effectiveDate ?? DateTime.Today;
+        var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/payroll/increments", _form);
+        if (resp.IsSuccessStatusCode)
+        {
+            await Toast.ShowSuccessAsync("Increment recorded.");
+            _showForm = false;
+            await Load();
+        }
+        else await Toast.ShowErrorAsync(await resp.Content.ReadAsStringAsync());
     }
 
-    private List<AppraisalCycle> _appraisals = new()
+    private async Task Approve(int id)
     {
-        new AppraisalCycle { EmployeeName = "John Smith", PreviousPay = "$9,000.00", NewPay = "$10,000.00", IncrementAmount = "+$1,000.00", Percentage = "11.1%", EffectiveDate = "2026-06-01", Status = "Approved", BadgeClass = "bg-green-50 text-green-700" },
-        new AppraisalCycle { EmployeeName = "Peter Parker", PreviousPay = "$5,000.00", NewPay = "$5,500.00", IncrementAmount = "+$500.00", Percentage = "10.0%", EffectiveDate = "2026-06-15", Status = "Pending Review", BadgeClass = "bg-amber-50 text-amber-700" }
-    };
+        await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/payroll/increments/{id}/approve", new { UserId = "HR" });
+        await Toast.ShowSuccessAsync("Increment approved.");
+        await Load();
+    }
 }

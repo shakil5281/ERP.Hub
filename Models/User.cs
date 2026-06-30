@@ -19,8 +19,9 @@ namespace ERPHub.Models
         [MaxLength(200)]
         public string FullName { get; set; } = string.Empty;
 
-        [Required]
-        [MaxLength(50)]
-        public string Role { get; set; } = string.Empty; // "Admin" or "User"
+        public int? EmployeeId { get; set; }
+        public Employee? Employee { get; set; }
+
+        public ICollection<UserRole>? UserRoles { get; set; }
     }
 }

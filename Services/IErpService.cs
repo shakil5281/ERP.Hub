@@ -60,6 +60,7 @@ namespace ERPHub.Services
 
         // Employees
         Task<List<Employee>> GetEmployeesAsync();
+        Task<List<Employee>> GetFilteredEmployeesAsync(EmployeeFilter filter);
         Task<Employee?> GetEmployeeByIdAsync(int id);
         Task AddEmployeeAsync(Employee employee);
         Task UpdateEmployeeAsync(Employee employee);

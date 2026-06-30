@@ -16,99 +16,111 @@
 
             <div class="flex flex-col gap-6">
                 <!-- Task 1: Collect Punch Logs -->
-                <MudCard Elevation="2" Class="rounded-lg">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6" Class="font-bold">1. Collect Punch Logs</MudText>
-                            <MudText Typo="Typo.body2" Class="text-zinc-500">Fetch the latest punch logs from biometric devices.</MudText>
-                        </CardHeaderContent>
-                        <CardHeaderActions>
-                            <MudIcon Icon="@Icons.Material.Filled.CloudDownload" Color="Color.Primary" Size="Size.Large" />
-                        </CardHeaderActions>
-                    </MudCardHeader>
-                    <MudCardContent>
+                <div class="card rounded-lg" style="box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.1);">
+                    <div class="card-header d-flex align-items-center justify-content-between w-100">
+                        <div class="flex-grow-1">
+                            <h6 class="font-bold font-heading" style="margin:0;font-size:1.125rem;">1. Collect Punch Logs</h6>
+                            <span class="text-sm text-zinc-500">Fetch the latest punch logs from biometric devices.</span>
+                        </div>
+                        <div>
+                            <svg class="w-6 h-6 text-indigo-500" fill="currentColor" viewBox="0 0 24 24"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+                        </div>
+                    </div>
+                    <div class="card-body">
                         <div class="flex gap-4 items-center flex-wrap">
-                            <MudDatePicker @bind-Date="_fromDateLogs" Label="Start Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                            <MudDatePicker @bind-Date="_toDateLogs" Label="End Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            <input type="date" class="form-control" @bind="_fromDateLogs" style="width:auto;" />
+                            <input type="date" class="form-control" @bind="_toDateLogs" style="width:auto;" />
                         </div>
                         @if (!string.IsNullOrEmpty(_collectMessage))
                         {
-                            <MudAlert Severity="@(_collectError ? Severity.Error : Severity.Success)" Class="mt-4">@_collectMessage</MudAlert>
+                            <div class="alert @(_collectError ? "alert-error" : "alert-success") mt-4">@_collectMessage</div>
                         }
-                    </MudCardContent>
-                    <MudCardActions Class="px-4 pb-4">
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="CollectPunchLogs" Disabled="@_isProcessingLogs" StartIcon="@Icons.Material.Filled.CloudDownload">
+                    </div>
+                    <div class="px-4 pb-4">
+                        <button class="btn btn-primary" @onclick="CollectPunchLogs" disabled="@_isProcessingLogs">
                             @if (_isProcessingLogs) {
-                                <MudProgressCircular Class="ms-n1 mr-2" Size="Size.Small" Indeterminate="true"/>
+                                <span class="spinner spinner-sm" style="margin-right:8px;"></span>
                             }
                             @_collectButtonText
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Task 2: Process Daily Attendance -->
-                <MudCard Elevation="2" Class="rounded-lg">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6" Class="font-bold">2. Daily Attendance Process</MudText>
-                            <MudText Typo="Typo.body2" Class="text-zinc-500">Calculate working hours, late entries, and overtime.</MudText>
-                        </CardHeaderContent>
-                        <CardHeaderActions>
-                            <MudIcon Icon="@Icons.Material.Filled.Calculate" Color="Color.Secondary" Size="Size.Large" />
-                        </CardHeaderActions>
-                    </MudCardHeader>
-                    <MudCardContent>
+                <div class="card rounded-lg" style="box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.1);">
+                    <div class="card-header d-flex align-items-center justify-content-between w-100">
+                        <div class="flex-grow-1">
+                            <h6 class="font-bold font-heading" style="margin:0;font-size:1.125rem;">2. Daily Attendance Process</h6>
+                            <span class="text-sm text-zinc-500">Calculate working hours, late entries, and overtime.</span>
+                        </div>
+                        <div>
+                            <svg class="w-6 h-6 text-pink-600" fill="currentColor" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+                        </div>
+                    </div>
+                    <div class="card-body">
                         <div class="flex gap-4 items-center flex-wrap">
-                            <MudDatePicker @bind-Date="_fromDateProcess" Label="Start Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                            <MudDatePicker @bind-Date="_toDateProcess" Label="End Date" Variant="Variant.Outlined" Margin="Margin.Dense" />
+                            <input type="date" class="form-control" @bind="_fromDateProcess" style="width:auto;" />
+                            <input type="date" class="form-control" @bind="_toDateProcess" style="width:auto;" />
                         </div>
                         @if (!string.IsNullOrEmpty(_processMessage))
                         {
-                            <MudAlert Severity="@(_processError ? Severity.Error : Severity.Success)" Class="mt-4">@_processMessage</MudAlert>
+                            <div class="alert @(_processError ? "alert-error" : "alert-success") mt-4">@_processMessage</div>
                         }
-                    </MudCardContent>
-                    <MudCardActions Class="px-4 pb-4">
-                        <MudButton Variant="Variant.Filled" Color="Color.Secondary" OnClick="ProcessAttendance" Disabled="@_isProcessingAttendance" StartIcon="@Icons.Material.Filled.Calculate">
+                    </div>
+                    <div class="px-4 pb-4">
+                        <button class="btn" style="background:#ec4899;color:white;border-color:#ec4899;" @onclick="ProcessAttendance" disabled="@_isProcessingAttendance">
                             @if (_isProcessingAttendance) {
-                                <MudProgressCircular Class="ms-n1 mr-2" Size="Size.Small" Indeterminate="true"/>
+                                <span class="spinner spinner-sm" style="margin-right:8px;"></span>
                             }
                             @_processButtonText
-                        </MudButton>
-                    </MudCardActions>
-                </MudCard>
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Task 3: Monthly Process -->
-                <MudCard Elevation="2" Class="rounded-lg">
-                    <MudCardHeader>
-                        <CardHeaderContent>
-                            <MudText Typo="Typo.h6" Class="font-bold">3. Monthly Process</MudText>
-                            <MudText Typo="Typo.body2" Class="text-zinc-500">Consolidate end-of-month registers and freeze time sheets.</MudText>
-                        </CardHeaderContent>
-                        <CardHeaderActions>
-                            <MudIcon Icon="@Icons.Material.Filled.CalendarMonth" Color="Color.Dark" Size="Size.Large" />
-                        </CardHeaderActions>
-                    </MudCardHeader>
-                    <MudCardContent>
-                        <MudTable Items="@_checks" Hover="true" SortLabel="Sort By" Dense="true" Elevation="0" Class="border border-zinc-200 rounded-lg">
-                            <HeaderContent>
-                                <MudTh>Verification Target</MudTh>
-                                <MudTh>Assigned Role</MudTh>
-                                <MudTh>Status</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Verification Target">@context.Target</MudTd>
-                                <MudTd DataLabel="Assigned Role">@context.Role</MudTd>
-                                <MudTd DataLabel="Status">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @context.BadgeClass">@context.Status</span>
-                                </MudTd>
-                            </RowTemplate>
-                        </MudTable>
-                    </MudCardContent>
-                    <MudCardActions Class="px-4 pb-4 flex justify-end gap-2">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default">Cancel</MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Dark" StartIcon="@Icons.Material.Filled.Lock">Freeze Month Logs</MudButton>
-                    </MudCardActions>
-                </MudCard>
+                <div class="card rounded-lg" style="box-shadow:0 4px 6px -1px rgba(0,0,0,0.1),0 2px 4px -2px rgba(0,0,0,0.1);">
+                    <div class="card-header d-flex align-items-center justify-content-between w-100">
+                        <div class="flex-grow-1">
+                            <h6 class="font-bold font-heading" style="margin:0;font-size:1.125rem;">3. Monthly Process</h6>
+                            <span class="text-sm text-zinc-500">Consolidate end-of-month registers and freeze time sheets.</span>
+                        </div>
+                        <div>
+                            <svg class="w-6 h-6 text-zinc-800" fill="currentColor" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zM9 12H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="bg-white border border-zinc-200 rounded-lg overflow-hidden">
+                            <table class="w-full border-collapse" style="font-size:0.875rem;">
+                                <thead>
+                                    <tr>
+                                        <th>Verification Target</th>
+                                        <th>Assigned Role</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in _checks)
+                                    {
+                                        <tr>
+                                            <td data-label="Verification Target">@item.Target</td>
+                                            <td data-label="Assigned Role">@item.Role</td>
+                                            <td data-label="Status">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @item.BadgeClass">@item.Status</span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="px-4 pb-4 flex justify-end gap-2">
+                        <button class="btn btn-outlined">Cancel</button>
+                        <button class="btn" style="background:#18181b;color:white;border-color:#18181b;">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg>
+                            Freeze Month Logs
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>

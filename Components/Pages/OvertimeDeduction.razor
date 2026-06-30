@@ -1,4 +1,5 @@
-@page "/attendance/overtime-deduction"
+﻿@page "/attendance/overtime-deduction"
+@using ERPHub.Services
 
 <PageTitle>ERPHub - Overtime Deduction</PageTitle>
 
@@ -38,68 +39,74 @@
                            @bind="_searchQuery" @bind:event="oninput" />
                     
                     <div class="w-48 max-sm:w-full">
-                        <MudSelect T="string" @bind-Value="_deptFilter" Placeholder="Department" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
-                            <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
-                            <MudSelectItem Value="@("Production")">Production</MudSelectItem>
-                            <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
-                        </MudSelect>
+                        <select class="w-full border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @bind="_deptFilter">
+                            <option value="">All Departments</option>
+                            <option value="IT">IT & Dev</option>
+                            <option value="Production">Production</option>
+                            <option value="Finance">Finance</option>
+                        </select>
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
-                    <MudDatePicker Date="@_selectedDate"
-                                   DateChanged="OnDateChanged"
-                                   Label="Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
+                    <input type="date" class="border border-zinc-200 rounded-lg p-2 text-sm bg-white outline-none focus:border-black" @onchange="HandleDateChanged" value="@_selectedDate.ToString("yyyy-MM-dd")" />
                 </div>
             </div>
 
             <!-- Table -->
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@FilteredRecords" Hover="true" Dense="true" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>Emp ID</MudTh>
-                        <MudTh>Employee Name</MudTh>
-                        <MudTh>Department</MudTh>
-                        <MudTh>Calculated OT</MudTh>
-                        <MudTh>Deductions</MudTh>
-                        <MudTh>Net Approved OT</MudTh>
-                        <MudTh>Reason</MudTh>
-                        <MudTh>Status</MudTh>
-                        <MudTh Class="text-right">Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
-                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
-                        <MudTd DataLabel="Department">@context.Department</MudTd>
-                        <MudTd DataLabel="Calculated OT">@context.BaseOt hrs</MudTd>
-                        <MudTd DataLabel="Deductions" Class="text-rose-600 font-bold">@context.DeductionOt hrs</MudTd>
-                        <MudTd DataLabel="Net Approved OT" Class="font-semibold text-zinc-900">@context.NetOt hrs</MudTd>
-                        <MudTd DataLabel="Reason"><span class="text-xs text-zinc-500 italic">@context.Reason</span></MudTd>
-                        <MudTd DataLabel="Status">
-                            @if (context.Status == "Approved")
+                <div class="overflow-x-auto">
+                    <table class="w-full text-xs">
+                        <thead>
+                            <tr class="bg-zinc-50 border-b border-zinc-100">
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Emp ID</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Employee Name</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Department</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Calculated OT</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Deductions</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Net Approved OT</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Reason</th>
+                                <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Status</th>
+                                <th class="text-right px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var record in FilteredRecords)
                             {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                                <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                    <td data-label="Emp ID" class="px-4 py-3"><span class="font-mono text-xs font-semibold">@record.EmpId</span></td>
+                                    <td data-label="Employee Name" class="px-4 py-3 font-semibold text-zinc-900">@record.Name</td>
+                                    <td data-label="Department" class="px-4 py-3">@record.Department</td>
+                                    <td data-label="Calculated OT" class="px-4 py-3">@record.BaseOt hrs</td>
+                                    <td data-label="Deductions" class="px-4 py-3 text-rose-600 font-bold">@record.DeductionOt hrs</td>
+                                    <td data-label="Net Approved OT" class="px-4 py-3 font-semibold text-zinc-900">@record.NetOt hrs</td>
+                                    <td data-label="Reason" class="px-4 py-3"><span class="text-xs text-zinc-500 italic">@record.Reason</span></td>
+                                    <td data-label="Status" class="px-4 py-3">
+                                        @if (record.Status == "Approved")
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending Audit</span>
+                                        }
+                                    </td>
+                                    <td data-label="Actions" class="text-right px-4 py-3 whitespace-nowrap">
+                                        @if (record.Status == "Pending")
+                                        {
+                                            <button type="button" class="btn-icon btn-icon-sm text-emerald-600 hover:bg-emerald-50" title="Approve Deduction" @onclick="() => ApproveDeduction(record)">
+                                                <span class="material-icons text-sm">check_circle</span>
+                                            </button>
+                                        }
+                                        <button type="button" class="btn-icon btn-icon-sm text-zinc-500 hover:bg-zinc-100" title="Adjust Hours" @onclick="() => OpenAdjustDialog(record)">
+                                            <span class="material-icons text-sm">edit</span>
+                                        </button>
+                                    </td>
+                                </tr>
                             }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending Audit</span>
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
-                            @if (context.Status == "Pending")
-                            {
-                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="@Size.Small" Color="Color.Success" title="Approve Deduction" OnClick="() => ApproveDeduction(context)" />
-                            }
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Default" title="Adjust Hours" OnClick="() => OpenAdjustDialog(context)" />
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -144,7 +151,7 @@
 @code {
     [Inject] private IErpService ErpService { get; set; } = default!;
     [Inject] private AttendanceService AttendanceService { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private ToastService Toast { get; set; } = default!;
 
     private string _searchQuery = string.Empty;
     private string _deptFilter = string.Empty;
@@ -171,7 +178,7 @@
 
         if (!filteredDb.Any())
         {
-            var attendanceRecords = await AttendanceService.GetAttendanceRecordsAsync(_selectedDate, _selectedDate);
+            var attendanceRecords = await AttendanceService.GetAttendanceRecordsAsync(_selectedDate, _selectedDate, null, true);
             foreach (var att in attendanceRecords)
             {
                 if (att.OvertimeMinutes > 0)
@@ -230,13 +237,13 @@
         }).ToList();
     }
 
-    private async Task OnDateChanged(DateTime? date)
+    private async Task HandleDateChanged(ChangeEventArgs e)
     {
-        if (date.HasValue)
+        if (DateTime.TryParse(e.Value?.ToString(), out var date))
         {
-            _selectedDate = date.Value;
+            _selectedDate = date;
             await LoadData();
-            Snackbar.Add($"Loaded OT audit records for {_selectedDate.ToString("yyyy-MM-dd")}", Severity.Info);
+            await Toast.ShowInfoAsync($"Loaded OT audit records for {_selectedDate.ToString("yyyy-MM-dd")}");
         }
     }
 
@@ -244,7 +251,7 @@
     {
         await ErpService.ApproveOvertimeDeductionAsync(record.Id);
         await LoadData();
-        Snackbar.Add($"OT hours approved for {record.Name}", Severity.Success);
+        await Toast.ShowSuccessAsync($"OT hours approved for {record.Name}");
     }
 
     private void OpenAdjustDialog(OvertimeDeductionUiRecord record)
@@ -276,7 +283,7 @@
         {
             if (_activeRecord.DeductionOt > _activeRecord.BaseOt)
             {
-                Snackbar.Add("Deducted hours cannot exceed calculated OT hours.", Severity.Warning);
+                await Toast.ShowWarningAsync("Deducted hours cannot exceed calculated OT hours.");
                 return;
             }
 
@@ -287,7 +294,7 @@
 
             await ErpService.UpdateOvertimeDeductionAsync(db);
             await LoadData();
-            Snackbar.Add($"Deduction modified for {_activeRecord.Name}.", Severity.Success);
+            await Toast.ShowSuccessAsync($"Deduction modified for {_activeRecord.Name}.");
         }
         CloseAdjustDialog();
     }

@@ -17,6 +17,8 @@ namespace ERPHub.Models
         [Required(ErrorMessage = "Section is required")]
         public int SectionId { get; set; }
 
+        public Section? Section { get; set; }
+
         public string SectionNameEn { get; set; } = string.Empty;
     }
 }

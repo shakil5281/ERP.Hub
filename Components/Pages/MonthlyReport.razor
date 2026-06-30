@@ -59,30 +59,57 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_reports" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.ReportId)">Report ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.PeriodMonth)">Period Month</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.ReportType)">Report Type</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.CreatedBy)">Created By</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ReportLog, object>(x=>x.Format)">Format</MudTableSortLabel></MudTh>
-                        <MudTh>Action</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Report ID">@context.ReportId</MudTd>
-                        <MudTd DataLabel="Period Month">@context.PeriodMonth</MudTd>
-                        <MudTd DataLabel="Report Type">@context.ReportType</MudTd>
-                        <MudTd DataLabel="Created By">@context.CreatedBy</MudTd>
-                        <MudTd DataLabel="Format">@context.Format</MudTd>
-                        <MudTd DataLabel="Action"><span class="text-indigo-600 text-xs font-bold cursor-pointer hover:underline">Download</span></MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <div class="table-responsive-wrapper">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Report ID <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Period Month <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Report Type <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Created By <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Format <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (_reports.Any())
+                            {
+                                @foreach (var item in _reports)
+                                {
+                                    <tr>
+                                        <td data-label="Report ID">@item.ReportId</td>
+                                        <td data-label="Period Month">@item.PeriodMonth</td>
+                                        <td data-label="Report Type">@item.ReportType</td>
+                                        <td data-label="Created By">@item.CreatedBy</td>
+                                        <td data-label="Format">@item.Format</td>
+                                        <td data-label="Action"><span class="text-indigo-600 text-xs font-bold cursor-pointer hover:underline">Download</span></td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-muted">Data Not Available</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="flex items-center gap-3">
+                        <span class="pagination-info">Rows per page:</span>
+                        <select class="page-size-select">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn" disabled>‹</button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn" disabled>›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>

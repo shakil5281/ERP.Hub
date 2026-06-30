@@ -1,4 +1,4 @@
-@page "/invoices"
+﻿@page "/invoices"
 
 <PageTitle>ERPHub - Sales Invoicing</PageTitle>
 
@@ -25,50 +25,38 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="flex flex-col gap-1.5 mb-4">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Invoice Number</label>
-                        <MudTextField @bind-Value="_newInvoice.InvoiceNumber" For="@(() => _newInvoice.InvoiceNumber)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="e.g. INV-2026-005" />
+                        <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" @bind="_newInvoice.InvoiceNumber" placeholder="e.g. INV-2026-005" />
                     </div>
                     <div class="flex flex-col gap-1.5 mb-4">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Billing Status</label>
-                        <MudSelect T="InvoiceStatus" @bind-Value="_newInvoice.Status" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer" @bind="_newInvoice.Status">
                             @foreach (var status in Enum.GetValues<InvoiceStatus>())
                             {
-                                <MudSelectItem Value="@status">@status</MudSelectItem>
+                                <option value="@status">@status</option>
                             }
-                        </MudSelect>
+                        </select>
                     </div>
                 </div>
 
                 <div class="flex flex-col gap-1.5 mb-4">
                     <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Client Organization</label>
-                    <MudTextField @bind-Value="_newInvoice.ClientName" For="@(() => _newInvoice.ClientName)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="Client company name" />
+                        <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" @bind="_newInvoice.ClientName" placeholder="Client company name" />
                 </div>
 
                 <div class="flex flex-col gap-1.5 mb-4">
                     <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Billing Email Address</label>
-                    <MudTextField @bind-Value="_newInvoice.ClientEmail" For="@(() => _newInvoice.ClientEmail)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="billing@client.com" />
+                        <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" @bind="_newInvoice.ClientEmail" placeholder="billing@client.com" />
                 </div>
 
                 <!-- Date Pickers -->
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div class="flex flex-col gap-1.5">
-                        <MudDatePicker Date="@_newInvoice.IssueDate"
-                                       DateChanged="@(d => { if (d.HasValue) _newInvoice.IssueDate = d.Value; })"
-                                       Label="Issue Date"
-                                       Editable="true"
-                                       Placeholder="Select Date"
-                                       DateFormat="yyyy-MM-dd"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense" />
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Issue Date</label>
+                        <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" @bind="_newInvoice.IssueDate" />
                     </div>
                     <div class="flex flex-col gap-1.5">
-                        <MudDatePicker Date="@_newInvoice.DueDate"
-                                       DateChanged="@(d => { if (d.HasValue) _newInvoice.DueDate = d.Value; })"
-                                       Label="Due Date"
-                                       Editable="true"
-                                       Placeholder="Select Date"
-                                       DateFormat="yyyy-MM-dd"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense" />
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Due Date</label>
+                        <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" @bind="_newInvoice.DueDate" />
                     </div>
                 </div>
 
@@ -104,17 +92,17 @@
                 <div class="grid grid-cols-2 gap-4 border-t border-zinc-100 pt-5 mb-5">
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Tax Rate (%)</label>
-                        <MudSelect T="decimal" @bind-Value="_newInvoice.TaxRate" Class="mud-select-square" dense="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@(0.00m)">0% Excluded</MudSelectItem>
-                            <MudSelectItem Value="@(0.05m)">5% (General)</MudSelectItem>
-                            <MudSelectItem Value="@(0.10m)">10% (Sales)</MudSelectItem>
-                            <MudSelectItem Value="@(0.15m)">15% (VAT Default)</MudSelectItem>
-                            <MudSelectItem Value="@(0.20m)">20% (Premium)</MudSelectItem>
-                        </MudSelect>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors cursor-pointer" @bind="_newInvoice.TaxRate">
+                            <option value="@(0.00m)">0% Excluded</option>
+                            <option value="@(0.05m)">5% (General)</option>
+                            <option value="@(0.10m)">10% (Sales)</option>
+                            <option value="@(0.15m)">15% (VAT Default)</option>
+                            <option value="@(0.20m)">20% (Premium)</option>
+                        </select>
                     </div>
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Discount Amount ($)</label>
-                        <MudNumericField @bind-Value="_newInvoice.DiscountAmount" For="@(() => _newInvoice.DiscountAmount)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" Min="0" />
+                        <input type="number" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-xs outline-none focus:border-black transition-colors" @bind="_newInvoice.DiscountAmount" min="0" step="0.01" />
                     </div>
                 </div>
 
@@ -236,53 +224,67 @@
     </div>
 
     <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-        <MudTable Items="@_invoicesList" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-            <HeaderContent>
-                <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x=>x.InvoiceNumber)">Invoice No</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x=>x.ClientName)">Recipient Organization</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x=>x.ClientEmail)">Billing Contact</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x=>x.IssueDate)">Dates (Issue / Due)</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x=>x.GrandTotal)">Grand Total</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Invoice, object>(x=>x.Status)">Ledger Status</MudTableSortLabel></MudTh>
-                <MudTh>Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Invoice No">@context.InvoiceNumber</MudTd>
-                <MudTd DataLabel="Recipient Organization">@context.ClientName</MudTd>
-                <MudTd DataLabel="Billing Contact"><code class="text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded text-xs">@context.ClientEmail</code></MudTd>
-                <MudTd DataLabel="Dates">
-                    <div>@context.IssueDate.ToShortDateString()</div>
-                    <div class="text-[10px] text-zinc-400 mt-0.5">Due: @context.DueDate.ToShortDateString()</div>
-                </MudTd>
-                <MudTd DataLabel="Grand Total">@context.GrandTotal.ToString("C")</MudTd>
-                <MudTd DataLabel="Ledger Status">
-                    @if (context.Status == InvoiceStatus.Paid)
+        <table class="w-full border-collapse">
+            <thead>
+                <tr class="border-b border-zinc-200 text-left">
+                    <th class="text-[11px] font-bold text-zinc-400 uppercase py-3 px-4">Invoice No</th>
+                    <th class="text-[11px] font-bold text-zinc-400 uppercase py-3 px-4">Recipient Organization</th>
+                    <th class="text-[11px] font-bold text-zinc-400 uppercase py-3 px-4">Billing Contact</th>
+                    <th class="text-[11px] font-bold text-zinc-400 uppercase py-3 px-4">Dates (Issue / Due)</th>
+                    <th class="text-[11px] font-bold text-zinc-400 uppercase py-3 px-4">Grand Total</th>
+                    <th class="text-[11px] font-bold text-zinc-400 uppercase py-3 px-4">Ledger Status</th>
+                    <th class="text-[11px] font-bold text-zinc-400 uppercase py-3 px-4">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_invoicesList.Any())
+                {
+                    @foreach (var invoice in _invoicesList)
                     {
-                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-green-700 border-green-200">
-                            <span class="text-green-600 font-bold text-[10px] mr-0.5">✓</span>
-                            Done
-                        </span>
+                        <tr class="border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
+                            <td class="py-3 px-4 text-xs text-zinc-800">@invoice.InvoiceNumber</td>
+                            <td class="py-3 px-4 text-xs text-zinc-800">@invoice.ClientName</td>
+                            <td class="py-3 px-4"><code class="text-indigo-600 bg-indigo-50/50 px-2 py-1 rounded text-xs">@invoice.ClientEmail</code></td>
+                            <td class="py-3 px-4 text-xs text-zinc-800">
+                                <div>@invoice.IssueDate.ToShortDateString()</div>
+                                <div class="text-[10px] text-zinc-400 mt-0.5">Due: @invoice.DueDate.ToShortDateString()</div>
+                            </td>
+                            <td class="py-3 px-4 text-xs text-zinc-800">@invoice.GrandTotal.ToString("C")</td>
+                            <td class="py-3 px-4">
+                                @if (invoice.Status == InvoiceStatus.Paid)
+                                {
+                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-green-700 border-green-200">
+                                        <span class="text-green-600 font-bold text-[10px] mr-0.5">Γ£ô</span>
+                                        Done
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-zinc-600 border-zinc-200">
+                                        <span class="w-1.5 h-1.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></span>
+                                        In Process
+                                    </span>
+                                }
+                            </td>
+                            <td class="py-3 px-4">
+                                <button class="btn-icon btn-icon-sm" @onclick="() => CopyToDesigner(invoice)" title="Open in designer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                </button>
+                                <button class="btn-icon btn-icon-sm" @onclick="() => DeleteInvoice(invoice.Id)" title="Delete">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                            </td>
+                        </tr>
                     }
-                    else
-                    {
-                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-xs font-semibold border bg-white text-zinc-600 border-zinc-200">
-                            <span class="w-1.5 h-1.5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin"></span>
-                            In Process
-                        </span>
-                    }
-                </MudTd>
-                <MudTd DataLabel="Actions">
-                    <MudIconButton Icon="@Icons.Material.Filled.OpenInNew" Size="@Size.Small" Color="Color.Primary" OnClick="() => CopyToDesigner(context)" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => DeleteInvoice(context.Id)" />
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-            </PagerContent>
-        <NoRecordsContent>
-            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-        </NoRecordsContent>
-        </MudTable>
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="7" class="text-center text-zinc-500 py-8 text-sm">Data Not Available</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>
     </Authorized>

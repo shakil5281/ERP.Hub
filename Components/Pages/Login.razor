@@ -181,7 +181,10 @@
         {
             await using var dbContext = await DbFactory.CreateDbContextAsync();
             var hashed = HashPassword(_password);
-            var user = await dbContext.Users.FirstOrDefaultAsync(u => u.Username == _username && u.PasswordHash == hashed);
+            var user = await dbContext.Users
+                .Include(u => u.UserRoles!)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Username == _username && u.PasswordHash == hashed);
 
             if (user == null)
             {
@@ -195,7 +198,7 @@
             {
                 Username = user.Username,
                 FullName = user.FullName,
-                Role = user.Role
+                Role = string.Join(",", user.UserRoles?.Where(ur => ur.Role != null).Select(ur => ur.Role!.Name) ?? Array.Empty<string>())
             });
 
             var target = string.IsNullOrEmpty(ReturnUrl) ? "/" : ReturnUrl;

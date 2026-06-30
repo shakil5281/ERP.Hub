@@ -1,4 +1,4 @@
-@page "/profile"
+﻿@page "/profile"
 
 <PageTitle>ERPHub - My Profile</PageTitle>
 
@@ -9,172 +9,153 @@
             @* Header *@
             <div class="d-flex justify-content-between align-items-center mb-6" style="flex-wrap:wrap;">
                 <div>
-                    <MudText Typo="Typo.h4" Class="fw-extrabold">My Profile</MudText>
-                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Manage your personal information, credentials, and account preferences.</MudText>
+                    <h4 class="fw-extrabold">My Profile</h4>
+                    <span class="text-muted text-xs mt-1">Manage your personal information, credentials, and account preferences.</span>
                 </div>
             </div>
 
             @* Profile Hero Card *@
-            <MudPaper Elevation="1" Outlined="true" Class="mb-6 overflow-hidden" Style="border-radius:12px;">
-                <div style="height:100px; border-bottom:1px solid var(--mud-palette-table-lines); background:linear-gradient(to right, rgba(99,102,241,0.1), rgba(16,185,129,0.1), rgba(99,102,241,0.1));"></div>
+            <div class="card mb-6 overflow-hidden" style="border-radius:12px;">
+                <div style="height:100px; border-bottom:1px solid #e5e7eb; background:linear-gradient(to right, rgba(99,102,241,0.1), rgba(16,185,129,0.1), rgba(99,102,241,0.1));"></div>
                 <div class="px-6 pb-6" style="margin-top:-48px;">
                     <div class="d-flex align-items-end" style="gap:20px;">
-                        <MudPaper Elevation="2" Class="d-flex align-items-center justify-content-center flex-shrink-0" Style="width:80px;height:80px;border-radius:12px;overflow:hidden;border:2px solid white;background-color:var(--mud-palette-table-hover);">
-                            <MudText Typo="Typo.h4" Class="mud-secondary-text-color fw-bold">@GetInitials(_profileUser.FullName)</MudText>
-                        </MudPaper>
+                        <div class="bg-zinc-100 d-flex align-items-center justify-content-center flex-shrink-0" style="width:80px;height:80px;border-radius:12px;overflow:hidden;border:2px solid white;">
+                            <span class="text-muted fw-bold text-2xl">@GetInitials(_profileUser.FullName)</span>
+                        </div>
                         <div class="flex-grow-1 pt-3">
-                            <MudText Typo="Typo.h5" Class="fw-extrabold">@_profileUser.FullName</MudText>
+                            <h5 class="fw-extrabold">@_profileUser.FullName</h5>
                             <div class="d-flex align-items-center" style="gap:8px; margin-top:2px;">
-                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@@@_profileUser.Username</MudText>
-                                <span style="width:4px;height:4px;border-radius:50%;background-color:var(--mud-palette-table-lines);"></span>
-                                <MudChip Size="Size.Small" Color="@(_profileUser.Role == "Admin" ? Color.Info : Color.Success)" Class="fw-bold" Style="font-size:10px;" T="string">
-                                    @_profileUser.Role
-                                </MudChip>
+                                <span class="text-muted text-xs">@@@_profileUser.Username</span>
+                                <span style="width:4px;height:4px;border-radius:50%;background-color:#e5e7eb;"></span>
+                                <span class="chip @(_profileRole == "Admin" ? "chip-info" : "chip-success") fw-bold" style="font-size:10px;">
+                                    @_profileRole
+                                </span>
                             </div>
                         </div>
                         <div class="d-flex text-center" style="gap:16px;">
-                            <MudPaper Elevation="0" Outlined="true" Class="px-4 py-2" Style="border-radius:8px;">
-                                <MudText Typo="Typo.body2" Class="fw-extrabold">@_totalCompanies</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold mt-1" Style="letter-spacing:0.05em;">Companies</MudText>
-                            </MudPaper>
-                            <MudPaper Elevation="0" Outlined="true" Class="px-4 py-2" Style="border-radius:8px;">
-                                <MudText Typo="Typo.body2" Class="fw-extrabold">@_totalProducts</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold mt-1" Style="letter-spacing:0.05em;">Products</MudText>
-                            </MudPaper>
-                            <MudPaper Elevation="0" Outlined="true" Class="px-4 py-2" Style="border-radius:8px;">
-                                <MudText Typo="Typo.body2" Class="fw-extrabold">@_totalInvoices</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color text-uppercase fw-bold mt-1" Style="letter-spacing:0.05em;">Invoices</MudText>
-                            </MudPaper>
+                            <div class="card px-4 py-2" style="border-radius:8px;">
+                                <span class="fw-extrabold">@_totalCompanies</span>
+                                <span class="text-muted text-uppercase fw-bold mt-1 text-xs" style="letter-spacing:0.05em;">Companies</span>
+                            </div>
+                            <div class="card px-4 py-2" style="border-radius:8px;">
+                                <span class="fw-extrabold">@_totalProducts</span>
+                                <span class="text-muted text-uppercase fw-bold mt-1 text-xs" style="letter-spacing:0.05em;">Products</span>
+                            </div>
+                            <div class="card px-4 py-2" style="border-radius:8px;">
+                                <span class="fw-extrabold">@_totalInvoices</span>
+                                <span class="text-muted text-uppercase fw-bold mt-1 text-xs" style="letter-spacing:0.05em;">Invoices</span>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </MudPaper>
+            </div>
 
-            <MudGrid Spacing="6">
+            <div class="d-flex flex-wrap" style="gap:24px;">
                 @* Personal Information *@
-                <MudItem xs="12" lg="8">
-                    <MudPaper Elevation="1" Outlined="true" Style="border-radius:12px; overflow:hidden;">
-                        <div class="pa-5 px-6" style="border-bottom:1px solid var(--mud-palette-table-lines);">
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Personal Information</MudText>
+                <div style="flex: 1 1 60%; min-width:300px;">
+                    <div class="card" style="border-radius:12px; overflow:hidden;">
+                        <div class="pa-5 px-6" style="border-bottom:1px solid #e5e7eb;">
+                            <h6 class="fw-bold">Personal Information</h6>
                         </div>
                         <div class="pa-5 px-6">
-                            <MudGrid Spacing="5">
-                                <MudItem xs="12" sm="6">
-                                    <MudTextField Label="Full Name"
-                                                  @bind-Value="_editFullName"
-                                                  Variant="Variant.Outlined"
-                                                  Placeholder="Enter full name"
-                                                  FullWidth="true"
-                                                  dense="true" />
-                                </MudItem>
-                                <MudItem xs="12" sm="6">
-                                    <MudTextField Label="Username"
-                                                  Value="@_profileUser.Username"
-                                                  Variant="Variant.Outlined"
-                                                  FullWidth="true"
-                                                  dense="true"
-                                                  ReadOnly="true"
-                                                  Disabled="true"
-                                                  HelperText="Username cannot be changed." />
-                                </MudItem>
-                            </MudGrid>
-                            <MudGrid Spacing="5" Class="mt-3">
-                                <MudItem xs="12" sm="6">
-                                    <MudTextField Label="Email Address"
-                                                  @bind-Value="_editEmail"
-                                                  Variant="Variant.Outlined"
-                                                  Placeholder="user@example.com"
-                                                  FullWidth="true"
-                                                  dense="true" />
-                                </MudItem>
-                                <MudItem xs="12" sm="6">
-                                    <MudTextField Label="Role"
-                                                  Value="@_profileUser.Role"
-                                                  Variant="Variant.Outlined"
-                                                  FullWidth="true"
-                                                  dense="true"
-                                                  ReadOnly="true"
-                                                  Disabled="true" />
-                                </MudItem>
-                            </MudGrid>
-                            <div class="d-flex justify-content-end" style="gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid var(--mud-palette-table-lines);">
-                                <MudButton Variant="Variant.Outlined" Color="Color.Default" Size="Size.Small" @onclick="ResetForm">Cancel</MudButton>
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Small" Disabled="@(!_hasChanges)" @onclick="SaveProfile">Save Changes</MudButton>
+                            <div class="d-flex flex-wrap" style="gap:20px;">
+                                <div style="flex: 1 1 calc(50% - 20px); min-width:200px;">
+                                    <div class="form-group dense">
+                                        <label class="form-label">Full Name</label>
+                                        <input class="form-control" @bind="_editFullName" placeholder="Enter full name" />
+                                    </div>
+                                </div>
+                                <div style="flex: 1 1 calc(50% - 20px); min-width:200px;">
+                                    <div class="form-group dense">
+                                        <label class="form-label">Username</label>
+                                        <input class="form-control" value="@_profileUser.Username" readonly disabled />
+                                        <span class="text-xs text-muted" style="margin-top:2px;display:block;">Username cannot be changed.</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex flex-wrap" style="gap:20px; margin-top:12px;">
+                                <div style="flex: 1 1 calc(50% - 20px); min-width:200px;">
+                                    <div class="form-group dense">
+                                        <label class="form-label">Email Address</label>
+                                        <input class="form-control" @bind="_editEmail" placeholder="user@example.com" />
+                                    </div>
+                                </div>
+                                <div style="flex: 1 1 calc(50% - 20px); min-width:200px;">
+                                    <div class="form-group dense">
+                                        <label class="form-label">Role</label>
+                                        <input class="form-control" value="@_profileRole" readonly disabled />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-end" style="gap:12px; margin-top:24px; padding-top:20px; border-top:1px solid #e5e7eb;">
+                                <button class="btn btn-outlined btn-sm" @onclick="ResetForm">Cancel</button>
+                                <button class="btn btn-primary btn-sm" disabled="@(!_hasChanges)" @onclick="SaveProfile">Save Changes</button>
                             </div>
                         </div>
-                    </MudPaper>
-                </MudItem>
+                    </div>
+                </div>
 
                 @* Right Column *@
-                <MudItem xs="12" lg="4" Class="d-flex flex-column" Style="gap:24px;">
+                <div class="d-flex flex-column" style="flex: 1 1 30%; min-width:280px; gap:24px;">
                     @* Change Password *@
-                    <MudPaper Elevation="1" Outlined="true" Style="border-radius:12px; overflow:hidden;">
-                        <div class="pa-5 px-6" style="border-bottom:1px solid var(--mud-palette-table-lines);">
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Change Password</MudText>
+                    <div class="card" style="border-radius:12px; overflow:hidden;">
+                        <div class="pa-5 px-6" style="border-bottom:1px solid #e5e7eb;">
+                            <h6 class="fw-bold">Change Password</h6>
                         </div>
                         <div class="pa-5 px-6 d-flex flex-column" style="gap:16px;">
-                            <MudTextField Label="Current Password"
-                                          @bind-Value="_currentPassword"
-                                          Variant="Variant.Outlined"
-                                          InputType="InputType.Password"
-                                          Placeholder="Enter current password"
-                                          FullWidth="true"
-                                          dense="true" />
-                            <MudTextField Label="New Password"
-                                          @bind-Value="_newPassword"
-                                          Variant="Variant.Outlined"
-                                          InputType="InputType.Password"
-                                          Placeholder="Enter new password"
-                                          FullWidth="true"
-                                          dense="true" />
-                            <MudTextField Label="Confirm New Password"
-                                          @bind-Value="_confirmPassword"
-                                          Variant="Variant.Outlined"
-                                          InputType="InputType.Password"
-                                          Placeholder="Confirm new password"
-                                          FullWidth="true"
-                                          dense="true" />
+                            <div class="form-group dense">
+                                <label class="form-label">Current Password</label>
+                                <input class="form-control" @bind="_currentPassword" type="password" placeholder="Enter current password" />
+                            </div>
+                            <div class="form-group dense">
+                                <label class="form-label">New Password</label>
+                                <input class="form-control" @bind="_newPassword" type="password" placeholder="Enter new password" />
+                            </div>
+                            <div class="form-group dense">
+                                <label class="form-label">Confirm New Password</label>
+                                <input class="form-control" @bind="_confirmPassword" type="password" placeholder="Confirm new password" />
+                            </div>
 
                             @if (!string.IsNullOrEmpty(_passwordMessage))
                             {
-                                <MudAlert Severity="@(_passwordSuccess ? Severity.Success : Severity.Error)" Class="pa-2" dense="true">
-                                    <MudText Typo="Typo.caption" Class="fw-semibold">@_passwordMessage</MudText>
-                                </MudAlert>
+                                <div class="alert @(_passwordSuccess ? "alert-success" : "alert-error") p-2">
+                                    <span class="fw-semibold text-xs">@_passwordMessage</span>
+                                </div>
                             }
 
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Size="Size.Small" @onclick="ChangePassword">Update Password</MudButton>
+                            <button class="btn btn-primary btn-sm w-full" @onclick="ChangePassword">Update Password</button>
                         </div>
-                    </MudPaper>
+                    </div>
 
                     @* Recent Activity *@
-                    <MudPaper Elevation="1" Outlined="true" Style="border-radius:12px; overflow:hidden;">
-                        <div class="pa-5 px-6" style="border-bottom:1px solid var(--mud-palette-table-lines);">
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold">Recent Activity</MudText>
+                    <div class="card" style="border-radius:12px; overflow:hidden;">
+                        <div class="pa-5 px-6" style="border-bottom:1px solid #e5e7eb;">
+                            <h6 class="fw-bold">Recent Activity</h6>
                         </div>
                         <div class="pa-5 px-6 d-flex flex-column" style="gap:14px;">
                             @foreach (var activity in _activities)
                             {
-                                <div class="d-flex" style="gap:12px; padding-bottom:14px; border-bottom:1px solid var(--mud-palette-table-lines);">
+                                <div class="d-flex" style="gap:12px; padding-bottom:14px; border-bottom:1px solid #e5e7eb;">
                                     <div style="width:8px; height:8px; border-radius:50%; margin-top:6px; flex-shrink:0; background-color:@activity.Color;"></div>
                                     <div class="flex-grow-1">
-                                        <MudText Typo="Typo.body2" Class="fw-semibold">@activity.Title</MudText>
-                                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@activity.TimeDescription</MudText>
+                                        <span class="fw-semibold">@activity.Title</span>
+                                        <span class="text-muted text-xs">@activity.TimeDescription</span>
                                     </div>
                                 </div>
                             }
                             @if (!_activities.Any())
                             {
-                                <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-6">No recent activity.</MudText>
+                                <span class="text-center text-muted py-6">No recent activity.</span>
                             }
                         </div>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
+                    </div>
+                </div>
+            </div>
 
             @* Success Toast *@
             @if (_showToast)
             {
-                <div class="d-flex align-items-center" style="position:fixed; bottom:24px; right:24px; background-color:var(--mud-palette-success); color:white; font-size:12px; font-weight:600; padding:12px 20px; border-radius:12px; box-shadow:var(--mud-elevation-8); z-index:9999; gap:10px;">
+                <div class="d-flex align-items-center" style="position:fixed; bottom:24px; right:24px; background-color:#10b981; color:white; font-size:12px; font-weight:600; padding:12px 20px; border-radius:12px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1); z-index:9999; gap:10px;">
                     <span>✓</span>
                     <span>@_toastMessage</span>
                 </div>

@@ -1,0 +1,66 @@
+@use 'variables' as *;
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  max-width: 100vw;
+  font-family: $font-family-sans;
+  font-size: 13px;
+  color: $text-primary;
+  background: $bg;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+kbd {
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  color: $text-muted;
+  background: $surface;
+  border: 1px solid $border-dark;
+  border-radius: 4px;
+  padding: 1px 5px;
+  line-height: 1.4;
+}
+
+@font-face {
+  font-family: 'SutonnyMJ';
+  src: local('SutonnyMJ'), local('Sutonny MJ'), local('Sutonny-MJ'),
+       url('https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.woff2') format('woff2'),
+       url('https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.woff') format('woff'),
+       url('https://db.onlinewebfonts.com/t/745d8457da8dec2e3477d0d4da431299.ttf') format('truetype');
+}
+
+::placeholder {
+  color: $text-muted;
+}
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: $border; border-radius: 4px; }

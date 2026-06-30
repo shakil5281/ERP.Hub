@@ -1,8 +1,9 @@
-@page "/attendance/job-cards"
+﻿@page "/attendance/job-cards"
 @using ERPHub.Models
+@using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 
 <PageTitle>ERPHub - Job Card</PageTitle>
 
@@ -18,93 +19,77 @@
             <div class="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm mb-6">
                 <div class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-3">Advanced Filters</div>
                 <div class="grid grid-cols-4 gap-3 max-xl:grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1">
-                    <div>
-                        <MudTextField T="string"
-                                      @bind-Value="_employeeId"
-                                      Label="Employee ID"
-                                      Variant="Variant.Outlined"
-                                      Placeholder="Leave empty for all employees"
-                                      Margin="Margin.Dense"
-                                      Immediate="true" />
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Employee ID</label>
+                        <input type="text" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_employeeId" placeholder="Leave empty for all employees" />
                     </div>
-                    <div>
-                        <MudDatePicker Date="@_fromDate"
-                                       DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })"
-                                       Label="From Date"
-                                       Editable="true"
-                                       Placeholder="Select Date"
-                                       DateFormat="yyyy-MM-dd"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense" />
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">From Date</label>
+                        <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_fromDate" />
                     </div>
-                    <div>
-                        <MudDatePicker Date="@_toDate"
-                                       DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })"
-                                       Label="To Date"
-                                       Editable="true"
-                                       Placeholder="Select Date"
-                                       DateFormat="yyyy-MM-dd"
-                                       Variant="Variant.Outlined"
-                                       Margin="Margin.Dense" />
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">To Date</label>
+                        <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_toDate" />
                     </div>
-                    <div>
-                        <MudSelect T="int" @bind-Value="_companyId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="0">All Companies</MudSelectItem>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Company</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_companyId">
+                            <option value="0">All Companies</option>
                             @foreach (var c in _companies)
                             {
-                                <MudSelectItem Value="@c.Id">@c.CompanyNameEn</MudSelectItem>
+                                <option value="@c.Id">@c.CompanyNameEn</option>
                             }
-                        </MudSelect>
+                        </select>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Department</label>
-                        <MudSelect T="int" @bind-Value="_departmentId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="0">All Departments</MudSelectItem>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Department</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_departmentId">
+                            <option value="0">All Departments</option>
                             @foreach (var d in _departments)
                             {
-                                <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                                <option value="@d.Id">@d.NameEn</option>
                             }
-                        </MudSelect>
+                        </select>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Section</label>
-                        <MudSelect T="int" @bind-Value="_sectionId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="0">All Sections</MudSelectItem>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Section</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_sectionId">
+                            <option value="0">All Sections</option>
                             @foreach (var s in _sections)
                             {
-                                <MudSelectItem Value="@s.Id">@s.NameEn</MudSelectItem>
+                                <option value="@s.Id">@s.NameEn</option>
                             }
-                        </MudSelect>
+                        </select>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Designation</label>
-                        <MudSelect T="int" @bind-Value="_designationId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="0">All Designations</MudSelectItem>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Designation</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_designationId">
+                            <option value="0">All Designations</option>
                             @foreach (var dg in _designations)
                             {
-                                <MudSelectItem Value="@dg.Id">@dg.NameEn</MudSelectItem>
+                                <option value="@dg.Id">@dg.NameEn</option>
                             }
-                        </MudSelect>
+                        </select>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Line</label>
-                        <MudSelect T="int" @bind-Value="_lineId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="0">All Lines</MudSelectItem>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Line</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_lineId">
+                            <option value="0">All Lines</option>
                             @foreach (var l in _lines)
                             {
-                                <MudSelectItem Value="@l.Id">@l.NameEn</MudSelectItem>
+                                <option value="@l.Id">@l.NameEn</option>
                             }
-                        </MudSelect>
+                        </select>
                     </div>
-                    <div>
-                        <label class="block text-[11px] font-semibold text-zinc-500 mb-1 uppercase tracking-wide">Shift</label>
-                        <MudSelect T="int" @bind-Value="_shiftId" Margin="Margin.Dense" Dense="true" Variant="Variant.Outlined">
-                            <MudSelectItem Value="0">All Shifts</MudSelectItem>
+                    <div class="flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Shift</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_shiftId">
+                            <option value="0">All Shifts</option>
                             @foreach (var sh in _shifts)
                             {
-                                <MudSelectItem Value="@sh.Id">@sh.ShiftName</MudSelectItem>
+                                <option value="@sh.Id">@sh.ShiftName</option>
                             }
-                        </MudSelect>
+                        </select>
                     </div>
                 </div>
                 <div class="flex gap-2 mt-4">
@@ -418,16 +403,16 @@
                 var base64 = Convert.ToBase64String(bytes);
                 var fileName = $"JobCard_{_page.Report.EmployeeId}_{_fromDate:yyyyMMdd}_{_toDate:yyyyMMdd}.xlsx";
                 await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-                Snackbar.Add("Excel exported successfully", Severity.Success);
+                await Toast.ShowSuccessAsync("Excel exported successfully");
             }
             else
             {
-                Snackbar.Add("Export failed: server returned error", Severity.Error);
+                await Toast.ShowErrorAsync("Export failed: server returned error");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Export failed: {ex.Message}");
         }
         finally
         {
@@ -461,16 +446,16 @@
                 var base64 = Convert.ToBase64String(bytes);
                 var fileName = $"JobCard_{_page.Report.EmployeeId}_{_fromDate:yyyyMMdd}_{_toDate:yyyyMMdd}.pdf";
                 await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64, "application/pdf");
-                Snackbar.Add("PDF exported successfully", Severity.Success);
+                await Toast.ShowSuccessAsync("PDF exported successfully");
             }
             else
             {
-                Snackbar.Add("Export failed: server returned error", Severity.Error);
+                await Toast.ShowErrorAsync("Export failed: server returned error");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Export failed: {ex.Message}");
         }
         finally
         {

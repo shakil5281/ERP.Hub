@@ -1,9 +1,9 @@
-@page "/hr/record-separation"
+﻿@page "/hr/record-separation"
 @using ERPHub.Models
 @using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 @inject AttendanceService AttendanceService
 
 <PageTitle>ERPHub - Record Employee Separation</PageTitle>
@@ -11,162 +11,161 @@
 <AuthorizeView Context="authContext">
     <Authorized>
         @* Header *@
-        <div class="d-flex align-center mb-6" style="flex-wrap:wrap; gap: 16px;width: 100%;">
+        <div class="d-flex justify-between align-center mb-6" style="flex-wrap:wrap; gap: 16px;width: 100%;">
             <div>
-                <MudText Typo="Typo.h5" Class="fw-extrabold">Record Employee Separation</MudText>
-                <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Find absent employees and record their separation.</MudText>
+                <h5 class="text-[22px] font-extrabold">Record Employee Separation</h5>
+                <p class="text-xs text-zinc-500 mt-1">Find absent employees and record their separation.</p>
             </div>
-            <MudSpacer />
         </div>
 
         @* Filters *@
-        <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4" Style="border-radius:8px;">
-            <MudGrid Spacing="3" class="align-items-end">
-                <MudItem xs="12" sm="4" md="2">
-                    <MudDatePicker Label="From Date" Date="@_fromDate" DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudDatePicker Label="To Date" Date="@_toDate" DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudNumericField Label="Min Cont. Absent" @bind-Value="_minContinuousAbsent" Min="0" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudTextField Label="Employee ID" @bind-Value="_employeeIdFilter" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudSelect Label="Department" @bind-Value="_departmentIdFilter" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" Clearable="true">
-                        <MudSelectItem Value="0">All</MudSelectItem>
-                        @foreach (var d in _departments) { <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem> }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudSelect Label="Designation" @bind-Value="_designationIdFilter" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" Clearable="true">
-                        <MudSelectItem Value="0">All</MudSelectItem>
-                        @foreach (var dg in _designations) { <MudSelectItem Value="@dg.Id">@dg.NameEn</MudSelectItem> }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="12" Class="d-flex align-center justify-end gap-2" Style="margin-top: 10px;">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Disabled="@_isLoading" @onclick="LoadRecords" Class="px-8">
-                        Apply Filters
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default" @onclick="ClearFilters" Class="px-8">
-                        Clear
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
+        <div class="bg-white border border-zinc-200 rounded-lg p-4 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3" style="align-items:end;">
+                <div>
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" value="@_fromDate.ToString("yyyy-MM-dd")" @onchange="@(e => { if (DateTime.TryParse((e as ChangeEventArgs)?.Value?.ToString(), out var d)) _fromDate = d; })" />
+                </div>
+                <div>
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" value="@_toDate.ToString("yyyy-MM-dd")" @onchange="@(e => { if (DateTime.TryParse((e as ChangeEventArgs)?.Value?.ToString(), out var d)) _toDate = d; })" />
+                </div>
+                <div>
+                    <label class="form-label">Min Cont. Absent</label>
+                    <input type="number" class="form-control" @bind="_minContinuousAbsent" min="0" />
+                </div>
+                <div>
+                    <label class="form-label">Employee ID</label>
+                    <input type="text" class="form-control" @bind="_employeeIdFilter" />
+                </div>
+                <div>
+                    <label class="form-label">Department</label>
+                    <select class="form-control" @bind="_departmentIdFilter">
+                        <option value="0">All</option>
+                        @foreach (var d in _departments) { <option value="@d.Id">@d.NameEn</option> }
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Designation</label>
+                    <select class="form-control" @bind="_designationIdFilter">
+                        <option value="0">All</option>
+                        @foreach (var dg in _designations) { <option value="@dg.Id">@dg.NameEn</option> }
+                    </select>
+                </div>
+                <div class="col-span-1 sm:col-span-2 md:col-span-3 flex justify-end gap-2" style="margin-top: 10px;">
+                    <button class="btn btn-primary px-8" disabled="@_isLoading" @onclick="LoadRecords">Apply Filters</button>
+                    <button class="btn btn-outlined px-8" @onclick="ClearFilters">Clear</button>
+                </div>
+            </div>
+        </div>
 
         @* Data Table *@
         @if (_isLoading)
         {
-            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Loading records...</MudText>
+            <div class="text-center py-8 text-zinc-500 text-sm">Loading records...</div>
         }
         else
         {
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden mb-6">
-                <MudTable Items="@_records" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0" Filter="new Func<AbsentSummaryDto, bool>(FilterFunc)">
-                    <ToolBarContent>
-                        <div>
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Absent Employees</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@_fromDate.ToString("yyyy-MM-dd") to @_toDate.ToString("yyyy-MM-dd")</MudText>
-                        </div>
-                        <MudSpacer />
-                        <MudTextField @bind-Value="_searchString"
-                                      Placeholder="Quick search name or ID..."
-                                      Adornment="Adornment.Start"
-                                      AdornmentIcon="@Icons.Material.Filled.Search"
-                                      IconSize="Size.Small"
-                                      Class="mt-0"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Clearable="true" />
-                    </ToolBarContent>
-                    <HeaderContent>
-                        <MudTh Style="width:44px; text-align:center;">
-                            <MudCheckBox T="bool" Value="@_selectAll" ValueChanged="ToggleSelectAll" Color="Color.Primary" Size="Size.Small" />
-                        </MudTh>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.EmployeeId)">Employee ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.Department)">Department</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.Designation)">Designation</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.TotalAbsentDays)">Total Absent</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.ContinuousAbsentDays)">Continuous Absent</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd Style="text-align:center;">
-                            @{
+                <div class="table-toolbar">
+                    <div>
+                        <span class="text-sm font-bold font-heading">Absent Employees</span>
+                        <span class="text-xs text-zinc-500 ml-2">@_fromDate.ToString("yyyy-MM-dd") to @_toDate.ToString("yyyy-MM-dd")</span>
+                    </div>
+                    <div class="relative">
+                        <input type="text" class="form-control pl-10" @bind="_searchString" placeholder="Quick search name or ID..." />
+                        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="table-body">
+                    <table class="data-table-base">
+                        <thead>
+                            <tr>
+                                <th style="width:44px; text-align:center;">
+                                    <input type="checkbox" class="form-check-input" checked="@_selectAll" @onchange="ToggleSelectAll" />
+                                </th>
+                                <th style="text-align:center;"><button class="sort-btn">Employee ID</button></th>
+                                <th><button class="sort-btn">Employee Name</button></th>
+                                <th><button class="sort-btn">Department</button></th>
+                                <th><button class="sort-btn">Designation</button></th>
+                                <th style="text-align:center;"><button class="sort-btn">Total Absent</button></th>
+                                <th style="text-align:center;"><button class="sort-btn">Continuous Absent</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var context in _records.Where(FilterFunc))
+                            {
                                 var isSelected = _selectedEmpIds.Contains(context.EmployeeId);
+                                <tr>
+                                    <td style="text-align:center;">
+                                        <input type="checkbox" class="form-check-input" checked="@isSelected" @onchange="@((ChangeEventArgs e) => ToggleEmployee(context, (bool)(e.Value ?? false)))" />
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <span class="text-sm font-bold font-mono">@context.EmployeeId</span>
+                                    </td>
+                                    <td><span class="text-sm fw-medium">@context.EmployeeName</span></td>
+                                    <td><span class="text-sm">@context.Department</span></td>
+                                    <td><span class="text-sm">@context.Designation</span></td>
+                                    <td style="text-align:center;">
+                                        <span class="text-sm font-bold text-error">@context.TotalAbsentDays</span>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <span class="text-sm font-bold text-warning">@context.ContinuousAbsentDays</span>
+                                    </td>
+                                </tr>
                             }
-                            <MudCheckBox T="bool" Value="@isSelected" ValueChanged="@((bool v) => ToggleEmployee(context, v))" Color="Color.Primary" Size="Size.Small" />
-                        </MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Employee ID"><MudText Typo="Typo.body2" Class="fw-bold font-mono">@context.EmployeeId</MudText></MudTd>
-                        <MudTd DataLabel="Employee Name"><MudText Typo="Typo.body2" Class="fw-medium">@context.EmployeeName</MudText></MudTd>
-                        <MudTd DataLabel="Department"><MudText Typo="Typo.body2">@context.Department</MudText></MudTd>
-                        <MudTd DataLabel="Designation"><MudText Typo="Typo.body2">@context.Designation</MudText></MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Total Absent">
-                            <MudText Typo="Typo.body2" Class="fw-bold text-error">@context.TotalAbsentDays</MudText>
-                        </MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Continuous Absent">
-                            <MudText Typo="Typo.body2" Class="fw-bold text-warning">@context.ContinuousAbsentDays</MudText>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-                    </PagerContent>
-                    <NoRecordsContent>
-                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No absent employees found</MudText>
-                    </NoRecordsContent>
-                </MudTable>
+                        </tbody>
+                    </table>
+                </div>
+                @if (!_records.Any(FilterFunc))
+                {
+                    <div class="table-empty">
+                        <span class="text-sm text-zinc-500">No absent employees found</span>
+                    </div>
+                }
             </div>
 
             @if (_selectedEmpIds.Count > 0)
             {
-                <MudPaper Elevation="0" Outlined="true" Class="pa-6 mt-6" Style="border-radius:12px; border:2px solid var(--mud-palette-primary); background-color:var(--mud-palette-primary-hover);">
-                    <MudText Typo="Typo.h6" Class="fw-bold mb-2">Record Separation for @_selectedEmpIds.Count Selected Employee(s)</MudText>
-                    <MudDivider Class="mb-4" />
-                    
-                    <MudGrid Spacing="3">
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudSelect T="string" Label="Separation Type" @bind-Value="_form.SeparationType" Variant="Variant.Outlined" Required="true">
-                                <MudSelectItem Value="@("Resign")">Resign</MudSelectItem>
-                                <MudSelectItem Value="@("Terminate")">Terminate</MudSelectItem>
-                                <MudSelectItem Value="@("Absconding")">Absconding</MudSelectItem>
-                                <MudSelectItem Value="@("Layoff")">Layoff</MudSelectItem>
-                                <MudSelectItem Value="@("Retirement")">Retirement</MudSelectItem>
-                                <MudSelectItem Value="@("Death")">Death</MudSelectItem>
-                                <MudSelectItem Value="@("Other")">Other</MudSelectItem>
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudSelect T="string" Label="Status" @bind-Value="_form.Status" Variant="Variant.Outlined" Required="true">
-                                <MudSelectItem Value="@("Initiated")">Initiated</MudSelectItem>
-                                <MudSelectItem Value="@("Pending Clearance")">Pending Clearance</MudSelectItem>
-                                <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
-                                <MudSelectItem Value="@("Completed")">Completed</MudSelectItem>
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudDatePicker Label="Resign/Notice Date" @bind-Date="_form.ResignDate" Variant="Variant.Outlined" Required="true" />
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudDatePicker Label="Last Working Day" @bind-Date="_form.LastWorkingDay" Variant="Variant.Outlined" Required="true" />
-                        </MudItem>
-                        <MudItem xs="12" sm="6" md="4">
-                            <MudNumericField Label="Clearance Progress (%)" @bind-Value="_form.ClearanceProgress" Min="0" Max="100" Variant="Variant.Outlined" />
-                        </MudItem>
-                        <MudItem xs="12">
-                            <MudTextField Label="Reason/Remarks" @bind-Value="_form.Reason" Lines="2" Variant="Variant.Outlined" />
-                        </MudItem>
-                    </MudGrid>
+                <div class="bg-white border-2 rounded-xl p-6 mt-6" style="border-color:var(--mud-palette-primary); background-color:var(--mud-palette-primary-hover);">
+                    <h6 class="text-base font-bold mb-2">Record Separation for @_selectedEmpIds.Count Selected Employee(s)</h6>
+                    <hr class="divider mb-4" />
 
-                    <div class="d-flex justify-end mt-4 gap-2">
-                        <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="ResetAll">Cancel</MudButton>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="SaveSeparations" Disabled="@_isSaving">
-                            @(_isSaving ? "Saving..." : "Record Separations")
-                        </MudButton>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                        <div>
+                            <label class="form-label">Separation Type</label>
+                            <select class="form-control" @bind="_form.SeparationType" required>
+                                <option value="Resign">Resign</option>
+                                <option value="Left">Left</option>
+                                <option value="Close">Close</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Separation Date</label>
+                            <input type="date" class="form-control" value="@_form.SeparationDate?.ToString("yyyy-MM-dd")" @onchange="@(e => { if (DateTime.TryParse((e as ChangeEventArgs)?.Value?.ToString(), out var d)) _form.SeparationDate = d; })" required />
+                        </div>
+                        <div>
+                            <label class="form-label">Approved By</label>
+                            <input type="text" class="form-control" @bind="_form.ApprovedBy" />
+                        </div>
+                        <div class="col-span-1 sm:col-span-2 md:col-span-3">
+                            <label class="form-label">Reason</label>
+                            <textarea class="form-control" @bind="_form.Reason" rows="2"></textarea>
+                        </div>
+                        <div class="col-span-1 sm:col-span-2 md:col-span-3">
+                            <label class="form-label">Remarks</label>
+                            <textarea class="form-control" @bind="_form.Remarks" rows="2"></textarea>
+                        </div>
                     </div>
-                </MudPaper>
+
+                    <div class="flex justify-end mt-4 gap-2">
+                        <button class="btn btn-outlined" @onclick="ResetAll">Cancel</button>
+                        <button class="btn btn-primary" @onclick="SaveSeparations" disabled="@_isSaving">
+                            @(_isSaving ? "Saving..." : "Record Separations")
+                        </button>
+                    </div>
+                </div>
             }
         }
     </Authorized>
@@ -178,16 +177,16 @@
 @code {
     private DateTime _fromDate = new(DateTime.Today.Year, DateTime.Today.Month, 1);
     private DateTime _toDate = DateTime.Today;
-    
+
     private string? _employeeIdFilter;
     private int _departmentIdFilter;
     private int _designationIdFilter;
     private int _minContinuousAbsent = 0;
-    
+
     private bool _isLoading;
     private bool _isSaving;
     private string _searchString = "";
-    
+
     private List<AbsentSummaryDto> _records = new();
     private List<AbsentSummaryDto> _allRecords = new();
 
@@ -202,7 +201,6 @@
     protected override async Task OnInitializedAsync()
     {
         await LoadLookupData();
-        // Wait until user clicks Apply to load records
     }
 
     private async Task LoadLookupData()
@@ -222,7 +220,6 @@
         }
         catch
         {
-            // Lookup data failed
         }
     }
 
@@ -236,14 +233,14 @@
         try
         {
             await AttendanceService.CalculateAttendanceAsync(_fromDate, _toDate);
-            
+
             _allRecords = await AttendanceService.GetAbsentSummaryAsync(_fromDate, _toDate, _employeeIdFilter, null);
-            
+
             ApplyClientFilters();
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading records: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Error loading records: {ex.Message}");
             _allRecords = new();
             _records = new();
         }
@@ -280,8 +277,7 @@
         _designationIdFilter = 0;
         _minContinuousAbsent = 0;
         _searchString = "";
-        
-        // Clear records when filters are cleared
+
         _records.Clear();
         _allRecords.Clear();
         _selectedEmpIds.Clear();
@@ -299,15 +295,16 @@
 
         if (element.EmployeeName != null && element.EmployeeName.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
-            
+
         if (element.Department != null && element.Department.Contains(_searchString, StringComparison.OrdinalIgnoreCase))
             return true;
 
         return false;
     }
 
-    private void ToggleSelectAll(bool isChecked)
+    private void ToggleSelectAll(ChangeEventArgs e)
     {
+        var isChecked = (bool)(e.Value ?? false);
         _selectAll = isChecked;
         if (isChecked)
         {
@@ -345,35 +342,32 @@
         try
         {
             var selected = _employees.Where(e => _selectedEmpIds.Contains(e.EmployeeId)).ToList();
-            var payload  = selected.Select(emp => new Separation
+            var payload = selected.Select(emp => new RecordSeparationRequest
             {
-                EmployeeId      = emp.EmployeeId,
-                EmployeeName    = emp.EmployeeName,
-                DepartmentId    = emp.DepartmentId,
-                SectionId       = emp.SectionId,
-                DesignationId   = emp.DesignationId,
-                SeparationType  = _form.SeparationType,
-                Status          = _form.Status,
-                ResignDate      = _form.ResignDate ?? DateTime.Today,
-                LastWorkingDay  = _form.LastWorkingDay ?? DateTime.Today.AddDays(30),
-                ClearanceProgress = _form.ClearanceProgress,
-                Reason          = _form.Reason
+                EmployeeId = emp.EmployeeId,
+                SeparationType = _form.SeparationType,
+                SeparationDate = _form.SeparationDate ?? DateTime.Today,
+                Reason = _form.Reason,
+                Remarks = _form.Remarks,
+                ApprovedBy = _form.ApprovedBy,
+                ApprovedDate = DateTime.Today,
+                CreatedBy = "HR"
             }).ToList();
 
             var response = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/separations/bulk", payload);
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add($"{payload.Count} separation(s) recorded successfully!", Severity.Success);
+                await Toast.ShowSuccessAsync($"{payload.Count} separation(s) recorded successfully!");
                 NavManager.NavigateTo("/hr/seperation");
             }
             else
             {
-                Snackbar.Add($"Save failed: {await response.Content.ReadAsStringAsync()}", Severity.Error);
+                await Toast.ShowErrorAsync($"Save failed: {await response.Content.ReadAsStringAsync()}");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Error: {ex.Message}");
         }
         finally
         {
@@ -383,11 +377,10 @@
 
     private class SepForm
     {
-        public string   SeparationType  { get; set; } = "Absconding";
-        public string   Status          { get; set; } = "Initiated";
-        public DateTime? ResignDate      { get; set; } = DateTime.Today;
-        public DateTime? LastWorkingDay  { get; set; } = DateTime.Today;
-        public int      ClearanceProgress { get; set; } = 0;
-        public string   Reason          { get; set; } = "";
+        public string SeparationType { get; set; } = SeparationTypes.Left;
+        public DateTime? SeparationDate { get; set; } = DateTime.Today;
+        public string ApprovedBy { get; set; } = "HR";
+        public string Reason { get; set; } = "";
+        public string Remarks { get; set; } = "";
     }
 }

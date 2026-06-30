@@ -1,4 +1,5 @@
-@page "/attendance/manual-entry"
+﻿@page "/attendance/manual-entry"
+@using ERPHub.Services
 
 <PageTitle>ERPHub - Manual Attendance Entry</PageTitle>
 
@@ -22,23 +23,18 @@
                         <div class="space-y-4">
                             <div>
                                 <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Employee</label>
-                                <MudSelect T="string" @bind-Value="_selectedEmpId" Placeholder="Choose Employee" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
+                                <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_selectedEmpId">
+                                    <option value="">Choose Employee</option>
                                     @foreach (var emp in _availableEmployees)
                                     {
-                                        <MudSelectItem Value="@emp.EmployeeId">@emp.EmployeeName (@emp.EmployeeId)</MudSelectItem>
+                                        <option value="@emp.EmployeeId">@emp.EmployeeName (@emp.EmployeeId)</option>
                                     }
-                                </MudSelect>
+                                </select>
                             </div>
                             <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <MudDatePicker Date="@_entryDate"
-                                                   DateChanged="@(d => { if (d.HasValue) _entryDate = d.Value; })"
-                                                   Label="Date"
-                                                   Editable="true"
-                                                   Placeholder="Select Date"
-                                                   DateFormat="yyyy-MM-dd"
-                                                   Variant="Variant.Outlined"
-                                                   Margin="Margin.Dense" />
+                                <div class="flex flex-col gap-1.5">
+                                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date</label>
+                                    <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_entryDate" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Time</label>
@@ -74,45 +70,67 @@
                             <span class="text-xs text-zinc-400">Showing recent manual corrections</span>
                         </div>
 
-                        <MudTable Items="@_logs" Hover="true" Dense="true" Elevation="0">
-                            <HeaderContent>
-                                <MudTh>Date</MudTh>
-                                <MudTh>Emp ID</MudTh>
-                                <MudTh>Name</MudTh>
-                                <MudTh>Time</MudTh>
-                                <MudTh>Type</MudTh>
-                                <MudTh>Reason</MudTh>
-                                <MudTh>Status</MudTh>
-                                <MudTh Class="text-right">Actions</MudTh>
-                            </HeaderContent>
-                            <RowTemplate>
-                                <MudTd DataLabel="Date">@context.LogDate.ToString("yyyy-MM-dd")</MudTd>
-                                <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
-                                <MudTd DataLabel="Name">@context.Name</MudTd>
-                                <MudTd DataLabel="Time">@context.PunchTime</MudTd>
-                                <MudTd DataLabel="Type">
-                                    <span class="font-semibold text-zinc-700">@context.PunchType</span>
-                                </MudTd>
-                                <MudTd DataLabel="Reason"><span class="text-zinc-500 text-xs italic">@context.Reason</span></MudTd>
-                                <MudTd DataLabel="Status">
-                                    @if (context.Status == "Approved")
+                        <div class="table-responsive-wrapper">
+                            <table class="w-full">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Emp ID</th>
+                                        <th>Name</th>
+                                        <th>Time</th>
+                                        <th>Type</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (_logs.Any())
                                     {
-                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                                        @foreach (var item in _logs)
+                                        {
+                                            <tr>
+                                                <td data-label="Date">@item.LogDate.ToString("yyyy-MM-dd")</td>
+                                                <td data-label="Emp ID"><span class="font-mono text-xs font-semibold">@item.EmpId</span></td>
+                                                <td data-label="Name">@item.Name</td>
+                                                <td data-label="Time">@item.PunchTime</td>
+                                                <td data-label="Type">
+                                                    <span class="font-semibold text-zinc-700">@item.PunchType</span>
+                                                </td>
+                                                <td data-label="Reason"><span class="text-zinc-500 text-xs italic">@item.Reason</span></td>
+                                                <td data-label="Status">
+                                                    @if (item.Status == "Approved")
+                                                    {
+                                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                                                    }
+                                                </td>
+                                                <td data-label="Actions" class="text-right whitespace-nowrap">
+                                                    @if (item.Status == "Pending")
+                                                    {
+                                                        <button class="btn-icon btn-icon-sm" title="Approve Log" @onclick="() => ApproveLog(item)">
+                                                            <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                                        </button>
+                                                    }
+                                                    <button class="btn-icon btn-icon-sm" title="Remove Log" @onclick="() => DeleteLog(item)">
+                                                        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
                                     }
                                     else
                                     {
-                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                                        <tr>
+                                            <td colspan="8" class="text-center py-8 text-muted">Data Not Available</td>
+                                        </tr>
                                     }
-                                </MudTd>
-                                <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
-                                    @if (context.Status == "Pending")
-                                    {
-                                        <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="@Size.Small" Color="Color.Success" title="Approve Log" OnClick="() => ApproveLog(context)" />
-                                    }
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" title="Remove Log" OnClick="() => DeleteLog(context)" />
-                                </MudTd>
-                            </RowTemplate>
-                        </MudTable>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -125,7 +143,7 @@
 
 @code {
     [Inject] private IErpService ErpService { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private ToastService Toast { get; set; } = default!;
 
     private string _selectedEmpId = string.Empty;
     private string _selectedPunchType = "Check In";
@@ -167,7 +185,7 @@
     {
         if (string.IsNullOrWhiteSpace(_selectedEmpId))
         {
-            Snackbar.Add("Please choose an employee.", Severity.Warning);
+            await Toast.ShowWarningAsync("Please choose an employee.");
             return;
         }
 
@@ -185,7 +203,7 @@
 
         await ErpService.AddManualPunchLogAsync(log);
         await LoadData();
-        Snackbar.Add($"Manual punch recorded. Pending approval.", Severity.Success);
+        await Toast.ShowSuccessAsync($"Manual punch recorded. Pending approval.");
 
         // Reset fields
         _selectedEmpId = string.Empty;
@@ -198,14 +216,14 @@
     {
         await ErpService.ApproveManualPunchLogAsync(log.Id);
         await LoadData();
-        Snackbar.Add($"Manual punch log approved.", Severity.Success);
+        await Toast.ShowSuccessAsync($"Manual punch log approved.");
     }
 
     private async Task DeleteLog(ManualPunchUiLog log)
     {
         await ErpService.DeleteManualPunchLogAsync(log.Id);
         await LoadData();
-        Snackbar.Add("Manual punch log removed.", Severity.Info);
+        await Toast.ShowInfoAsync("Manual punch log removed.");
     }
 
     public class ManualPunchUiLog

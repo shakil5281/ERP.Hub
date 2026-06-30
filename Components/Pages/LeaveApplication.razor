@@ -1,10 +1,11 @@
-@page "/leave/application"
+﻿@page "/leave/application"
 @using ERPHub.Models
 @using LeaveApp = ERPHub.Models.LeaveApplication
 @using LeaveTypeModel = ERPHub.Models.LeaveType
+@using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 @inject IJSRuntime JS
 
 <PageTitle>ERPHub - Leave Applications</PageTitle>
@@ -19,7 +20,7 @@
                     <p class="text-zinc-500 text-xs mt-0.5 font-body">Submit, track, and manage employee leave requests with full approval workflow.</p>
                 </div>
                 <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick='() => NavManager.NavigateTo("/leave/apply")'>
-                    <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
+                    <span class="material-icons text-sm mr-1">add</span>
                     Apply Leave
                 </button>
             </div>
@@ -27,7 +28,7 @@
             @if (_isLoading)
             {
                 <div class="flex justify-center items-center py-20">
-                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                    <div class="spinner spinner-lg"></div>
                 </div>
             }
             else
@@ -56,16 +57,17 @@
                 <div class="bg-white border border-zinc-200 rounded-xl shadow-sm mb-6 overflow-hidden">
                     <div class="px-5 py-3.5 border-b border-zinc-100 flex justify-between items-center cursor-pointer select-none hover:bg-zinc-50 transition-colors" @onclick="() => _filterOpen = !_filterOpen">
                         <div class="flex items-center gap-2.5">
-                            <MudIcon Icon="@Icons.Material.Filled.FilterList" Size="Size.Small" Class="text-zinc-400" />
+                            <span class="material-icons text-sm text-zinc-400">filter_list</span>
                             <span class="text-sm font-semibold text-zinc-800 font-heading">Filters</span>
                             @if (_statusFilter != "All" || _typeFilter != "All" || _monthFilter > 0)
                             {
                                 <span class="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100">Active</span>
                             }
                         </div>
-                        <MudIcon Icon="@(_filterOpen ? Icons.Material.Filled.ExpandLess : Icons.Material.Filled.ExpandMore)" Size="Size.Small" Class="text-zinc-400" />
+                        <span class="material-icons text-sm text-zinc-400">@(_filterOpen ? "expand_less" : "expand_more")</span>
                     </div>
-                    <MudCollapse Expanded="_filterOpen">
+                    @if (_filterOpen)
+                    {
                         <div class="p-5 bg-zinc-50/50">
                             <div class="grid grid-cols-4 gap-4 max-sm:grid-cols-1">
                                 <div>
@@ -105,93 +107,113 @@
                                 </div>
                             </div>
                         </div>
-                    </MudCollapse>
+                    }
                 </div>
 
                 <!-- Applications Table -->
                 <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                    <MudTable Items="@_filtered" Hover="true" Dense="true" SortLabel="Sort By" Elevation="0" Filter="new Func<LeaveApp, bool>(SearchFunc)">
-                        <ToolBarContent>
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Applications List</MudText>
-                            <MudSpacer />
-                            <MudTextField @bind-Value="_search" Placeholder="Search employee, type..."
-                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                                          IconSize="Size.Small" Variant="Variant.Outlined" Margin="Margin.Dense"
-                                          Clearable="true" Class="mt-0" />
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.EmployeeName)">Employee</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.Department != null ? x.Department.NameEn : string.Empty)">Department</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.LeaveType)">Leave Type</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.LeaveDate)">From</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.EndDate)">To</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.TotalDays)">Days</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LeaveApp, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align:center">Actions</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Employee">
-                                <div class="flex flex-col">
-                                    <span class="fw-semibold text-zinc-900 text-sm">@context.EmployeeName</span>
-                                    <span class="text-zinc-400 text-[10px] font-mono">@context.EmployeeId</span>
-                                </div>
-                            </MudTd>
-                            <MudTd DataLabel="Department">
-                                <span class="text-xs text-zinc-600">@(context.Department?.NameEn ?? "-")</span>
-                            </MudTd>
-                            <MudTd DataLabel="Leave Type">
-                                @{
-                                    var ltype = _leaveTypes.FirstOrDefault(t => t.Name == context.LeaveType);
-                                    var ltColor = ltype?.Color ?? "#6366f1";
+                    <div class="flex items-center justify-between px-5 py-3.5 border-b border-zinc-100">
+                        <span class="text-sm font-bold text-zinc-800 font-heading">Applications List</span>
+                        <div class="flex-1"></div>
+                        <div class="relative">
+                            <span class="material-icons text-sm absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">search</span>
+                            <input type="text" class="w-64 border border-zinc-200 rounded-lg py-2 pl-10 pr-3 text-sm outline-none focus:border-black" @bind="_search" placeholder="Search employee, type..." @bind:event="oninput" />
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="bg-zinc-50 border-b border-zinc-100">
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Employee</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Department</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Leave Type</th>
+                                    <th class="text-center px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">From</th>
+                                    <th class="text-center px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">To</th>
+                                    <th class="text-center px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Days</th>
+                                    <th class="text-center px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Status</th>
+                                    <th class="text-center px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var app in _filtered)
+                                {
+                                    <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                        <td data-label="Employee" class="px-4 py-3">
+                                            <div class="flex flex-col">
+                                                <span class="font-semibold text-zinc-900 text-sm">@app.EmployeeName</span>
+                                                <span class="text-zinc-400 text-[10px] font-mono">@app.EmployeeId</span>
+                                            </div>
+                                        </td>
+                                        <td data-label="Department" class="px-4 py-3">
+                                            <span class="text-xs text-zinc-600">@(app.Department?.NameEn ?? "-")</span>
+                                        </td>
+                                        <td data-label="Leave Type" class="px-4 py-3">
+                                            @{
+                                                var ltype = _leaveTypes.FirstOrDefault(t => t.Name == app.LeaveType);
+                                                var ltColor = ltype?.Color ?? "#6366f1";
+                                            }
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border"
+                                                  style="background-color:@(ltColor + "15"); color:@ltColor; border-color:@(ltColor + "40")">
+                                                @app.LeaveType
+                                            </span>
+                                        </td>
+                                        <td class="text-center px-4 py-3"><span class="font-mono text-xs text-zinc-600">@app.LeaveDate.ToString("dd MMM yy")</span></td>
+                                        <td class="text-center px-4 py-3"><span class="font-mono text-xs text-zinc-600">@app.EndDate.ToString("dd MMM yy")</span></td>
+                                        <td class="text-center px-4 py-3"><span class="text-sm font-bold text-zinc-800">@app.TotalDays</span></td>
+                                        <td class="text-center px-4 py-3">
+                                            @{
+                                                var sc = app.Status switch {
+                                                    "Approved" => "bg-emerald-50 text-emerald-700 border border-emerald-100",
+                                                    "Pending"  => "bg-amber-50 text-amber-700 border border-amber-100",
+                                                    "Rejected" => "bg-red-50 text-red-700 border border-red-100",
+                                                    _ => "bg-zinc-100 text-zinc-500"
+                                                };
+                                            }
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @sc">@app.Status</span>
+                                        </td>
+                                        <td class="text-center px-4 py-3">
+                                            <div class="flex items-center justify-center gap-1">
+                                                @if (app.Status == "Pending")
+                                                {
+                                                    <button type="button" class="p-1.5 rounded-md hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 transition-colors cursor-pointer"
+                                                            title="Approve" @onclick="() => QuickApprove(app)">
+                                                        <span class="material-icons text-sm">check_circle</span>
+                                                    </button>
+                                                    <button type="button" class="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                                                            title="Reject" @onclick="() => OpenRejectDialog(app)">
+                                                        <span class="material-icons text-sm">cancel</span>
+                                                    </button>
+                                                }
+                                                <button type="button" class="px-2 py-1 rounded-md bg-zinc-900 text-white hover:bg-zinc-700 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1"
+                                                        title="Download PDF Form" @onclick="() => ExportPdf(app)">
+                                                    <span class="material-icons text-sm">download</span> PDF
+                                                </button>
+                                                <button type="button" class="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
+                                                        title="Delete" @onclick="() => DeleteApplication(app)">
+                                                    <span class="material-icons text-sm">delete</span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 }
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border"
-                                      style="background-color:@(ltColor + "15"); color:@ltColor; border-color:@(ltColor + "40")">
-                                    @context.LeaveType
-                                </span>
-                            </MudTd>
-                            <MudTd Style="text-align:center"><span class="font-mono text-xs text-zinc-600">@context.LeaveDate.ToString("dd MMM yy")</span></MudTd>
-                            <MudTd Style="text-align:center"><span class="font-mono text-xs text-zinc-600">@context.EndDate.ToString("dd MMM yy")</span></MudTd>
-                            <MudTd Style="text-align:center"><span class="text-sm font-bold text-zinc-800">@context.TotalDays</span></MudTd>
-                            <MudTd Style="text-align:center">
-                                @{
-                                    var sc = context.Status switch {
-                                        "Approved" => "bg-emerald-50 text-emerald-700 border border-emerald-100",
-                                        "Pending"  => "bg-amber-50 text-amber-700 border border-amber-100",
-                                        "Rejected" => "bg-red-50 text-red-700 border border-red-100",
-                                        _ => "bg-zinc-100 text-zinc-500"
-                                    };
-                                }
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @sc">@context.Status</span>
-                            </MudTd>
-                            <MudTd Style="text-align:center">
-                                <div class="flex items-center justify-center gap-1">
-                                    @if (context.Status == "Pending")
-                                    {
-                                        <button type="button" class="p-1.5 rounded-md hover:bg-emerald-50 text-zinc-400 hover:text-emerald-600 transition-colors cursor-pointer"
-                                                title="Approve" @onclick="() => QuickApprove(context)">
-                                            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Size="Size.Small" />
-                                        </button>
-                                        <button type="button" class="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
-                                                title="Reject" @onclick="() => OpenRejectDialog(context)">
-                                            <MudIcon Icon="@Icons.Material.Filled.Cancel" Size="Size.Small" />
-                                        </button>
-                                    }
-                                    <button type="button" class="px-2 py-1 rounded-md bg-zinc-900 text-white hover:bg-zinc-700 transition-colors cursor-pointer text-xs font-bold flex items-center gap-1"
-                                            title="Download PDF Form" @onclick="() => ExportPdf(context)">
-                                        <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" /> PDF
-                                    </button>
-                                    <button type="button" class="p-1.5 rounded-md hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors cursor-pointer"
-                                            title="Delete" @onclick="() => DeleteApplication(context)">
-                                        <MudIcon Icon="@Icons.Material.Filled.Delete" Size="Size.Small" />
-                                    </button>
-                                </div>
-                            </MudTd>
-                        </RowTemplate>
-                        <PagerContent><MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" /></PagerContent>
-                        <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No applications found.</MudText>
-                        </NoRecordsContent>
-                    </MudTable>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between px-4 py-3 border-t border-zinc-100">
+                        <div class="text-xs text-zinc-400">@_filtered.Count application(s)</div>
+                        <div class="flex items-center gap-2 text-xs text-zinc-500">
+                            <span>Rows per page:</span>
+                            <select class="border border-zinc-200 rounded px-2 py-1 text-xs bg-white outline-none">
+                                <option>10</option>
+                                <option>25</option>
+                                <option>50</option>
+                            </select>
+                        </div>
+                    </div>
+                    @if (!_filtered.Any())
+                    {
+                        <div class="text-center py-8 text-zinc-400 text-xs">No applications found.</div>
+                    }
                 </div>
             }
         </div>
@@ -258,7 +280,7 @@
             _applications = await Http.GetFromJsonAsync<List<LeaveApp>>($"{NavManager.BaseUri}api/leaveapplications") ?? new();
             ApplyFilters();
         }
-        catch (Exception ex) { Snackbar.Add($"Load error: {ex.Message}", Severity.Error); }
+        catch (Exception ex) { await Toast.ShowErrorAsync($"Load error: {ex.Message}"); }
         finally { _isLoading = false; }
     }
 
@@ -267,14 +289,18 @@
         _filtered = _applications.Where(a =>
             (_statusFilter == "All" || a.Status == _statusFilter) &&
             (_typeFilter == "All" || a.LeaveType == _typeFilter) &&
-            (_monthFilter == 0 || a.LeaveDate.Month == _monthFilter)
+            (_monthFilter == 0 || a.LeaveDate.Month == _monthFilter) &&
+            (string.IsNullOrWhiteSpace(_search) ||
+             a.EmployeeName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             a.EmployeeId.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             a.LeaveType.Contains(_search, StringComparison.OrdinalIgnoreCase))
         ).ToList();
     }
 
     private void OnStatusFilterChanged(ChangeEventArgs e) { _statusFilter = e.Value?.ToString() ?? "All"; ApplyFilters(); }
     private void OnTypeFilterChanged(ChangeEventArgs e) { _typeFilter = e.Value?.ToString() ?? "All"; ApplyFilters(); }
     private void OnMonthFilterChanged(ChangeEventArgs e) { int.TryParse(e.Value?.ToString(), out _monthFilter); ApplyFilters(); }
-    private void ResetFilters() { _statusFilter = "All"; _typeFilter = "All"; _monthFilter = 0; ApplyFilters(); }
+    private void ResetFilters() { _statusFilter = "All"; _typeFilter = "All"; _monthFilter = 0; _search = ""; ApplyFilters(); }
 
     private bool SearchFunc(LeaveApp a) =>
         string.IsNullOrWhiteSpace(_search) ||
@@ -286,8 +312,8 @@
     {
         var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/leaveapplications/{app.Id}/approve",
             new { ApprovedBy = "HR Manager" });
-        if (resp.IsSuccessStatusCode) { Snackbar.Add($"Approved leave for {app.EmployeeName}.", Severity.Success); await LoadData(); }
-        else Snackbar.Add("Approve failed.", Severity.Error);
+        if (resp.IsSuccessStatusCode) { await Toast.ShowSuccessAsync($"Approved leave for {app.EmployeeName}."); await LoadData(); }
+        else await Toast.ShowErrorAsync("Approve failed.");
     }
 
     private void OpenRejectDialog(LeaveApp app) { _rejectTarget = app; _rejectReason = ""; _showRejectDialog = true; }
@@ -299,17 +325,17 @@
             new { RejectedBy = "HR Manager", Reason = _rejectReason });
         if (resp.IsSuccessStatusCode)
         {
-            Snackbar.Add($"Rejected leave for {_rejectTarget.EmployeeName}.", Severity.Info);
+            await Toast.ShowInfoAsync($"Rejected leave for {_rejectTarget.EmployeeName}.");
             _showRejectDialog = false;
             await LoadData();
         }
-        else Snackbar.Add("Reject failed.", Severity.Error);
+        else await Toast.ShowErrorAsync("Reject failed.");
     }
 
     private async Task DeleteApplication(LeaveApp app)
     {
         var resp = await Http.DeleteAsync($"{NavManager.BaseUri}api/leaveapplications/{app.Id}");
-        if (resp.IsSuccessStatusCode) { Snackbar.Add("Application deleted.", Severity.Info); await LoadData(); }
+        if (resp.IsSuccessStatusCode) { await Toast.ShowInfoAsync("Application deleted."); await LoadData(); }
     }
 
     private void ExportPdf(LeaveApp app)

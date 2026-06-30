@@ -18,11 +18,27 @@ namespace ERPHub.Models
 
         public decimal DailyBasic { get; set; }
 
+        public decimal DailyGross { get; set; }
+
         public double OtHours { get; set; }
 
         public decimal OtPay { get; set; }
 
+        public decimal NightBillPay { get; set; }
+
+        public decimal HolidayBillPay { get; set; }
+
         public decimal Allowances { get; set; }
+
+        public decimal AbsentDeduction { get; set; }
+
+        public decimal LateDeduction { get; set; }
+
+        public decimal LwopDeduction { get; set; }
+
+        public decimal AdvanceDeduction { get; set; }
+
+        public decimal LoanDeduction { get; set; }
 
         public decimal Deductions { get; set; }
 

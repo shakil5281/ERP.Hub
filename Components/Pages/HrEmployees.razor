@@ -49,85 +49,110 @@
                             </div>
                             <input type="text" class="block w-full pl-10 pr-3 py-3 border border-zinc-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl bg-zinc-50 hover:bg-white text-sm transition-colors outline-none text-zinc-900 placeholder-zinc-400" placeholder="Search employees by name, email or role..." @bind="_searchQuery" @bind:event="oninput" />
                         </div>
-                        
+
                         <!-- Filters Container -->
                         <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
                             <!-- Employee ID -->
-                            <MudTextField T="string" @bind-Value="_employeeIdFilter" Label="Employee ID" Placeholder="e.g. 1001" Variant="Variant.Outlined" Margin="Margin.Dense" dense="true" />
+                            <div>
+                                <label class="form-label">Employee ID</label>
+                                <input type="text" class="form-control" @bind="_employeeIdFilter" placeholder="e.g. 1001" />
+                            </div>
 
                             <!-- Company -->
-                            <MudSelect T="string" @bind-Value="_selectedCompany" Label="Company" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Companies</MudSelectItem>
-                                @foreach (var c in _companies)
-                                {
-                                    <MudSelectItem Value="@c.CompanyNameEn">@c.CompanyNameEn</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Company</label>
+                                <select class="form-control" @bind="_selectedCompany">
+                                    <option value="">All Companies</option>
+                                    @foreach (var c in _companies)
+                                    {
+                                        <option value="@c.CompanyNameEn">@c.CompanyNameEn</option>
+                                    }
+                                </select>
+                            </div>
 
                             <!-- Department -->
-                            <MudSelect T="string" @bind-Value="_selectedDept" Label="Department" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Departments</MudSelectItem>
-                                @foreach (var dept in _departments)
-                                {
-                                    <MudSelectItem Value="@dept.NameEn">@dept.NameEn</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Department</label>
+                                <select class="form-control" @bind="_selectedDept">
+                                    <option value="">All Departments</option>
+                                    @foreach (var dept in _departments)
+                                    {
+                                        <option value="@dept.NameEn">@dept.NameEn</option>
+                                    }
+                                </select>
+                            </div>
 
                             <!-- Section -->
-                            <MudSelect T="string" @bind-Value="_selectedSection" Label="Section" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Sections</MudSelectItem>
-                                @foreach (var sec in _sections)
-                                {
-                                    <MudSelectItem Value="@sec.NameEn">@sec.NameEn</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Section</label>
+                                <select class="form-control" @bind="_selectedSection">
+                                    <option value="">All Sections</option>
+                                    @foreach (var sec in _sections)
+                                    {
+                                        <option value="@sec.NameEn">@sec.NameEn</option>
+                                    }
+                                </select>
+                            </div>
 
                             <!-- Designation -->
-                            <MudSelect T="string" @bind-Value="_selectedDesignation" Label="Designation" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Designations</MudSelectItem>
-                                @foreach (var desig in _designations)
-                                {
-                                    <MudSelectItem Value="@desig.NameEn">@desig.NameEn</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Designation</label>
+                                <select class="form-control" @bind="_selectedDesignation">
+                                    <option value="">All Designations</option>
+                                    @foreach (var desig in _designations)
+                                    {
+                                        <option value="@desig.NameEn">@desig.NameEn</option>
+                                    }
+                                </select>
+                            </div>
 
                             <!-- Line -->
-                            <MudSelect T="string" @bind-Value="_selectedLine" Label="Line" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Lines</MudSelectItem>
-                                @foreach (var line in _lines)
-                                {
-                                    <MudSelectItem Value="@line.NameEn">@line.NameEn</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Line</label>
+                                <select class="form-control" @bind="_selectedLine">
+                                    <option value="">All Lines</option>
+                                    @foreach (var line in _lines)
+                                    {
+                                        <option value="@line.NameEn">@line.NameEn</option>
+                                    }
+                                </select>
+                            </div>
 
                             <!-- Group -->
-                            <MudSelect T="string" @bind-Value="_selectedGroup" Label="Group" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Groups</MudSelectItem>
-                                @foreach (var group in _groups)
-                                {
-                                    <MudSelectItem Value="@group.GroupName">@group.GroupName</MudSelectItem>
-                                }
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Group</label>
+                                <select class="form-control" @bind="_selectedGroup">
+                                    <option value="">All Groups</option>
+                                    @foreach (var group in _groups)
+                                    {
+                                        <option value="@group.GroupName">@group.GroupName</option>
+                                    }
+                                </select>
+                            </div>
 
                             <!-- Status -->
-                            <MudSelect T="string" @bind-Value="_selectedStatus" Label="Status" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Statuses</MudSelectItem>
-                                <MudSelectItem Value="@("Regular")">Regular</MudSelectItem>
-                                <MudSelectItem Value="@("Resign")">Resign</MudSelectItem>
-                                <MudSelectItem Value="@("Left")">Left</MudSelectItem>
-                                <MudSelectItem Value="@("Close")">Close</MudSelectItem>
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Status</label>
+                                <select class="form-control" @bind="_selectedStatus">
+                                    <option value="">All Statuses</option>
+                                    <option value="Active">Active</option>
+                                    <option value="Separation">Separation</option>
+                                </select>
+                            </div>
 
                             <!-- Year -->
-                            <MudSelect T="string" @bind-Value="_selectedYear" Label="Year" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                                <MudSelectItem Value="@("")">All Years</MudSelectItem>
-                                <MudSelectItem Value="@("2020")">2020</MudSelectItem>
-                                <MudSelectItem Value="@("2021")">2021</MudSelectItem>
-                                <MudSelectItem Value="@("2022")">2022</MudSelectItem>
-                                <MudSelectItem Value="@("2023")">2023</MudSelectItem>
-                            </MudSelect>
+                            <div>
+                                <label class="form-label">Year</label>
+                                <select class="form-control" @bind="_selectedYear">
+                                    <option value="">All Years</option>
+                                    <option value="2020">2020</option>
+                                    <option value="2021">2021</option>
+                                    <option value="2022">2022</option>
+                                    <option value="2023">2023</option>
+                                </select>
+                            </div>
                         </div>
-                        
+
                         <div class="flex justify-end mt-2">
                             <button type="button" class="py-2 px-6 rounded-lg bg-indigo-600 text-white font-semibold hover:bg-indigo-700 transition-colors text-sm flex items-center gap-2" @onclick="ApplyFilters">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -148,51 +173,70 @@
             else
             {
                 <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                    <MudTable Items="@FilteredEmployees" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                        <HeaderContent>
-                            <MudTh>Avatar</MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.PunchNumber)">Punch No</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.Email)">Email</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.Department != null ? x.Department.NameEn : string.Empty)">Department</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.Section != null ? x.Section.NameEn : string.Empty)">Section</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.Designation != null ? x.Designation.NameEn : string.Empty)">Designation</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.Line != null ? x.Line.NameEn : string.Empty)">Line</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.JoiningDate)">Join Date</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<Employee, object>(x=>x.EmployeeStatus)">Status</MudTableSortLabel></MudTh>
-                            <MudTh>Actions</MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Avatar">
-                                <div class="w-8 h-8 rounded-full bg-zinc-200 text-zinc-700 flex items-center justify-center text-xs font-bold">@GetInitials(context.EmployeeName)</div>
-                            </MudTd>
-                            <MudTd DataLabel="Employee Name">@context.EmployeeName</MudTd>
-                            <MudTd DataLabel="Punch No">@context.PunchNumber</MudTd>
-                            <MudTd DataLabel="Email">@context.Email</MudTd>
-                            <MudTd DataLabel="Department">@context.Department?.NameEn</MudTd>
-                            <MudTd DataLabel="Section">@context.Section?.NameEn</MudTd>
-                            <MudTd DataLabel="Designation">@context.Designation?.NameEn</MudTd>
-                            <MudTd DataLabel="Line">@context.Line?.NameEn</MudTd>
-                            <MudTd DataLabel="Join Date">@context.JoiningDate.ToString("yyyy-MM-dd")</MudTd>
-                            <MudTd DataLabel="Status">
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @GetStatusBadge(context.EmployeeStatus)">@context.EmployeeStatus</span>
-                            </MudTd>
-                            <MudTd DataLabel="Actions">
-                                <div class="flex items-center gap-1">
-                                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
-                                                   OnClick="@(() => NavManager.NavigateTo($"/hr/edit-employee/{context.Id}"))" />
-                                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                                   OnClick="@(() => ConfirmDelete(context))" />
-                                </div>
-                            </MudTd>
-                        </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                        </PagerContent>
-                    <NoRecordsContent>
-                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                    </NoRecordsContent>
-                    </MudTable>
+                    <div class="table-body">
+                        <table class="data-table-base">
+                            <thead>
+                                <tr>
+                                    <th>Avatar</th>
+                                    <th><button class="sort-btn">Employee Name</button></th>
+                                    <th><button class="sort-btn">Punch No</button></th>
+                                    <th><button class="sort-btn">Email</button></th>
+                                    <th><button class="sort-btn">Department</button></th>
+                                    <th><button class="sort-btn">Section</button></th>
+                                    <th><button class="sort-btn">Designation</button></th>
+                                    <th><button class="sort-btn">Line</button></th>
+                                    <th><button class="sort-btn">Join Date</button></th>
+                                    <th><button class="sort-btn">Status</button></th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var context in _employees)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="w-8 h-8 rounded-full bg-zinc-200 text-zinc-700 flex items-center justify-center text-xs font-bold">@GetInitials(context.EmployeeName)</div>
+                                        </td>
+                                        <td>@context.EmployeeName</td>
+                                        <td>@context.PunchNumber</td>
+                                        <td>@context.Email</td>
+                                        <td>@context.Department?.NameEn</td>
+                                        <td>@context.Section?.NameEn</td>
+                                        <td>@context.Designation?.NameEn</td>
+                                        <td>@context.Line?.NameEn</td>
+                                        <td>@context.JoiningDate.ToString("yyyy-MM-dd")</td>
+                                        <td>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @GetStatusBadge(context.Status)">@context.Status</span>
+                                            @if (context.Status == "Separation" && !string.IsNullOrEmpty(context.SeparationType))
+                                            {
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 ml-1">@context.SeparationType</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="flex items-center gap-1">
+                                                <button class="btn-icon btn-icon-sm text-indigo-500" @onclick='() => NavManager.NavigateTo("/hr/edit-employee/" + context.Id)'>
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
+                                                <button class="btn-icon btn-icon-sm text-red-500" @onclick="() => ConfirmDelete(context)">
+                                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (_employees.Count == 0)
+                    {
+                        <div class="table-empty">
+                            <span class="text-sm text-zinc-500">Data Not Available</span>
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -264,7 +308,7 @@
     private bool _showDeleteDialog = false;
     private Employee? _employeeToDelete;
     private List<Employee> _employees = new();
-    
+
     private List<Company> _companies = new();
     private List<Department> _departments = new();
     private List<Section> _sections = new();
@@ -285,7 +329,28 @@
     {
         try
         {
-            _employees = await Http.GetFromJsonAsync<List<Employee>>($"{baseUri}api/employees") ?? new();
+            var url = $"{baseUri}api/employees";
+            var separator = "?";
+            void AddParam(string name, string? value)
+            {
+                if (!string.IsNullOrEmpty(value))
+                {
+                    url += $"{separator}{name}={Uri.EscapeDataString(value)}";
+                    separator = "&";
+                }
+            }
+
+            AddParam("searchQuery", _activeSearchQuery);
+            AddParam("employeeId", _activeEmployeeIdFilter);
+            AddParam("company", _activeCompany);
+            AddParam("department", _activeDept);
+            AddParam("section", _activeSection);
+            AddParam("designation", _activeDesignation);
+            AddParam("line", _activeLine);
+            AddParam("status", _activeStatus);
+            AddParam("year", _activeYear);
+
+            _employees = await Http.GetFromJsonAsync<List<Employee>>(url) ?? new();
         }
         catch (Exception ex)
         {
@@ -314,8 +379,7 @@
             _sections = await secTask ?? new();
             _designations = await desigTask ?? new();
             _lines = await lineTask ?? new();
-            
-            // Group has no API controller, load via ErpService
+
             _groups = await ErpService.GetBusinessGroupsAsync() ?? new();
         }
         catch (Exception ex)
@@ -328,15 +392,15 @@
 
     private bool HasActiveFilters => !string.IsNullOrEmpty(_activeEmployeeIdFilter) ||
                                      !string.IsNullOrEmpty(_activeCompany) ||
-                                     !string.IsNullOrEmpty(_activeDept) || 
-                                     !string.IsNullOrEmpty(_activeSection) || 
-                                     !string.IsNullOrEmpty(_activeDesignation) || 
-                                     !string.IsNullOrEmpty(_activeLine) || 
-                                     !string.IsNullOrEmpty(_activeGroup) || 
-                                     !string.IsNullOrEmpty(_activeStatus) || 
+                                     !string.IsNullOrEmpty(_activeDept) ||
+                                     !string.IsNullOrEmpty(_activeSection) ||
+                                     !string.IsNullOrEmpty(_activeDesignation) ||
+                                     !string.IsNullOrEmpty(_activeLine) ||
+                                     !string.IsNullOrEmpty(_activeGroup) ||
+                                     !string.IsNullOrEmpty(_activeStatus) ||
                                      !string.IsNullOrEmpty(_activeYear);
 
-    private void ApplyFilters()
+    private async Task ApplyFilters()
     {
         _activeSearchQuery = _searchQuery;
         _activeEmployeeIdFilter = _employeeIdFilter;
@@ -348,9 +412,10 @@
         _activeGroup = _selectedGroup;
         _activeStatus = _selectedStatus;
         _activeYear = _selectedYear;
+        await LoadEmployeesAsync(NavManager.BaseUri);
     }
 
-    private void ClearFilters()
+    private async Task ClearFilters()
     {
         _searchQuery = "";
         _employeeIdFilter = "";
@@ -362,24 +427,18 @@
         _selectedGroup = "";
         _selectedStatus = "";
         _selectedYear = "";
-        
-        ApplyFilters();
+        _activeSearchQuery = "";
+        _activeEmployeeIdFilter = "";
+        _activeCompany = "";
+        _activeDept = "";
+        _activeSection = "";
+        _activeDesignation = "";
+        _activeLine = "";
+        _activeGroup = "";
+        _activeStatus = "";
+        _activeYear = "";
+        await LoadEmployeesAsync(NavManager.BaseUri);
     }
-
-    private IEnumerable<Employee> FilteredEmployees => _employees
-        .Where(e => string.IsNullOrEmpty(_activeSearchQuery) || 
-                    e.EmployeeName.Contains(_activeSearchQuery, StringComparison.OrdinalIgnoreCase) || 
-                    e.Email.Contains(_activeSearchQuery, StringComparison.OrdinalIgnoreCase) || 
-                    (e.EmployeeId != null && e.EmployeeId.Contains(_activeSearchQuery, StringComparison.OrdinalIgnoreCase)))
-        .Where(e => string.IsNullOrEmpty(_activeEmployeeIdFilter) || (e.EmployeeId != null && e.EmployeeId.Equals(_activeEmployeeIdFilter, StringComparison.OrdinalIgnoreCase)))
-        .Where(e => string.IsNullOrEmpty(_activeCompany) || (e.Company?.CompanyNameEn == _activeCompany))
-        .Where(e => string.IsNullOrEmpty(_activeDept) || (e.Department?.NameEn == _activeDept))
-        .Where(e => string.IsNullOrEmpty(_activeSection) || (e.Section?.NameEn == _activeSection))
-        .Where(e => string.IsNullOrEmpty(_activeDesignation) || (e.Designation?.NameEn == _activeDesignation))
-        .Where(e => string.IsNullOrEmpty(_activeLine) || (e.Line?.NameEn == _activeLine))
-        // Note: Group is not currently a property on Employee, so we don't filter by it physically. If GroupId is added later, filter here.
-        .Where(e => string.IsNullOrEmpty(_activeStatus) || e.EmployeeStatus == _activeStatus)
-        .Where(e => string.IsNullOrEmpty(_activeYear) || e.JoiningDate.Year.ToString() == _activeYear);
 
     private static string GetInitials(string name)
     {
@@ -393,10 +452,8 @@
     {
         return status switch
         {
-            "Regular" => "bg-green-50 text-green-700",
-            "Resign" => "bg-amber-50 text-amber-700",
-            "Left" => "bg-red-50 text-red-700",
-            "Close" => "bg-zinc-100 text-zinc-600",
+            "Active" => "bg-green-50 text-green-700",
+            "Separation" => "bg-red-50 text-red-700",
             _ => "bg-zinc-100 text-zinc-600"
         };
     }

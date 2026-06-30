@@ -1,9 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Authorization;
-using MudBlazor;
 using ERPHub.Services;
-using ERPHub.Components.Common;
 
 namespace ERPHub.Components.Layout;
 
@@ -11,10 +9,10 @@ public partial class MainLayout : IDisposable
 {
     [Inject] private CustomAuthenticationStateProvider AuthProvider { get; set; } = default!;
     [Inject] private NavigationManager Nav { get; set; } = default!;
-    [Inject] private IDialogService DialogService { get; set; } = default!;
     [Inject] private NotificationService NotificationService { get; set; } = default!;
 
     private bool _drawerOpen = true;
+    private bool _showSearchDialog;
     private bool _showNotifications;
     private bool _showProfileMenu;
     private IReadOnlyList<NotificationItem> _notifications = Array.Empty<NotificationItem>();
@@ -41,19 +39,15 @@ public partial class MainLayout : IDisposable
 
     private void ToggleDrawer() => _drawerOpen = !_drawerOpen;
 
-    private async Task OpenSearchDialog()
+    private void OpenSearchDialog()
     {
         CloseAllPanels();
-        var options = new DialogOptions
-        {
-            CloseButton = true,
-            FullWidth = true,
-            MaxWidth = MaxWidth.Medium,
-            Position = DialogPosition.TopCenter,
-            BackdropClick = true,
-            CloseOnEscapeKey = true
-        };
-        await DialogService.ShowAsync<GlobalSearchDialog>("", options);
+        _showSearchDialog = true;
+    }
+
+    private void CloseSearchDialog()
+    {
+        _showSearchDialog = false;
     }
 
     private void ToggleNotifications()

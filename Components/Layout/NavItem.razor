@@ -1,8 +1,16 @@
-<MudNavLink Href="@Href" Match="@Match" Icon="@Icon">@ChildContent</MudNavLink>
+<a href="@Href" class="nav-link @(IsActive ? "active" : "")">
+    @if (!string.IsNullOrEmpty(Icon))
+    {
+        <span class="material-icons nav-icon">@Icon</span>
+    }
+    @ChildContent
+</a>
 
 @code {
     [Parameter] [EditorRequired] public string Href { get; set; } = string.Empty;
-    [Parameter] public NavLinkMatch Match { get; set; } = NavLinkMatch.Prefix;
     [Parameter] public string? Icon { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Inject] private NavigationManager NavManager { get; set; } = default!;
+
+    private bool IsActive => NavManager.Uri.TrimEnd('/').EndsWith(Href.TrimEnd('/'), StringComparison.OrdinalIgnoreCase);
 }

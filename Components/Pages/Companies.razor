@@ -1,4 +1,4 @@
-@page "/companies"
+﻿@page "/companies"
 
 <PageTitle>ERPHub - Company Information</PageTitle>
 
@@ -16,39 +16,46 @@
     </div>
 
     <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-        <MudTable Items="@FilteredCompanies" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-            <HeaderContent>
-                <MudTh>Sl</MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.CompanyNameEn)">Company Name (EN)</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.CompanyNameBn)">Company Name (BN)</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.AddressEn)">Address (EN)</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.AddressBn)">Address (BN)</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.Email)">Email</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.PhoneNumber)">Phone Number</MudTableSortLabel></MudTh>
-                <MudTh><MudTableSortLabel SortBy="new Func<Company, object>(x=>x.Signature)">Signature</MudTableSortLabel></MudTh>
-                <MudTh>Actions</MudTh>
-            </HeaderContent>
-            <RowTemplate>
-                <MudTd DataLabel="Sl">@(FilteredCompanies.ToList().IndexOf(context) + 1)</MudTd>
-                <MudTd DataLabel="Company Name (EN)">@context.CompanyNameEn</MudTd>
-                <MudTd DataLabel="Company Name (BN)" Class="font-sutonnymj">@context.CompanyNameBn</MudTd>
-                <MudTd DataLabel="Address (EN)">@context.AddressEn</MudTd>
-                <MudTd DataLabel="Address (BN)" Class="font-sutonnymj">@context.AddressBn</MudTd>
-                <MudTd DataLabel="Email"><code class="text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded">@context.Email</code></MudTd>
-                <MudTd DataLabel="Phone Number">@context.PhoneNumber</MudTd>
-                <MudTd DataLabel="Signature"><span class="font-serif italic border-b border-zinc-300 pb-0.5 text-zinc-600">@context.Signature</span></MudTd>
-                <MudTd DataLabel="Actions">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Primary" OnClick="() => OpenEditModal(context)" />
-                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="@Size.Small" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)" />
-                </MudTd>
-            </RowTemplate>
-            <PagerContent>
-                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-            </PagerContent>
-        <NoRecordsContent>
-            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-        </NoRecordsContent>
-        </MudTable>
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Sl</th>
+                        <th>Company Name (EN)</th>
+                        <th>Company Name (BN)</th>
+                        <th>Address (EN)</th>
+                        <th>Address (BN)</th>
+                        <th>Email</th>
+                        <th>Phone Number</th>
+                        <th>Signature</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var company in FilteredCompanies)
+                    {
+                        <tr>
+                            <td>@(FilteredCompanies.ToList().IndexOf(company) + 1)</td>
+                            <td>@company.CompanyNameEn</td>
+                            <td class="font-sutonnymj">@company.CompanyNameBn</td>
+                            <td>@company.AddressEn</td>
+                            <td class="font-sutonnymj">@company.AddressBn</td>
+                            <td><code class="text-indigo-600 bg-indigo-50/50 px-2 py-0.5 rounded">@company.Email</code></td>
+                            <td>@company.PhoneNumber</td>
+                            <td><span class="font-serif italic border-b border-zinc-300 pb-0.5 text-zinc-600">@company.Signature</span></td>
+                            <td>
+                                <button class="btn btn-icon btn-icon-sm" @onclick="() => OpenEditModal(company)"><span class="material-icons">edit</span></button>
+                                <button class="btn btn-icon btn-icon-sm" @onclick="() => ConfirmDelete(company.Id)"><span class="material-icons">delete</span></button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (!FilteredCompanies.Any())
+        {
+            <div class="text-center py-8 text-muted">Data Not Available</div>
+        }
     </div>
 </div>
 
@@ -70,42 +77,42 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Company Name (EN)</label>
-                            <MudTextField @bind-Value="_editingCompany.CompanyNameEn" For="@(() => _editingCompany.CompanyNameEn)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="e.g. Acme Corporation" />
+                            <input class="form-control" @bind="_editingCompany.CompanyNameEn" placeholder="e.g. Acme Corporation" />
                         </div>
                         
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Company Name (BN)</label>
-                            <MudTextField @bind-Value="_editingCompany.CompanyNameBn" For="@(() => _editingCompany.CompanyNameBn)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="একমি কর্পোরেশন" Class="font-sutonnymj" />
+                            <input class="form-control font-sutonnymj" @bind="_editingCompany.CompanyNameBn" placeholder="αªÅαªòαª«αª┐ αªòαª░αºìαª¬αºïαª░αºçαª╢αª¿" />
                         </div>
                     </div>
 
                     <!-- Address Fields -->
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Address (EN)</label>
-                        <MudTextField @bind-Value="_editingCompany.AddressEn" For="@(() => _editingCompany.AddressEn)" Variant="Variant.Outlined" dense="true" Lines="3" Margin="Margin.Dense" placeholder="e.g. 123 Industrial Area, Dhaka" />
+                        <textarea class="form-control" @bind="_editingCompany.AddressEn" placeholder="e.g. 123 Industrial Area, Dhaka"></textarea>
                     </div>
 
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Address (BN)</label>
-                        <MudTextField @bind-Value="_editingCompany.AddressBn" For="@(() => _editingCompany.AddressBn)" Variant="Variant.Outlined" dense="true" Lines="3" Margin="Margin.Dense" placeholder="যেমন: ১২৩ শিল্প এলাকা, ঢাকা" Class="font-sutonnymj" />
+                        <textarea class="form-control font-sutonnymj" @bind="_editingCompany.AddressBn" placeholder="αª»αºçαª«αª¿: αººαº¿αº⌐ αª╢αª┐αª▓αºìαª¬ αªÅαª▓αª╛αªòαª╛, αªóαª╛αªòαª╛"></textarea>
                     </div>
 
                     <!-- Contact Fields -->
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Contact Email</label>
-                            <MudTextField @bind-Value="_editingCompany.Email" For="@(() => _editingCompany.Email)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="info@company.com" />
+                            <input class="form-control" @bind="_editingCompany.Email" placeholder="info@company.com" />
                         </div>
                         <div class="flex flex-col gap-1.5">
                             <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Phone Number</label>
-                            <MudTextField @bind-Value="_editingCompany.PhoneNumber" For="@(() => _editingCompany.PhoneNumber)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="+880 1711-000000" />
+                            <input class="form-control" @bind="_editingCompany.PhoneNumber" placeholder="+880 1711-000000" />
                         </div>
                     </div>
 
                     <!-- Signature Field -->
                     <div class="flex flex-col gap-1.5">
                         <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Authorized Signature Name</label>
-                        <MudTextField @bind-Value="_editingCompany.Signature" For="@(() => _editingCompany.Signature)" Variant="Variant.Outlined" dense="true" Margin="Margin.Dense" placeholder="e.g. John Doe" />
+                        <input class="form-control" @bind="_editingCompany.Signature" placeholder="e.g. John Doe" />
                     </div>
                 </div>
 
@@ -122,14 +129,14 @@
     @if (_showToast)
     {
         <div class="fixed bottom-6 right-6 bg-emerald-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
-            <span>✓</span>
+            <span>Γ£ô</span>
             <span>@_toastMessage</span>
         </div>
     }
     @if (_showErrorToast)
     {
         <div class="fixed bottom-6 right-6 bg-red-600 text-white text-xs font-semibold px-5 py-3 rounded-xl shadow-lg z-[9999] animate-fade-in flex items-center gap-2.5">
-            <span>✗</span>
+            <span>Γ£ù</span>
             <span>@_errorMessage</span>
         </div>
     }

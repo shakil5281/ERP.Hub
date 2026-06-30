@@ -29,17 +29,14 @@ namespace ERPHub.Models
 
         public string Gender { get; set; } = string.Empty;
 
-        // Family (missing from model)
         public string SpouseName { get; set; } = string.Empty;
 
         public int ChildrenCount { get; set; }
 
-        // Account
         public string AccountType { get; set; } = string.Empty;
 
         public string AccountNumber { get; set; } = string.Empty;
 
-        // Present Address
         public string PresentVillage { get; set; } = string.Empty;
         public string PresentPostOffice { get; set; } = string.Empty;
         public int PresentDivisionId { get; set; }
@@ -47,7 +44,6 @@ namespace ERPHub.Models
         public int PresentUpazilaId { get; set; }
         public string PresentPostalCode { get; set; } = string.Empty;
 
-        // Permanent Address
         public string PermanentVillage { get; set; } = string.Empty;
         public string PermanentPostOffice { get; set; } = string.Empty;
         public int PermanentDivisionId { get; set; }
@@ -86,18 +82,55 @@ namespace ERPHub.Models
 
         public decimal GrossSalary { get; set; }
 
+        public decimal HouseRent { get; set; }
+        public decimal MedicalAllowance { get; set; }
+        public decimal TransportAllowance { get; set; }
+        public decimal FoodAllowance { get; set; }
+        public decimal SpecialAllowance { get; set; }
+        public decimal AttendanceBonus { get; set; }
+        public decimal ProductionBonus { get; set; }
+
+        [MaxLength(100)]
+        public string BankName { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        public string BranchName { get; set; } = string.Empty;
+
+        [MaxLength(30)]
+        public string RoutingNumber { get; set; } = string.Empty;
+
         public string PhotoBase64 { get; set; } = string.Empty;
 
         public string SignatureBase64 { get; set; } = string.Empty;
 
-        public string EmployeeStatus { get; set; } = "Regular";
+        public string Status { get; set; } = EmployeeStatuses.Active;
+
+        public DateTime? SeparationDate { get; set; }
+
+        [MaxLength(30)]
+        public string? SeparationType { get; set; }
+
+        [MaxLength(1000)]
+        public string? SeparationReason { get; set; }
+
+        [MaxLength(500)]
+        public string? SeparationRemarks { get; set; }
+
+        [MaxLength(100)]
+        public string? SeparationApprovedBy { get; set; }
+
+        public DateTime? SeparationApprovedDate { get; set; }
 
         public int CompanyId { get; set; }
 
         public Company? Company { get; set; }
 
         public bool OverTimeStatus { get; set; }
-
         public string EmployeeType { get; set; } = string.Empty;
+
+        public int? BusinessGroupId { get; set; }
+        public BusinessGroup? BusinessGroup { get; set; }
+
+        public ICollection<Separation> Separations { get; set; } = [];
     }
 }

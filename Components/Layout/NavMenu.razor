@@ -1,68 +1,74 @@
-<MudNavMenu Class="app-nav-menu">
-    <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">
+<nav class="app-nav">
+    <a href="/" class="nav-link @(NavManager.Uri == NavManager.BaseUri ? "active" : "")">
+        <span class="material-icons nav-icon">dashboard</span>
         Dashboard
-    </MudNavLink>
+    </a>
 
-    <MudNavLink Href="lifecycle" Icon="@Icons.Material.Filled.CurrencyExchange">
+    <a href="lifecycle" class="nav-link @(NavManager.Uri.Contains("/lifecycle") ? "active" : "")">
+        <span class="material-icons nav-icon">currency_exchange</span>
         Lifecycle
-    </MudNavLink>
+    </a>
 
-    <MudNavGroup Title="Information" Icon="@Icons.Material.Filled.Business" Expanded="false" ExpandIcon="@Icons.Material.Filled.ChevronRight">
-        <MudNavLink Href="companies">Company Info</MudNavLink>
-        <MudNavLink Href="organogram">Organogram</MudNavLink>
-        <MudNavLink Href="shift">Shift</MudNavLink>
-        <MudNavLink Href="address">Address</MudNavLink>
-        <MudNavLink Href="group">Group</MudNavLink>
-        <MudNavLink Href="floor">Floor</MudNavLink>
-    </MudNavGroup>
+    <NavGroup Title="Information" Icon="business">
+        <a href="companies" class="nav-link">Company Info</a>
+        <a href="organogram" class="nav-link">Organogram</a>
+        <a href="shift" class="nav-link">Shift</a>
+        <a href="address" class="nav-link">Address</a>
+        <a href="group" class="nav-link">Group</a>
+        <a href="floor" class="nav-link">Floor</a>
+    </NavGroup>
 
-    <MudNavGroup Title="Human Resource" Icon="@Icons.Material.Filled.People" Expanded="false" ExpandIcon="@Icons.Material.Filled.ChevronRight">
-        <MudNavLink Href="hr/employees">Employee</MudNavLink>
-        <MudNavLink Href="hr/manpower">Manpower</MudNavLink>
-        <MudNavLink Href="hr/manpower-requirement">Manpower Req.</MudNavLink>
-        <MudNavLink Href="hr/seperation">Separation</MudNavLink>
-    </MudNavGroup>
+    <NavGroup Title="Human Resource" Icon="people">
+        <a href="hr/employees" class="nav-link">Employee</a>
+        <a href="hr/manpower" class="nav-link">Manpower</a>
+        <a href="hr/manpower-requirement" class="nav-link">Manpower Req.</a>
+        <a href="hr/seperation" class="nav-link">Separation</a>
+    </NavGroup>
 
-    <MudNavGroup Title="Attendance" Icon="@Icons.Material.Filled.Schedule" Expanded="false" ExpandIcon="@Icons.Material.Filled.ChevronRight">
-        <MudNavLink Href="attendance/daily">Daily Attendance</MudNavLink>
-        <MudNavLink Href="attendance/daily-summary">Summary</MudNavLink>
-        <MudNavLink Href="attendance/job-cards">Job Cards</MudNavLink>
-        <MudNavLink Href="attendance/missing-entry">Missing Entry</MudNavLink>
-        <MudNavLink Href="attendance/manual-entry">Manual Entry</MudNavLink>
-        <MudNavLink Href="attendance/absent-status">Absent Status</MudNavLink>
-        <MudNavLink Href="attendance/overtime-deduction">Overtime Deduction</MudNavLink>
-        <MudNavLink Href="attendance/id-card">ID Card</MudNavLink>
-        <MudNavLink Href="ot/daily-sheet">Daily OT Sheet</MudNavLink>
-        <MudNavLink Href="ot/daily-summary">OT Summary</MudNavLink>
-    </MudNavGroup>
+    <NavGroup Title="Attendance" Icon="schedule">
+        <a href="attendance/daily" class="nav-link">Daily Attendance</a>
+        <a href="attendance/daily-summary" class="nav-link">Summary</a>
+        <a href="attendance/job-cards" class="nav-link">Job Cards</a>
+        <a href="attendance/missing-entry" class="nav-link">Missing Entry</a>
+        <a href="attendance/manual-entry" class="nav-link">Manual Entry</a>
+        <a href="attendance/absent-status" class="nav-link">Absent Status</a>
+        <a href="attendance/overtime-deduction" class="nav-link">Overtime Deduction</a>
+        <a href="attendance/id-card" class="nav-link">ID Card</a>
+        <a href="ot/daily-sheet" class="nav-link">Daily OT Sheet</a>
+        <a href="ot/daily-summary" class="nav-link">OT Summary</a>
+    </NavGroup>
 
-    <MudNavGroup Title="Payroll" Icon="@Icons.Material.Filled.AttachMoney" Expanded="false" ExpandIcon="@Icons.Material.Filled.ChevronRight">
-        <MudNavLink Href="payroll/process">Salary Process</MudNavLink>
-        <MudNavLink Href="payroll/salary-sheet">Salary Sheet</MudNavLink>
-        <MudNavLink Href="payroll/daily-salary-sheet">Daily Salary Sheet</MudNavLink>
-        <MudNavLink Href="payroll/payslip">Payslips</MudNavLink>
-        <MudNavLink Href="payroll/increment">Increment</MudNavLink>
-        <MudNavLink Href="payroll/advance">Advance</MudNavLink>
-        <MudNavLink Href="payroll/night-bill">Night Bill</MudNavLink>
-        <MudNavLink Href="payroll/holiday-bill">Holiday Bill</MudNavLink>
-    </MudNavGroup>
+    <NavGroup Title="Payroll" Icon="attach_money">
+        <a href="payroll/process" class="nav-link">Salary Process</a>
+        <a href="payroll/salary-sheet" class="nav-link">Salary Sheet</a>
+        <a href="payroll/daily-salary-sheet" class="nav-link">Daily Salary Sheet</a>
+        <a href="payroll/payslip" class="nav-link">Payslips</a>
+        <a href="payroll/increment" class="nav-link">Increment</a>
+        <a href="payroll/advance" class="nav-link">Advance</a>
+        <a href="payroll/night-bill" class="nav-link">Night Bill</a>
+        <a href="payroll/holiday-bill" class="nav-link">Holiday Bill</a>
+    </NavGroup>
 
-    <MudNavGroup Title="Leave" Icon="@Icons.Material.Filled.CalendarMonth" Expanded="false" ExpandIcon="@Icons.Material.Filled.ChevronRight">
-        <MudNavLink Href="leave/type">Leave Types</MudNavLink>
-        <MudNavLink Href="leave/application">Applications</MudNavLink>
-        <MudNavLink Href="leave/approval">Approval Queue</MudNavLink>
-        <MudNavLink Href="leave/details">Balance Ledger</MudNavLink>
-        <MudNavLink Href="leave/monthly-report">Monthly Report</MudNavLink>
-    </MudNavGroup>
+    <NavGroup Title="Leave" Icon="calendar_month">
+        <a href="leave/type" class="nav-link">Leave Types</a>
+        <a href="leave/application" class="nav-link">Applications</a>
+        <a href="leave/approval" class="nav-link">Approval Queue</a>
+        <a href="leave/details" class="nav-link">Balance Ledger</a>
+        <a href="leave/monthly-report" class="nav-link">Monthly Report</a>
+    </NavGroup>
 
-    <MudNavGroup Title="Reports" Icon="@Icons.Material.Filled.Assessment" Expanded="false" ExpandIcon="@Icons.Material.Filled.ChevronRight">
-        <MudNavLink Href="reports/monthly">Monthly Summary</MudNavLink>
-        <MudNavLink Href="reports/payroll">Payroll Report</MudNavLink>
-    </MudNavGroup>
+    <NavGroup Title="Reports" Icon="assessment">
+        <a href="reports/monthly" class="nav-link">Monthly Summary</a>
+        <a href="reports/payroll" class="nav-link">Payroll Report</a>
+    </NavGroup>
 
-    <MudNavGroup Title="Data Collect" Icon="@Icons.Material.Filled.Storage" Expanded="false" ExpandIcon="@Icons.Material.Filled.ChevronRight">
-        <MudNavLink Href="datacollect/punch-log">Punch Log</MudNavLink>
-        <MudNavLink Href="datacollect/daily-attendance-process">Daily Process</MudNavLink>
-        <MudNavLink Href="datacollect/monthly-process">Monthly Process</MudNavLink>
-    </MudNavGroup>
-</MudNavMenu>
+    <NavGroup Title="Data Collect" Icon="storage">
+        <a href="datacollect/punch-log" class="nav-link">Punch Log</a>
+        <a href="datacollect/daily-attendance-process" class="nav-link">Daily Process</a>
+        <a href="datacollect/monthly-process" class="nav-link">Monthly Process</a>
+    </NavGroup>
+</nav>
+
+@code {
+    [Inject] private NavigationManager NavManager { get; set; } = default!;
+}

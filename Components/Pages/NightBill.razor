@@ -14,32 +14,59 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_claims" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<NightAllowanceClaim, object>(x=>x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<NightAllowanceClaim, object>(x=>x.NightShiftsLogged)">Night Shifts Logged</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<NightAllowanceClaim, object>(x=>x.AllowanceRate)">Allowance Rate</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<NightAllowanceClaim, object>(x=>x.TotalAllowance)">Total Allowance</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<NightAllowanceClaim, object>(x=>x.Period)">Period</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<NightAllowanceClaim, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Employee Name">@context.EmployeeName</MudTd>
-                        <MudTd DataLabel="Night Shifts Logged">@context.NightShiftsLogged</MudTd>
-                        <MudTd DataLabel="Allowance Rate">@context.AllowanceRate</MudTd>
-                        <MudTd DataLabel="Total Allowance">@context.TotalAllowance</MudTd>
-                        <MudTd DataLabel="Period">@context.Period</MudTd>
-                        <MudTd DataLabel="Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@context.Status</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <div class="table-responsive-wrapper">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Employee Name <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Night Shifts Logged <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Allowance Rate <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Total Allowance <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Period <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Status <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (_claims.Any())
+                            {
+                                @foreach (var item in _claims)
+                                {
+                                    <tr>
+                                        <td data-label="Employee Name">@item.EmployeeName</td>
+                                        <td data-label="Night Shifts Logged">@item.NightShiftsLogged</td>
+                                        <td data-label="Allowance Rate">@item.AllowanceRate</td>
+                                        <td data-label="Total Allowance">@item.TotalAllowance</td>
+                                        <td data-label="Period">@item.Period</td>
+                                        <td data-label="Status">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100">@item.Status</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-8 text-muted">Data Not Available</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="flex items-center gap-3">
+                        <span class="pagination-info">Rows per page:</span>
+                        <select class="page-size-select">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn" disabled>‹</button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn" disabled>›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>

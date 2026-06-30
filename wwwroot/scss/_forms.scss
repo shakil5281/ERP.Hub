@@ -1,0 +1,254 @@
+@use 'variables' as *;
+
+/* ============================================================
+   FORM INPUTS
+   ============================================================ */
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  font-family: inherit;
+  color: $text-primary;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  transition: border-color $transition-fast, box-shadow $transition-fast;
+  outline: none;
+  min-height: 32px;
+  line-height: 1.5;
+}
+
+.form-control:hover {
+  border-color: $border-dark;
+}
+
+.form-control:focus {
+  border-color: $primary;
+  box-shadow: 0 0 0 2px rgba($primary, 0.15);
+}
+
+.form-control::placeholder {
+  color: $text-muted;
+}
+
+select.form-control {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2352525b' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 6px center;
+  background-repeat: no-repeat;
+  background-size: 18px;
+  padding-right: 28px;
+}
+
+textarea.form-control {
+  min-height: 80px;
+  resize: vertical;
+}
+
+.form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: $text-secondary;
+  margin-bottom: 4px;
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+.form-group.dense {
+  margin-bottom: 0;
+}
+
+.form-group.dense .form-control {
+  min-height: 30px;
+  padding: 2px 8px;
+}
+
+/* Button */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  border: 1px solid transparent;
+  border-radius: $radius-sm;
+  cursor: pointer;
+  transition: all $transition-fast;
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: $primary;
+  color: $text-inverse;
+  border-color: $primary;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: $primary-dark;
+  border-color: $primary-dark;
+}
+
+.btn-outlined {
+  background: transparent;
+  color: $text-secondary;
+  border-color: $border;
+}
+
+.btn-outlined:hover:not(:disabled) {
+  background: $bg-hover;
+  border-color: $border-dark;
+  color: $text-primary;
+}
+
+.btn-text {
+  background: transparent;
+  color: $primary;
+  border-color: transparent;
+  padding: 4px 8px;
+}
+
+.btn-text:hover:not(:disabled) {
+  background: rgba($primary, 0.08);
+}
+
+.btn-success { background: $success; color: $text-inverse; border-color: $success; }
+.btn-success:hover:not(:disabled) { background: $success-dark; border-color: $success-dark; }
+
+.btn-danger { background: $danger; color: $text-inverse; border-color: $danger; }
+.btn-danger:hover:not(:disabled) { background: $danger-dark; border-color: $danger-dark; }
+
+.btn-warning { background: $warning; color: $text-inverse; border-color: $warning; }
+.btn-warning:hover:not(:disabled) { background: $warning-dark; border-color: $warning-dark; }
+
+.btn-info { background: $info; color: $text-inverse; border-color: $info; }
+.btn-info:hover:not(:disabled) { background: $info-dark; border-color: $info-dark; }
+
+.btn-default { background: transparent; color: $text-secondary; border-color: $border; }
+.btn-default:hover:not(:disabled) { background: $bg-hover; border-color: $border-dark; color: $text-primary; }
+
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btn-lg {
+  padding: 10px 20px;
+  font-size: 15px;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: $radius-md;
+  border: none;
+  background: transparent;
+  color: $text-secondary;
+  cursor: pointer;
+  transition: background $transition-fast;
+  font-size: 18px;
+}
+
+.btn-icon:hover {
+  background: $bg-hover;
+}
+
+.btn-icon-sm {
+  width: 28px;
+  height: 28px;
+  font-size: 16px;
+}
+
+/* Checkbox / Switch */
+.form-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.form-check input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: $primary;
+  cursor: pointer;
+}
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-track {
+  width: 36px;
+  height: 20px;
+  background: #d4d4d8;
+  border-radius: 10px;
+  position: relative;
+  transition: background $transition-fast;
+}
+
+.switch input:checked + .switch-track {
+  background: $primary;
+}
+
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  background: $surface;
+  border-radius: 50%;
+  transition: transform $transition-fast;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.switch input:checked + .switch-track .switch-thumb {
+  transform: translateX(16px);
+}
+
+/* Date input */
+input[type="date"].form-control {
+  min-height: 32px;
+}
+
+/* Numeric input */
+input[type="number"].form-control {
+  -moz-appearance: textfield;
+}
+
+input[type="number"].form-control::-webkit-outer-spin-button,
+input[type="number"].form-control::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}

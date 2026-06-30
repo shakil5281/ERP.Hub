@@ -16,6 +16,7 @@ public partial class Profile
     [Inject] private CustomAuthenticationStateProvider CustomAuthProvider { get; set; } = default!;
 
     private User? _profileUser;
+    private string _profileRole = string.Empty;
     private string _editFullName = string.Empty;
     private string _editEmail = string.Empty; // Reserved for future use
 
@@ -52,11 +53,15 @@ public partial class Profile
         {
             var username = user.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
             await using var db = await DbFactory.CreateDbContextAsync();
-            _profileUser = await db.Users.FirstOrDefaultAsync(u => u.Username == username);
+            _profileUser = await db.Users
+                .Include(u => u.UserRoles!)
+                    .ThenInclude(ur => ur.Role)
+                .FirstOrDefaultAsync(u => u.Username == username);
 
             if (_profileUser != null)
             {
                 _editFullName = _profileUser.FullName;
+                _profileRole = string.Join(", ", _profileUser.UserRoles?.Where(ur => ur.Role != null).Select(ur => ur.Role!.Name) ?? Array.Empty<string>());
                 _editEmail = string.Empty;
             }
         }
@@ -92,7 +97,7 @@ public partial class Profile
         {
             Username = _profileUser.Username,
             FullName = _profileUser.FullName,
-            Role = _profileUser.Role
+            Role = _profileRole
         });
 
         ShowToast("Profile updated successfully.");

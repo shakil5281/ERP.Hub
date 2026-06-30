@@ -25,621 +25,396 @@
                     <DataAnnotationsValidator />
 
                     <div class="p-5 sm:p-6">
-                        <MudTabs @bind-ActivePanelIndex="_activeTabIndex" Color="Color.Default" Rounded="true" KeepPanelsAlive="true" Class="add-employee-tabs">
-
-                            @* ===== TAB 1: Personal Info ===== *@
-                            <MudTabPanel Text="Personal Info" Icon="@Icons.Material.Filled.Person">
-                                <div class="pt-5">
-                                    <MudGrid>
-                                        <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="_employee.EmployeeId"
-                                                          Label="Employee ID"
-                                                          Placeholder="e.g. EMP-001"
-                                                          Required="true"
-                                                          RequiredError="Employee ID is required."
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudNumericField @bind-Value="_employee.PunchNumber"
-                                                             Label="Punch Number"
-                                                             Placeholder="e.g. 1001"
-                                                             Variant="Variant.Outlined"
-                                                             Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12">
-                                            <MudTextField @bind-Value="_employee.EmployeeName"
-                                                          Label="Full Name"
-                                                          Placeholder="e.g. Jane Doe"
-                                                          Required="true"
-                                                          RequiredError="Full Name is required."
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="_employee.NID"
-                                                          Label="National ID (NID)"
-                                                          Placeholder="e.g. 1234567890"
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="_employee.MobileNo"
-                                                          Label="Mobile Number"
-                                                          Placeholder="e.g. +880 1711-000000"
-                                                          Required="true"
-                                                          RequiredError="Mobile Number is required."
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="_employee.Email"
-                                                          Label="Email Address"
-                                                          Placeholder="e.g. jane.doe@company.com"
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudDatePicker Date="_dob"
-                                                           DateChanged="OnDobChanged"
-                                                           Label="Date of Birth"
-                                                           Editable="true"
-                                                           Placeholder="Select Date"
-                                                           DateFormat="dd/MM/yyyy"
-                                                           Variant="Variant.Outlined"
-                                                           Margin="Margin.Dense"
-                                                           Adornment="Adornment.End"
-                                                           AdornmentIcon="@Icons.Material.Filled.CalendarToday" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="string" Value="_gender"
-                                                       ValueChanged="@( (string v) => OnGenderChanged(v) )"
-                                                       Label="Gender"
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="@("Male")" />
-                                                <MudSelectItem Value="@("Female")" />
-                                                <MudSelectItem Value="@("Other")" />
-                                            </MudSelect>
-                                        </MudItem>
-                                    </MudGrid>
-                                </div>
-                            </MudTabPanel>
-
-                            @* ===== TAB 2: Family Info ===== *@
-                            <MudTabPanel Text="Family Info" Icon="@Icons.Material.Filled.FamilyRestroom">
-                                <div class="pt-5">
-                                    <MudGrid>
-                                        <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="_employee.FatherName"
-                                                          Label="Father's Name"
-                                                          Placeholder="e.g. John Doe"
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudTextField @bind-Value="_employee.MotherName"
-                                                          Label="Mother's Name"
-                                                          Placeholder="e.g. Mary Doe"
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudTextField Value="_spouseName"
-                                                          ValueChanged="@( (string? v) => OnSpouseNameChanged(v ?? string.Empty) )"
-                                                          Label="Spouse Name"
-                                                          Placeholder="e.g. Sarah Doe"
-                                                          Variant="Variant.Outlined"
-                                                          Margin="Margin.Dense" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudNumericField Value="_childrenCount"
-                                                             ValueChanged="@( (int? v) => OnChildrenCountChanged(v ?? 0) )"
-                                                             Label="Number of Children"
-                                                             Min="0"
-                                                             Variant="Variant.Outlined"
-                                                             Margin="Margin.Dense" />
-                                        </MudItem>
-                                    </MudGrid>
-                                </div>
-                            </MudTabPanel>
-
-                            @* ===== TAB 3: Office Info ===== *@
-                            <MudTabPanel Text="Office Info" Icon="@Icons.Material.Filled.Work">
-                                <div class="pt-5">
-                                    <MudGrid>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="int" @bind-Value="_employee.CompanyId"
-                                                       Label="Company Name"
-                                                       Required="true"
-                                                       RequiredError="Company is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="0">Select Company</MudSelectItem>
-                                                @foreach (var comp in _companies)
-                                                {
-                                                    <MudSelectItem Value="@comp.Id">@comp.CompanyNameEn</MudSelectItem>
-                                                }
-                                            </MudSelect>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="int" Value="_employee.DepartmentId"
-                                                       ValueChanged="@( (int v) => OnDepartmentValueChanged(v) )"
-                                                       Label="Department"
-                                                       Required="true"
-                                                       RequiredError="Department is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="0">Select Department</MudSelectItem>
-                                                @foreach (var dept in _departments)
-                                                {
-                                                    <MudSelectItem Value="@dept.Id">@dept.NameEn</MudSelectItem>
-                                                }
-                                            </MudSelect>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="int" Value="_employee.SectionId"
-                                                       ValueChanged="@( (int v) => OnSectionValueChanged(v) )"
-                                                       Label="Section"
-                                                       Required="true"
-                                                       RequiredError="Section is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="0">Select Section</MudSelectItem>
-                                                @foreach (var sec in _filteredSections)
-                                                {
-                                                    <MudSelectItem Value="@sec.Id">@sec.NameEn</MudSelectItem>
-                                                }
-                                            </MudSelect>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="int" @bind-Value="_employee.DesignationId"
-                                                       Label="Designation"
-                                                       Required="true"
-                                                       RequiredError="Designation is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="0">Select Designation</MudSelectItem>
-                                                @foreach (var desig in _filteredDesignations)
-                                                {
-                                                    <MudSelectItem Value="@desig.Id">@desig.NameEn</MudSelectItem>
-                                                }
-                                            </MudSelect>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="int" @bind-Value="_employee.LineId"
-                                                       Label="Line"
-                                                       Required="true"
-                                                       RequiredError="Line is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="0">Select Line</MudSelectItem>
-                                                @foreach (var line in _filteredLines)
-                                                {
-                                                    <MudSelectItem Value="@line.Id">@line.NameEn</MudSelectItem>
-                                                }
-                                            </MudSelect>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="int" @bind-Value="_employee.ShiftId"
-                                                       Label="Shift"
-                                                       Required="true"
-                                                       RequiredError="Shift is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="0">Select Shift</MudSelectItem>
-                                                @foreach (var shift in _shifts)
-                                                {
-                                                    <MudSelectItem Value="@shift.Id">@shift.ShiftName</MudSelectItem>
-                                                }
-                                            </MudSelect>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudDatePicker Date="@_joiningDate"
-                                                           DateChanged="@( (DateTime? d) => OnJoiningDateChanged(d) )"
-                                                           Label="Joining Date"
-                                                           Editable="true"
-                                                           Placeholder="Select Date"
-                                                           DateFormat="dd/MM/yyyy"
-                                                           Variant="Variant.Outlined"
-                                                           Margin="Margin.Dense"
-                                                           Adornment="Adornment.End"
-                                                           AdornmentIcon="@Icons.Material.Filled.CalendarToday" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="string" @bind-Value="_employee.EmployeeStatus"
-                                                       Label="Employee Status"
-                                                       Required="true"
-                                                       RequiredError="Employee Status is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="@("Regular")" />
-                                                <MudSelectItem Value="@("Resign")" />
-                                                <MudSelectItem Value="@("Left")" />
-                                                <MudSelectItem Value="@("Close")" />
-                                            </MudSelect>
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSwitch @bind-Value="_employee.OverTimeStatus"
-                                                       Label="OverTime Status"
-                                                       Color="Color.Primary"
-                                                       Class="mt-2" />
-                                        </MudItem>
-                                        <MudItem xs="12" sm="6">
-                                            <MudSelect T="string" @bind-Value="_employee.EmployeeType"
-                                                       Label="Employee Type"
-                                                       Required="true"
-                                                       RequiredError="Employee Type is required."
-                                                       Variant="Variant.Outlined"
-                                                       Margin="Margin.Dense">
-                                                <MudSelectItem Value="@("Permanent")" />
-                                                <MudSelectItem Value="@("Contract")" />
-                                                <MudSelectItem Value="@("Probation")" />
-                                                <MudSelectItem Value="@("Intern")" />
-                                                <MudSelectItem Value="@("Part-Time")" />
-                                            </MudSelect>
-                                        </MudItem>
-                                    </MudGrid>
-                                </div>
-                            </MudTabPanel>
-
-                            @* ===== TAB 4: Salary & Account ===== *@
-                            <MudTabPanel Text="Salary & Account" Icon="@Icons.Material.Filled.AccountBalance">
-                                <div class="pt-5 flex flex-col gap-6">
+                        <div class="tabs add-employee-tabs">
+                            <div class="tabs-header">
+                            <button class="tab @(_activeTabIndex == 0 ? "active" : "")" @onclick="() => _activeTabIndex = 0">
+                                <span class="material-icons" style="font-size:16px;">person</span> Personal Info
+                            </button>
+                            <button class="tab @(_activeTabIndex == 1 ? "active" : "")" @onclick="() => _activeTabIndex = 1">
+                                <span class="material-icons" style="font-size:16px;">family_restroom</span> Family Info
+                            </button>
+                            <button class="tab @(_activeTabIndex == 2 ? "active" : "")" @onclick="() => _activeTabIndex = 2">
+                                <span class="material-icons" style="font-size:16px;">work</span> Office Info
+                            </button>
+                            <button class="tab @(_activeTabIndex == 3 ? "active" : "")" @onclick="() => _activeTabIndex = 3">
+                                <span class="material-icons" style="font-size:16px;">account_balance</span> Salary & Account
+                            </button>
+                            <button class="tab @(_activeTabIndex == 4 ? "active" : "")" @onclick="() => _activeTabIndex = 4">
+                                <span class="material-icons" style="font-size:16px;">location_on</span> Address
+                            </button>
+                            <button class="tab @(_activeTabIndex == 5 ? "active" : "")" @onclick="() => _activeTabIndex = 5">
+                                <span class="material-icons" style="font-size:16px;">image</span> Signature & Image
+                            </button>
+                            </div>
+                            <div class="tabs-content">
+                            <div class="tab-panel @(_activeTabIndex == 0 ? "active" : "")">
+                                    <div class="pt-5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.EmployeeId" @bind:event="oninput" class="form-control" placeholder="e.g. EMP-001" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" @bind="_employee.PunchNumber" class="form-control" placeholder="e.g. 1001" />
+                                    </div>
+                                    <div class="col-span-1">
+                                    <input type="text" @bind="_employee.EmployeeName" @bind:event="oninput" class="form-control" placeholder="e.g. Jane Doe" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.NID" @bind:event="oninput" class="form-control" placeholder="e.g. 1234567890" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.MobileNo" @bind:event="oninput" class="form-control" placeholder="e.g. +880 1711-000000" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.Email" @bind:event="oninput" class="form-control" placeholder="e.g. jane.doe@company.com" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="date" @bind="_dob" class="form-control" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_gender" @onchange="@( (ChangeEventArgs e) => { OnGenderChanged(e.Value?.ToString() ?? string.Empty); } )">
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                    </select>
+                                    </div>
+                                    </div>
+                                    </div>
+                            </div>
+                            <div class="tab-panel @(_activeTabIndex == 1 ? "active" : "")">
+                                    <div class="pt-5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.FatherName" @bind:event="oninput" class="form-control" placeholder="e.g. John Doe" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.MotherName" @bind:event="oninput" class="form-control" placeholder="e.g. Mary Doe" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" value="@_spouseName" @onchange="@( (ChangeEventArgs e) => OnSpouseNameChanged(e.Value?.ToString() ?? "") )" class="form-control" placeholder="e.g. Sarah Doe" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" value="@_childrenCount" @onchange="@( (ChangeEventArgs e) => { int.TryParse(e.Value?.ToString() ?? "0", out var v); OnChildrenCountChanged(v); } )" class="form-control" min="0" />
+                                    </div>
+                                    </div>
+                                    </div>
+                            </div>
+                            <div class="tab-panel @(_activeTabIndex == 2 ? "active" : "")">
+                                    <div class="pt-5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.CompanyId">
+                                    <option value="0">Select Company</option>
+                                    @foreach (var comp in _companies)
+                                    {
+                                    <option value="@comp.Id">@comp.CompanyNameEn</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_employee.DepartmentId" @onchange="@( (ChangeEventArgs e) => { int.TryParse(e.Value?.ToString() ?? "0", out var v); OnDepartmentValueChanged(v); } )">
+                                    <option value="0">Select Department</option>
+                                    @foreach (var dept in _departments)
+                                    {
+                                    <option value="@dept.Id">@dept.NameEn</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_employee.SectionId" @onchange="@( (ChangeEventArgs e) => { int.TryParse(e.Value?.ToString() ?? "0", out var v); OnSectionValueChanged(v); } )">
+                                    <option value="0">Select Section</option>
+                                    @foreach (var sec in _filteredSections)
+                                    {
+                                    <option value="@sec.Id">@sec.NameEn</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.DesignationId">
+                                    <option value="0">Select Designation</option>
+                                    @foreach (var desig in _filteredDesignations)
+                                    {
+                                    <option value="@desig.Id">@desig.NameEn</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.LineId">
+                                    <option value="0">Select Line</option>
+                                    @foreach (var line in _filteredLines)
+                                    {
+                                    <option value="@line.Id">@line.NameEn</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.ShiftId">
+                                    <option value="0">Select Shift</option>
+                                    @foreach (var shift in _shifts)
+                                    {
+                                    <option value="@shift.Id">@shift.ShiftName</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="date" @bind="_joiningDate" class="form-control" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.Status">
+                                    <option value="Regular">Regular</option>
+                                    <option value="Resign">Resign</option>
+                                    <option value="Left">Left</option>
+                                    <option value="Close">Close</option>
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <label class="switch mt-2">
+                                    <input type="checkbox" @bind="_employee.OverTimeStatus" />
+                                    <span class="switch-track"><span class="switch-thumb"></span></span>
+                                    OverTime Status
+                                    </label>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.EmployeeType">
+                                    <option value="Permanent">Permanent</option>
+                                    <option value="Contract">Contract</option>
+                                    <option value="Probation">Probation</option>
+                                    <option value="Intern">Intern</option>
+                                    <option value="Part-Time">Part-Time</option>
+                                    </select>
+                                    </div>
+                                    </div>
+                                    </div>
+                            </div>
+                            <div class="tab-panel @(_activeTabIndex == 3 ? "active" : "")">
+                                    <div class="pt-5 flex flex-col gap-6">
 
                                     @* --- Salary Section --- *@
                                     <div>
-                                        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                                            </svg>
-                                            Salary Details
-                                        </h4>
-                                        <MudGrid>
-                                            <MudItem xs="12" sm="6">
-                                                <MudNumericField Value="_grossSalary"
-                                                                 Label="Gross Salary"
-                                                                 Placeholder="0.00"
-                                                                 Adornment="Adornment.Start"
-                                                                 AdornmentText="৳"
-                                                                 Variant="Variant.Outlined"
-                                                                 Margin="Margin.Dense"
-                                                                 ValueChanged="@( (decimal v) => OnGrossSalaryChanged(v) )" />
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudNumericField Value="_employee.BasicSalary"
-                                                                 Label="Basic Salary"
-                                                                 Placeholder="0.00"
-                                                                 Adornment="Adornment.Start"
-                                                                 AdornmentText="৳"
-                                                                 Variant="Variant.Outlined"
-                                                                 Margin="Margin.Dense"
-                                                                 Disabled="true" />
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudNumericField Value="_houseRent"
-                                                                 Label="House Rent"
-                                                                 Placeholder="0.00"
-                                                                 Adornment="Adornment.Start"
-                                                                 AdornmentText="৳"
-                                                                 Variant="Variant.Outlined"
-                                                                 Margin="Margin.Dense"
-                                                                 Disabled="true" />
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudNumericField Value="_foodAllowance"
-                                                                 Label="Food Allowance"
-                                                                 Placeholder="0.00"
-                                                                 Adornment="Adornment.Start"
-                                                                 AdornmentText="৳"
-                                                                 Variant="Variant.Outlined"
-                                                                 Margin="Margin.Dense"
-                                                                 Disabled="true" />
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudNumericField Value="_medicalAllowance"
-                                                                 Label="Medical Allowance"
-                                                                 Placeholder="0.00"
-                                                                 Adornment="Adornment.Start"
-                                                                 AdornmentText="৳"
-                                                                 Variant="Variant.Outlined"
-                                                                 Margin="Margin.Dense"
-                                                                 Disabled="true" />
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudNumericField Value="_conveyanceAllowance"
-                                                                 Label="Conveyance"
-                                                                 Placeholder="0.00"
-                                                                 Adornment="Adornment.Start"
-                                                                 AdornmentText="৳"
-                                                                 Variant="Variant.Outlined"
-                                                                 Margin="Margin.Dense"
-                                                                 Disabled="true" />
-                                            </MudItem>
-                                            <MudItem xs="12">
-                                                <div class="flex items-center gap-2 mt-1">
-                                                    <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Total:</span>
-                                                    <span class="text-sm font-bold text-black">৳ @_totalSalary.ToString("N2")</span>
-                                                </div>
-                                            </MudItem>
-                                        </MudGrid>
+                                    <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                                    </svg>
+                                    Salary Details
+                                    </h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" value="@_grossSalary" @onchange="@( (ChangeEventArgs e) => { decimal.TryParse(e.Value?.ToString() ?? "0", out var v); OnGrossSalaryChanged(v); } )" class="form-control" placeholder="0.00" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" value="@_employee.BasicSalary" class="form-control" placeholder="0.00" disabled="true" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" value="@_houseRent" class="form-control" placeholder="0.00" disabled="true" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" value="@_foodAllowance" class="form-control" placeholder="0.00" disabled="true" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" value="@_medicalAllowance" class="form-control" placeholder="0.00" disabled="true" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="number" value="@_conveyanceAllowance" class="form-control" placeholder="0.00" disabled="true" />
+                                    </div>
+                                    <div class="col-span-1">
+                                    <div class="flex items-center gap-2 mt-1">
+                                    <span class="text-xs font-bold text-zinc-400 uppercase tracking-wider">Total:</span>
+                                    <span class="text-sm font-bold text-black">৳ @_totalSalary.ToString("N2")</span>
+                                    </div>
+                                    </div>
+                                    </div>
                                     </div>
 
                                     <hr class="border-zinc-100" />
 
                                     @* --- Account Section --- *@
                                     <div>
-                                        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                                            </svg>
-                                            Account Details
-                                        </h4>
-                                        <MudGrid>
-                                            <MudItem xs="12" sm="6">
-                                                <MudSelect T="string" Value="_accountType"
-                                                           ValueChanged="@( (string v) => OnAccountTypeChanged(v) )"
-                                                           Label="Account Type"
-                                                           Variant="Variant.Outlined"
-                                                           Margin="Margin.Dense">
-                                                    <MudSelectItem Value="@("mCash")" />
-                                                    <MudSelectItem Value="@("Card")" />
-                                                </MudSelect>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudTextField Value="_accountNumber"
-                                                              ValueChanged="@( (string v) => OnAccountNumberChanged(v) )"
-                                                              Label="Account Number"
-                                                              Placeholder="@_accountPlaceholder"
-                                                              MaxLength="@_accountMaxLength"
-                                                              Variant="Variant.Outlined"
-                                                              Margin="Margin.Dense"
-                                                              Error="@_accountNumberError"
-                                                              ErrorText="@_accountNumberErrorText" />
-                                            </MudItem>
-                                        </MudGrid>
+                                    <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                                    </svg>
+                                    Account Details
+                                    </h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_accountType" @onchange="@( (ChangeEventArgs e) => { OnAccountTypeChanged(e.Value?.ToString() ?? string.Empty); } )">
+                                    <option value="mCash">mCash</option>
+                                    <option value="Card">Card</option>
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" value="@_accountNumber" @onchange="@( (ChangeEventArgs e) => OnAccountNumberChanged(e.Value?.ToString() ?? "") )" class="form-control" placeholder="@_accountPlaceholder" maxlength="@_accountMaxLength" aria-invalid="@_accountNumberError" />
+                                    </div>
+                                    </div>
                                     </div>
 
-                                </div>
-                            </MudTabPanel>
-
-                            @* ===== TAB 5: Address ===== *@
-                            <MudTabPanel Text="Address" Icon="@Icons.Material.Filled.LocationOn">
-                                <div class="pt-5 flex flex-col gap-6">
+                                    </div>
+                            </div>
+                            <div class="tab-panel @(_activeTabIndex == 4 ? "active" : "")">
+                                    <div class="pt-5 flex flex-col gap-6">
 
                                     @* --- Present Address --- *@
                                     <div>
-                                        <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                            </svg>
-                                            Present Address
-                                        </h4>
-                                        <MudGrid>
-                                            <MudItem xs="12" sm="6">
-                                                <MudTextField @bind-Value="_employee.PresentVillage"
-                                                              Label="Village / Neighborhood"
-                                                              Placeholder="e.g. Vill: Genda"
-                                                              Variant="Variant.Outlined"
-                                                              Margin="Margin.Dense" />
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudTextField @bind-Value="_employee.PresentPostOffice"
-                                                              Label="Post Office (P.O.)"
-                                                              Placeholder="e.g. GPO"
-                                                              Variant="Variant.Outlined"
-                                                              Margin="Margin.Dense" />
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudSelect T="int" Value="_presentDivisionId"
-                                                           ValueChanged="@( (int v) => OnPresentDivisionChanged(v) )"
-                                                           Label="Division"
-                                                           Required="true"
-                                                           RequiredError="Division is required."
-                                                           Variant="Variant.Outlined"
-                                                           Margin="Margin.Dense">
-                                                    <MudSelectItem Value="0">Select Division</MudSelectItem>
-                                                    @foreach (var div in _divisions)
-                                                    {
-                                                        <MudSelectItem Value="@div.Id">@div.Name</MudSelectItem>
-                                                    }
-                                                </MudSelect>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudSelect T="int" Value="_presentDistrictId"
-                                                           ValueChanged="@( (int v) => OnPresentDistrictChanged(v) )"
-                                                           Label="District (Zila)"
-                                                           Required="true"
-                                                           RequiredError="District is required."
-                                                           Variant="Variant.Outlined"
-                                                           Margin="Margin.Dense"
-                                                           Disabled="@(_presentDivisionId == 0)">
-                                                    <MudSelectItem Value="0">Select District</MudSelectItem>
-                                                    @foreach (var dist in _presentFilteredDistricts)
-                                                    {
-                                                        <MudSelectItem Value="@dist.Id">@dist.Name</MudSelectItem>
-                                                    }
-                                                </MudSelect>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudSelect T="int" @bind-Value="_employee.PresentUpazilaId"
-                                                           Label="Sub-district (Upazila/Thana)"
-                                                           Required="true"
-                                                           RequiredError="Upazila is required."
-                                                           Variant="Variant.Outlined"
-                                                           Margin="Margin.Dense"
-                                                           Disabled="@(_presentDistrictId == 0)">
-                                                    <MudSelectItem Value="0">Select Upazila</MudSelectItem>
-                                                    @foreach (var upa in _presentFilteredUpazilas)
-                                                    {
-                                                        <MudSelectItem Value="@upa.Id">@upa.Name</MudSelectItem>
-                                                    }
-                                                </MudSelect>
-                                            </MudItem>
-                                            <MudItem xs="12" sm="6">
-                                                <MudTextField @bind-Value="_employee.PresentPostalCode"
-                                                              Label="Postal Code"
-                                                              Placeholder="e.g. 1234"
-                                                              MaxLength="4"
-                                                              Variant="Variant.Outlined"
-                                                              Margin="Margin.Dense" />
-                                            </MudItem>
-                                        </MudGrid>
+                                    <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    </svg>
+                                    Present Address
+                                    </h4>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.PresentVillage" @bind:event="oninput" class="form-control" placeholder="e.g. Vill: Genda" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.PresentPostOffice" @bind:event="oninput" class="form-control" placeholder="e.g. GPO" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_presentDivisionId" @onchange="@( (ChangeEventArgs e) => { int.TryParse(e.Value?.ToString() ?? "0", out var v); OnPresentDivisionChanged(v); } )">
+                                    <option value="0">Select Division</option>
+                                    @foreach (var div in _divisions)
+                                    {
+                                    <option value="@div.Id">@div.Name</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_presentDistrictId" @onchange="@( (ChangeEventArgs e) => { int.TryParse(e.Value?.ToString() ?? "0", out var v); OnPresentDistrictChanged(v); } )" disabled="@(_presentDivisionId == 0)">
+                                    <option value="0">Select District</option>
+                                    @foreach (var dist in _presentFilteredDistricts)
+                                    {
+                                    <option value="@dist.Id">@dist.Name</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.PresentUpazilaId" disabled="@(_presentDistrictId == 0)">
+                                    <option value="0">Select Upazila</option>
+                                    @foreach (var upa in _presentFilteredUpazilas)
+                                    {
+                                    <option value="@upa.Id">@upa.Name</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.PresentPostalCode" @bind:event="oninput" class="form-control" placeholder="e.g. 1234" maxlength="4" />
+                                    </div>
+                                    </div>
                                     </div>
 
                                     <hr class="border-zinc-100" />
 
                                     @* --- Permanent Address --- *@
                                     <div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
-                                                <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                                                </svg>
-                                                Permanent Address
-                                            </h4>
-                                            <MudCheckBox T="bool" Value="_sameAsPresent"
-                                                         ValueChanged="@( (bool v) => OnSameAsPresentChanged(v) )"
-                                                         Label="Same as Present"
-                                                         Color="Color.Primary" />
-                                        </div>
-
-                                        @if (!_sameAsPresent)
-                                        {
-                                            <MudGrid>
-                                                <MudItem xs="12" sm="6">
-                                                    <MudTextField @bind-Value="_employee.PermanentVillage"
-                                                                  Label="Village / Neighborhood"
-                                                                  Placeholder="e.g. Vill: Genda"
-                                                                  Variant="Variant.Outlined"
-                                                                  Margin="Margin.Dense" />
-                                                </MudItem>
-                                                <MudItem xs="12" sm="6">
-                                                    <MudTextField @bind-Value="_employee.PermanentPostOffice"
-                                                                  Label="Post Office (P.O.)"
-                                                                  Placeholder="e.g. GPO"
-                                                                  Variant="Variant.Outlined"
-                                                                  Margin="Margin.Dense" />
-                                                </MudItem>
-                                                <MudItem xs="12" sm="6">
-                                                    <MudSelect T="int" Value="_permanentDivisionId"
-                                                               ValueChanged="@( (int v) => OnPermanentDivisionChanged(v) )"
-                                                               Label="Division"
-                                                               Required="true"
-                                                               RequiredError="Division is required."
-                                                               Variant="Variant.Outlined"
-                                                               Margin="Margin.Dense">
-                                                        <MudSelectItem Value="0">Select Division</MudSelectItem>
-                                                        @foreach (var div in _divisions)
-                                                        {
-                                                            <MudSelectItem Value="@div.Id">@div.Name</MudSelectItem>
-                                                        }
-                                                    </MudSelect>
-                                                </MudItem>
-                                                <MudItem xs="12" sm="6">
-                                                    <MudSelect T="int" Value="_permanentDistrictId"
-                                                               ValueChanged="@( (int v) => OnPermanentDistrictChanged(v) )"
-                                                               Label="District (Zila)"
-                                                               Required="true"
-                                                               RequiredError="District is required."
-                                                               Variant="Variant.Outlined"
-                                                               Margin="Margin.Dense"
-                                                               Disabled="@(_permanentDivisionId == 0)">
-                                                        <MudSelectItem Value="0">Select District</MudSelectItem>
-                                                        @foreach (var dist in _permanentFilteredDistricts)
-                                                        {
-                                                            <MudSelectItem Value="@dist.Id">@dist.Name</MudSelectItem>
-                                                        }
-                                                    </MudSelect>
-                                                </MudItem>
-                                                <MudItem xs="12" sm="6">
-                                                    <MudSelect T="int" @bind-Value="_employee.PermanentUpazilaId"
-                                                               Label="Sub-district (Upazila/Thana)"
-                                                               Required="true"
-                                                               RequiredError="Upazila is required."
-                                                               Variant="Variant.Outlined"
-                                                               Margin="Margin.Dense"
-                                                               Disabled="@(_permanentDistrictId == 0)">
-                                                        <MudSelectItem Value="0">Select Upazila</MudSelectItem>
-                                                        @foreach (var upa in _permanentFilteredUpazilas)
-                                                        {
-                                                            <MudSelectItem Value="@upa.Id">@upa.Name</MudSelectItem>
-                                                        }
-                                                    </MudSelect>
-                                                </MudItem>
-                                                <MudItem xs="12" sm="6">
-                                                    <MudTextField @bind-Value="_employee.PermanentPostalCode"
-                                                                  Label="Postal Code"
-                                                                  Placeholder="e.g. 1234"
-                                                                  MaxLength="4"
-                                                                  Variant="Variant.Outlined"
-                                                                  Margin="Margin.Dense" />
-                                                </MudItem>
-                                            </MudGrid>
-                                        }
+                                    <div class="flex items-center justify-between mb-3">
+                                    <h4 class="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                    </svg>
+                                    Permanent Address
+                                    </h4>
+                                    <label class="checkbox-container">
+                                    <input type="checkbox" checked="@_sameAsPresent" @onchange="@( (ChangeEventArgs e) => OnSameAsPresentChanged(e.Value?.ToString() == "true") )" class="checkbox-input" />
+                                    <span class="checkbox-checkmark"></span>
+                                    <span class="checkbox-label">Same as Present</span>
+                                    </label>
                                     </div>
 
-                                </div>
-                            </MudTabPanel>
+                                    @if (!_sameAsPresent)
+                                    {
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.PermanentVillage" @bind:event="oninput" class="form-control" placeholder="e.g. Vill: Genda" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.PermanentPostOffice" @bind:event="oninput" class="form-control" placeholder="e.g. GPO" />
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_permanentDivisionId" @onchange="@( (ChangeEventArgs e) => { int.TryParse(e.Value?.ToString() ?? "0", out var v); OnPermanentDivisionChanged(v); } )">
+                                    <option value="0">Select Division</option>
+                                    @foreach (var div in _divisions)
+                                    {
+                                    <option value="@div.Id">@div.Name</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" value="@_permanentDistrictId" @onchange="@( (ChangeEventArgs e) => { int.TryParse(e.Value?.ToString() ?? "0", out var v); OnPermanentDistrictChanged(v); } )" disabled="@(_permanentDivisionId == 0)">
+                                    <option value="0">Select District</option>
+                                    @foreach (var dist in _permanentFilteredDistricts)
+                                    {
+                                    <option value="@dist.Id">@dist.Name</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <select class="form-control" @bind="_employee.PermanentUpazilaId" disabled="@(_permanentDistrictId == 0)">
+                                    <option value="0">Select Upazila</option>
+                                    @foreach (var upa in _permanentFilteredUpazilas)
+                                    {
+                                    <option value="@upa.Id">@upa.Name</option>
+                                    }
+                                    </select>
+                                    </div>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <input type="text" @bind="_employee.PermanentPostalCode" @bind:event="oninput" class="form-control" placeholder="e.g. 1234" maxlength="4" />
+                                    </div>
+                                    </div>
+                                    }
+                                    </div>
 
-                            @* ===== TAB 6: Signature & Image ===== *@
-                            <MudTabPanel Text="Signature & Image" Icon="@Icons.Material.Filled.Image">
-                                <div class="pt-5">
-                                    <MudGrid>
-                                        <MudItem xs="12" sm="6">
-                                            <div class="border border-dashed border-zinc-300 rounded-xl p-6 text-center hover:border-zinc-400 transition-colors">
-                                                <MudIcon Icon="@Icons.Material.Filled.PhotoCamera" Size="Size.Large" Color="Color.Secondary" Class="mb-3" />
-                                                <MudText Typo="Typo.body2" Class="mb-2 font-semibold text-zinc-700">Employee Photo</MudText>
-                                                <MudText Typo="Typo.caption" Class="text-zinc-400 mb-3">JPG, PNG up to 2MB</MudText>
+                                    </div>
+                            </div>
+                            <div class="tab-panel @(_activeTabIndex == 5 ? "active" : "")">
+                                    <div class="pt-5">
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <div class="border border-dashed border-zinc-300 rounded-xl p-6 text-center hover:border-zinc-400 transition-colors">
+                                    <span class="material-icons mb-3" style="font-size:20px;">photo_camera</span>
+                                    <p class="mb-2 font-semibold text-zinc-700">Employee Photo</p>
+                                    <span class="text-zinc-400 mb-3">JPG, PNG up to 2MB</span>
 
-                                                @if (!string.IsNullOrEmpty(_photoPreview))
-                                                {
-                                                    <div class="mb-3 flex justify-center">
-                                                        <MudImage Src="@_photoPreview"
-                                                                 Width="120" Height="120"
-                                                                 ObjectFit="ObjectFit.Cover"
-                                                                 Class="rounded-lg border border-zinc-200" />
-                                                    </div>
-                                                }
+                                    @if (!string.IsNullOrEmpty(_photoPreview))
+                                    {
+                                    <div class="mb-3 flex justify-center">
+                                    <img src="@_photoPreview" alt="" class="rounded-lg border border-zinc-200" style="width:120px;height:120px;object-fit:cover" />
+                                    </div>
+                                    }
 
-                                                <label class="inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-sm">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Upload" Size="Size.Small" />
-                                                    Choose Photo
-                                                    <InputFile OnChange="OnPhotoSelected" Accept=".jpg,.jpeg,.png" class="hidden" />
-                                                </label>
-                                            </div>
-                                        </MudItem>
+                                    <label class="inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-sm">
+                                    <span class="material-icons" style="font-size:20px;">upload</span>
+                                    Choose Photo
+                                    <InputFile OnChange="OnPhotoSelected" Accept=".jpg,.jpeg,.png" class="hidden" />
+                                    </label>
+                                    </div>
+                                    </div>
 
-                                        <MudItem xs="12" sm="6">
-                                            <div class="border border-dashed border-zinc-300 rounded-xl p-6 text-center hover:border-zinc-400 transition-colors">
-                                                <MudIcon Icon="@Icons.Material.Filled.Draw" Size="Size.Large" Color="Color.Secondary" Class="mb-3" />
-                                                <MudText Typo="Typo.body2" Class="mb-2 font-semibold text-zinc-700">Signature</MudText>
-                                                <MudText Typo="Typo.caption" Class="text-zinc-400 mb-3">JPG, PNG up to 1MB</MudText>
+                                    <div class="col-span-1 sm:col-span-2">
+                                    <div class="border border-dashed border-zinc-300 rounded-xl p-6 text-center hover:border-zinc-400 transition-colors">
+                                    <span class="material-icons mb-3" style="font-size:20px;">draw</span>
+                                    <p class="mb-2 font-semibold text-zinc-700">Signature</p>
+                                    <span class="text-zinc-400 mb-3">JPG, PNG up to 1MB</span>
 
-                                                @if (!string.IsNullOrEmpty(_signaturePreview))
-                                                {
-                                                    <div class="mb-3 flex justify-center">
-                                                        <MudImage Src="@_signaturePreview"
-                                                                 Width="200" Height="80"
-                                                                 ObjectFit="ObjectFit.Contain"
-                                                                 Class="rounded-lg border border-zinc-200" />
-                                                    </div>
-                                                }
+                                    @if (!string.IsNullOrEmpty(_signaturePreview))
+                                    {
+                                    <div class="mb-3 flex justify-center">
+                                    <img src="@_signaturePreview" alt="" class="rounded-lg border border-zinc-200" style="width:200px;height:80px;object-fit:contain" />
+                                    </div>
+                                    }
 
-                                                <label class="inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-sm">
-                                                    <MudIcon Icon="@Icons.Material.Filled.Upload" Size="Size.Small" />
-                                                    Choose Signature
-                                                    <InputFile OnChange="OnSignatureSelected" Accept=".jpg,.jpeg,.png" class="hidden" />
-                                                </label>
-                                            </div>
-                                        </MudItem>
-                                    </MudGrid>
-                                </div>
-                            </MudTabPanel>
-
-                        </MudTabs>
-                    </div>
+                                    <label class="inline-flex items-center gap-2 py-2 px-4 rounded-lg bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-sm">
+                                    <span class="material-icons" style="font-size:20px;">upload</span>
+                                    Choose Signature
+                                    <InputFile OnChange="OnSignatureSelected" Accept=".jpg,.jpeg,.png" class="hidden" />
+                                    </label>
+                                    </div>
+                                    </div>
+                                    </div>
+                                    </div>
+                            </div>
+                            </div>
+                        </div>
+</div>
 
                     <!-- Action Bar -->
                     <div class="p-4 sm:p-5 border-t border-zinc-100 bg-zinc-50 flex flex-col-reverse sm:flex-row justify-end gap-2.5">

@@ -1,11 +1,11 @@
-@page "/attendance/absent-status"
+﻿@page "/attendance/absent-status"
 @using ERPHub.Models
 @using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
 @inject IExportService ExportService
 @inject IJSRuntime JS
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 @inject AttendanceService AttendanceService
 
 <PageTitle>ERPHub - Absent Summary</PageTitle>
@@ -15,181 +15,145 @@
         @* Header with Export Buttons *@
         <div class="d-flex align-center mb-6" style="flex-wrap:wrap; gap: 16px;width: 100%;">
             <div>
-                <MudText Typo="Typo.h5" Class="fw-extrabold">Absent Status Summary</MudText>
-                <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">Track employee total absent and continuous absent days over a period.</MudText>
+                <span class="text-2xl fw-extrabold">Absent Status Summary</span>
+                <span class="text-xs mud-secondary-text-color mt-1 d-block">Track employee total absent and continuous absent days over a period.</span>
             </div>
-            <MudSpacer />
+            <span class="flex-grow-1"></span>
             <div class="d-flex justify-end gap-2">
-                <MudButton Variant="Variant.Outlined" Color="Color.Default"
-                           Disabled="@(_records.Count == 0 || _isExporting)"
-                           OnClick="ExportToExcel"
-                           StartIcon="@Icons.Material.Filled.TableChart"
-                           Size="Size.Small">
-                    Excel
-                </MudButton>
-                <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                           Disabled="@(_records.Count == 0 || _isExporting)"
-                           OnClick="ExportToPdf"
-                           StartIcon="@Icons.Material.Filled.PictureAsPdf"
-                           Size="Size.Small">
-                    PDF
-                </MudButton>
+                <button class="btn btn-outlined btn-sm"
+                        disabled="@(_records.Count == 0 || _isExporting)"
+                        @onclick="ExportToExcel">
+                    <span class="material-icons">table_chart</span> Excel
+                </button>
+                <button class="btn btn-primary btn-sm"
+                        disabled="@(_records.Count == 0 || _isExporting)"
+                        @onclick="ExportToPdf">
+                    <span class="material-icons">picture_as_pdf</span> PDF
+                </button>
             </div>
         </div>
 
         @* Filters *@
-        <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4" Style="border-radius:8px;">
-            <MudGrid Spacing="3" class="align-items-end">
-                <MudItem xs="12" sm="4" md="3">
-                    <MudDatePicker Label="From Date"
-                                   Date="@_fromDate"
-                                   DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   dense="true"
-                                   Margin="Margin.Dense"
-                                   Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="3">
-                    <MudDatePicker Label="To Date"
-                                   Date="@_toDate"
-                                   DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   dense="true"
-                                   Margin="Margin.Dense"
-                                   Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="3">
-                    <MudTextField Label="Employee ID"
-                                  @bind-Value="_employeeIdFilter"
-                                  Variant="Variant.Outlined"
-                                  Placeholder="e.g. 1001"
-                                  dense="true"
-                                  Margin="Margin.Dense"
-                                  Immediate="true" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="3">
-                    <MudSelect Label="Employee Status"
-                               @bind-Value="_employeeStatus"
-                               Variant="Variant.Outlined"
-                               dense="true"
-                               Margin="Margin.Dense">
-                        <MudSelectItem Value="0">All</MudSelectItem>
-                        <MudSelectItem Value="1">Active</MudSelectItem>
-                        <MudSelectItem Value="2">Inactive</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4" md="3">
-                    <MudSelect Label="Company"
-                               @bind-Value="_companyIdFilter"
-                               Variant="Variant.Outlined"
-                               dense="true"
-                               Margin="Margin.Dense">
-                        <MudSelectItem Value="0">All Companies</MudSelectItem>
+        <div class="card pa-4 mb-4" style="border-radius:8px;">
+            <div class="d-flex flex-wrap gap-3 align-items-end">
+                <div style="flex:1 1 220px;min-width:200px;">
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" value="@_fromDate.ToString("yyyy-MM-dd")"
+                           @onchange="e => { if (DateTime.TryParse(e.Value?.ToString(), out var d)) _fromDate = d; }" />
+                </div>
+                <div style="flex:1 1 220px;min-width:200px;">
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" value="@_toDate.ToString("yyyy-MM-dd")"
+                           @onchange="e => { if (DateTime.TryParse(e.Value?.ToString(), out var d)) _toDate = d; }" />
+                </div>
+                <div style="flex:1 1 220px;min-width:200px;">
+                    <label class="form-label">Employee ID</label>
+                    <input class="form-control" placeholder="e.g. 1001"
+                           @bind="_employeeIdFilter"
+                           @bind:event="oninput" />
+                </div>
+                <div style="flex:1 1 220px;min-width:200px;">
+                    <label class="form-label">Employee Status</label>
+                    <select class="form-control" @bind="_employeeStatus">
+                        <option value="0">All</option>
+                        <option value="1">Active</option>
+                        <option value="2">Inactive</option>
+                    </select>
+                </div>
+                <div style="flex:1 1 220px;min-width:200px;">
+                    <label class="form-label">Company</label>
+                    <select class="form-control" @bind="_companyIdFilter">
+                        <option value="0">All Companies</option>
                         @foreach (var c in _companies)
                         {
-                            <MudSelectItem Value="@c.Id">@c.CompanyNameEn</MudSelectItem>
+                            <option value="@c.Id">@c.CompanyNameEn</option>
                         }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4" md="3">
-                    <MudSelect Label="Department"
-                               @bind-Value="_departmentIdFilter"
-                               Variant="Variant.Outlined"
-                               dense="true"
-                               Margin="Margin.Dense"
-                               Clearable="true">
-                        <MudSelectItem Value="0">All Departments</MudSelectItem>
+                    </select>
+                </div>
+                <div style="flex:1 1 220px;min-width:200px;">
+                    <label class="form-label">Department</label>
+                    <select class="form-control" @bind="_departmentIdFilter">
+                        <option value="0">All Departments</option>
                         @foreach (var d in _departments)
                         {
-                            <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                            <option value="@d.Id">@d.NameEn</option>
                         }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4" md="3">
-                    <MudSelect Label="Designation"
-                               @bind-Value="_designationIdFilter"
-                               Variant="Variant.Outlined"
-                               dense="true"
-                               Margin="Margin.Dense"
-                               Clearable="true">
-                        <MudSelectItem Value="0">All Designations</MudSelectItem>
+                    </select>
+                </div>
+                <div style="flex:1 1 220px;min-width:200px;">
+                    <label class="form-label">Designation</label>
+                    <select class="form-control" @bind="_designationIdFilter">
+                        <option value="0">All Designations</option>
                         @foreach (var dg in _designations)
                         {
-                            <MudSelectItem Value="@dg.Id">@dg.NameEn</MudSelectItem>
+                            <option value="@dg.Id">@dg.NameEn</option>
                         }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="12" md="3" Class="d-flex align-center gap-2" Style="margin-top: 10px;">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                               Disabled="@_isLoading" @onclick="LoadRecords" Class="flex-grow-1">
-                        Apply
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default"
-                               @onclick="ClearFilters" Class="flex-grow-1">
-                        Clear
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
+                    </select>
+                </div>
+                <div class="d-flex align-center gap-2" style="flex:1 1 100%;margin-top:10px;">
+                    <button class="btn btn-primary flex-grow-1" disabled="@_isLoading" @onclick="LoadRecords">Apply</button>
+                    <button class="btn btn-outlined flex-grow-1" @onclick="ClearFilters">Clear</button>
+                </div>
+            </div>
+        </div>
 
         @* Data Table *@
         @if (_isLoading)
         {
-            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Loading records...</MudText>
+            <div class="text-center mud-secondary-text-color py-8">Loading records...</div>
         }
         else
         {
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_records" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0" Filter="new Func<AbsentSummaryDto, bool>(FilterFunc)">
-                    <ToolBarContent>
-                        <div>
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Absent Summary</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@_fromDate.ToString("yyyy-MM-dd") to @_toDate.ToString("yyyy-MM-dd")</MudText>
-                        </div>
-                        <MudSpacer />
-                        <MudTextField @bind-Value="_searchString"
-                                      Placeholder="Quick search name or ID..."
-                                      Adornment="Adornment.Start"
-                                      AdornmentIcon="@Icons.Material.Filled.Search"
-                                      IconSize="Size.Small"
-                                      Class="mt-0"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Clearable="true" />
-                    </ToolBarContent>
-                    <HeaderContent>
-                        <MudTh Style="text-align: center;">Sl</MudTh>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.EmployeeId)">Employee ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.EmployeeName)">Employee Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.Department)">Department</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.Designation)">Designation</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.TotalAbsentDays)">Total Absent</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<AbsentSummaryDto, object>(x => x.ContinuousAbsentDays)">Continuous Absent</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd Style="text-align: center;" DataLabel="Sl">@(_records.IndexOf(context) + 1)</MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Employee ID"><MudText Typo="Typo.body2" Class="fw-bold font-mono">@context.EmployeeId</MudText></MudTd>
-                        <MudTd DataLabel="Employee Name"><MudText Typo="Typo.body2" Class="fw-medium">@context.EmployeeName</MudText></MudTd>
-                        <MudTd DataLabel="Department"><MudText Typo="Typo.body2">@context.Department</MudText></MudTd>
-                        <MudTd DataLabel="Designation"><MudText Typo="Typo.body2">@context.Designation</MudText></MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Total Absent">
-                            <MudText Typo="Typo.body2" Class="fw-bold text-error">@context.TotalAbsentDays</MudText>
-                        </MudTd>
-                        <MudTd Style="text-align: center;" DataLabel="Continuous Absent">
-                            <MudText Typo="Typo.body2" Class="fw-bold text-warning">@context.ContinuousAbsentDays</MudText>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
-                    </PagerContent>
-                    <NoRecordsContent>
-                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                    </NoRecordsContent>
-                </MudTable>
+                <div class="table-toolbar">
+                    <div>
+                        <div class="fw-bold font-heading">Absent Summary</div>
+                        <div class="text-xs mud-secondary-text-color">@_fromDate.ToString("yyyy-MM-dd") to @_toDate.ToString("yyyy-MM-dd")</div>
+                    </div>
+                    <span class="flex-grow-1"></span>
+                    <div class="d-flex align-center" style="position:relative;">
+                        <span class="material-icons" style="position:absolute;left:8px;color:#a1a1aa;font-size:16px;">search</span>
+                        <input class="form-control" placeholder="Quick search name or ID..." @bind="_searchString" style="padding-left:28px;width:220px;" />
+                    </div>
+                </div>
+                @if (_records.Any(FilterFunc))
+                {
+                    <div class="table-body">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center;">Sl</th>
+                                    <th style="text-align: center;">Employee ID</th>
+                                    <th>Employee Name</th>
+                                    <th>Department</th>
+                                    <th>Designation</th>
+                                    <th style="text-align: center;">Total Absent</th>
+                                    <th style="text-align: center;">Continuous Absent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var context in _records.Where(FilterFunc))
+                                {
+                                    <tr>
+                                        <td style="text-align: center;">@(_records.IndexOf(context) + 1)</td>
+                                        <td style="text-align: center;"><span class="fw-bold font-mono">@context.EmployeeId</span></td>
+                                        <td><span class="fw-medium">@context.EmployeeName</span></td>
+                                        <td>@context.Department</td>
+                                        <td>@context.Designation</td>
+                                        <td style="text-align: center;"><span class="fw-bold text-error">@context.TotalAbsentDays</span></td>
+                                        <td style="text-align: center;"><span class="fw-bold text-warning">@context.ContinuousAbsentDays</span></td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="table-empty">
+                        <span>Data Not Available</span>
+                    </div>
+                }
             </div>
         }
     </Authorized>
@@ -269,7 +233,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error loading records: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Error loading records: {ex.Message}");
             _allRecords = new();
             _records = new();
         }
@@ -338,7 +302,7 @@
             var exportRecords = _records.Where(FilterFunc).ToList();
             if (exportRecords.Count == 0)
             {
-                Snackbar.Add("No records match the current filter.", Severity.Warning);
+                await Toast.ShowWarningAsync("No records match the current filter.");
                 return;
             }
 
@@ -354,11 +318,11 @@
             var fileName = $"AbsentSummary_{DateTime.Now:yyyyMMddHHmmss}.xlsx";
 
             await JS.InvokeVoidAsync("downloadFile", fileName, base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-            Snackbar.Add("Excel exported successfully", Severity.Success);
+            await Toast.ShowSuccessAsync("Excel exported successfully");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Export failed: {ex.Message}");
         }
         finally
         {
@@ -379,7 +343,7 @@
             var exportRecords = _records.Where(FilterFunc).ToList();
             if (exportRecords.Count == 0)
             {
-                Snackbar.Add("No records match the current filter.", Severity.Warning);
+                await Toast.ShowWarningAsync("No records match the current filter.");
                 return;
             }
 
@@ -394,11 +358,11 @@
             var fileName = $"AbsentSummary_{DateTime.Now:yyyyMMddHHmmss}.pdf";
 
             await JS.InvokeVoidAsync("downloadFile", fileName, base64, "application/pdf");
-            Snackbar.Add("PDF exported successfully", Severity.Success);
+            await Toast.ShowSuccessAsync("PDF exported successfully");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Export failed: {ex.Message}");
         }
         finally
         {

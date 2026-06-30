@@ -1,10 +1,11 @@
-@page "/leave/apply"
+﻿@page "/leave/apply"
 @using ERPHub.Models
 @using LeaveApp = ERPHub.Models.LeaveApplication
 @using LeaveTypeModel = ERPHub.Models.LeaveType
+@using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 
 <PageTitle>ERPHub - Apply for Leave</PageTitle>
 
@@ -14,7 +15,7 @@
             <!-- Header -->
             <div class="flex items-center gap-4 mb-6">
                 <button type="button" class="p-2 bg-white border border-zinc-200 rounded-lg hover:bg-zinc-50 transition-colors cursor-pointer text-zinc-500 hover:text-black" @onclick='() => NavManager.NavigateTo("/leave/application")'>
-                    <MudIcon Icon="@Icons.Material.Filled.ArrowBack" Size="Size.Small" />
+                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
                 </button>
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Apply for Leave</h2>
@@ -33,11 +34,11 @@
                             <button type="button" class="px-5 py-2.5 bg-black text-white rounded-lg text-sm font-bold hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-2" @onclick="SearchEmployee" disabled="@_isSearching">
                                 @if (_isSearching)
                                 {
-                                    <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="w-4 h-4" />
+                                    <span class="spinner-sm inline-block"></span>
                                 }
                                 else
                                 {
-                                    <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" />
+                                    <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                                 }
                                 Search
                             </button>
@@ -78,7 +79,7 @@
                                 </div>
                                 <div>
                                     <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Status</div>
-                                    <div class="text-sm font-bold text-emerald-600">@_selectedEmployee.EmployeeStatus</div>
+                                    <div class="text-sm font-bold text-emerald-600">@_selectedEmployee.Status</div>
                                 </div>
                                 <div>
                                     <div class="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-0.5">Current Date</div>
@@ -90,7 +91,7 @@
                     else if (_searchAttempted)
                     {
                         <div class="bg-red-50 border border-red-200 text-red-600 rounded-lg p-3 text-sm font-semibold flex items-center gap-2 mb-2">
-                            <MudIcon Icon="@Icons.Material.Filled.ErrorOutline" Size="Size.Small" />
+                            <svg viewBox="0 0 24 24" class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                             Employee not found. Please verify the ID.
                         </div>
                     }
@@ -104,23 +105,24 @@
                             <div>
                                 <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Leave Type</label>
                                 <div class="max-w-md">
-                                    <MudSelect T="string" Placeholder="Select leave type..." Variant="Variant.Outlined" Margin="Margin.Dense" ValueChanged="OnLeaveTypeChangedMud">
+                                    <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @onchange="OnLeaveTypeChanged">
+                                        <option value="">Select leave type...</option>
                                         @foreach (var lt in _leaveTypes.Where(t => t.IsActive))
                                         {
-                                            <MudSelectItem Value="@($"{lt.Id}|{lt.Name}")">@lt.Name (@lt.MaxDaysPerYear Days/Yr)</MudSelectItem>
+                                            <option value="@($"{lt.Id}|{lt.Name}")">@lt.Name (@lt.MaxDaysPerYear Days/Yr)</option>
                                         }
-                                    </MudSelect>
+                                    </select>
                                 </div>
                             </div>
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl">
                                 <div>
                                     <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">Start Date</label>
-                                    <MudDatePicker Variant="Variant.Outlined" Margin="Margin.Dense" Date="_applyStart" DateChanged="OnStartDateChangedMud" />
+                                    <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_applyStart" @bind:after="RecalcDays" />
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-zinc-400 uppercase tracking-wider mb-1">End Date</label>
-                                    <MudDatePicker Variant="Variant.Outlined" Margin="Margin.Dense" Date="_applyEnd" DateChanged="OnEndDateChangedMud" />
+                                    <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_applyEnd" @bind:after="RecalcDays" />
                                 </div>
                             </div>
                             
@@ -141,7 +143,7 @@
                         <button type="button" class="px-5 py-2.5 bg-black text-white rounded-lg text-sm font-bold hover:bg-zinc-800 transition-colors cursor-pointer flex items-center gap-2" @onclick="SubmitLeave" disabled="@_isSaving">
                             @if (_isSaving)
                             {
-                                <MudProgressCircular Size="Size.Small" Indeterminate="true" Color="Color.Inherit" Class="w-4 h-4" />
+                                <span class="spinner-sm inline-block"></span>
                             }
                             Submit Leave Application
                         </button>
@@ -215,13 +217,13 @@
                 {
                     // Fetch the full employee object to get navigation properties (Department, Designation, etc.)
                     _selectedEmployee = await Http.GetFromJsonAsync<Employee>($"{NavManager.BaseUri}api/employees/{emp.Id}");
-                    Snackbar.Add($"Found employee: {_selectedEmployee?.EmployeeName}", Severity.Success);
+                    await Toast.ShowSuccessAsync($"Found employee: {_selectedEmployee?.EmployeeName}");
                 }
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Search error: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Search error: {ex.Message}");
         }
         finally
         {
@@ -230,8 +232,9 @@
         }
     }
 
-    private void OnLeaveTypeChangedMud(string val)
+    private void OnLeaveTypeChanged(ChangeEventArgs e)
     {
+        var val = e.Value?.ToString();
         if (string.IsNullOrEmpty(val))
         {
             _applyLeaveTypeId = null;
@@ -244,18 +247,6 @@
             _applyLeaveTypeId = id;
             _applyLeaveTypeName = parts[1];
         }
-    }
-
-    private void OnStartDateChangedMud(DateTime? date)
-    {
-        _applyStart = date;
-        RecalcDays();
-    }
-
-    private void OnEndDateChangedMud(DateTime? date)
-    {
-        _applyEnd = date;
-        RecalcDays();
     }
 
     private void RecalcDays()
@@ -274,7 +265,7 @@
     {
         if (_selectedEmployee == null || string.IsNullOrWhiteSpace(_applyLeaveTypeName))
         {
-            Snackbar.Add("Please complete all required fields.", Severity.Warning);
+            await Toast.ShowWarningAsync("Please complete all required fields.");
             return;
         }
 
@@ -301,18 +292,18 @@
             var resp = await Http.PostAsJsonAsync($"{NavManager.BaseUri}api/leaveapplications", payload);
             if (resp.IsSuccessStatusCode)
             {
-                Snackbar.Add("Leave application submitted successfully.", Severity.Success);
+                await Toast.ShowSuccessAsync("Leave application submitted successfully.");
                 await Task.Delay(1000);
                 NavManager.NavigateTo("/leave/application");
             }
             else
             {
-                Snackbar.Add($"Submit failed: {await resp.Content.ReadAsStringAsync()}", Severity.Error);
+                await Toast.ShowErrorAsync($"Submit failed: {await resp.Content.ReadAsStringAsync()}");
             }
         }
         catch (Exception ex) 
         { 
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error); 
+            await Toast.ShowErrorAsync($"Error: {ex.Message}"); 
         }
         finally 
         { 

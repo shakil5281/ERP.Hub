@@ -41,11 +41,11 @@ public partial class Home
         };
     }
 
-    private MudBlazor.Color GetStatusColor(InvoiceStatus status) => status switch
+    private string GetStatusColor(InvoiceStatus status) => status switch
     {
-        InvoiceStatus.Paid => MudBlazor.Color.Success,
-        InvoiceStatus.Sent => MudBlazor.Color.Warning,
-        _ => MudBlazor.Color.Default
+        InvoiceStatus.Paid => "chip-success",
+        InvoiceStatus.Sent => "chip-warning",
+        _ => "chip-default"
     };
 
     private record ActivityItem(string Title, string TimeDescription, string Color);

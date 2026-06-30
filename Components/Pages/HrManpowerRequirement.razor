@@ -1,9 +1,9 @@
-@page "/hr/manpower-requirement"
+﻿@page "/hr/manpower-requirement"
 @using ERPHub.Models
 @using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 @inject IJSRuntime JS
 
 <PageTitle>ERPHub - Manpower Requirements</PageTitle>
@@ -19,7 +19,9 @@
                 </div>
                 <div>
                     <button type="button" class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick="OpenAddModal">
-                        <MudIcon Icon="@Icons.Material.Filled.Add" Size="Size.Small" Class="mr-1" />
+                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                        </svg>
                         New Requisition
                     </button>
                 </div>
@@ -28,7 +30,7 @@
             @if (_isLoading)
             {
                 <div class="flex justify-center items-center py-16">
-                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                    <div class="spinner spinner-lg"></div>
                 </div>
             }
             else
@@ -73,119 +75,137 @@
                         </svg>
                     </div>
 
-                    <MudCollapse Expanded="!_isFilterCollapsed">
+                    <div class="collapse @(_isFilterCollapsed ? "" : "open")">
                         <div class="p-5 bg-zinc-50/50">
-                            <MudGrid Spacing="3">
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 <!-- Department Dropdown -->
-                                <MudItem xs="12" sm="4">
-                                    <MudSelect T="int" Value="_departmentIdFilter" ValueChanged="OnDepartmentFilterChanged" Label="Department" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                        <MudSelectItem Value="0">All Departments</MudSelectItem>
+                                <div>
+                                    <label class="form-label">Department</label>
+                                    <select class="form-control" Value="@_departmentIdFilter" @onchange="OnDepartmentFilterChanged">
+                                        <option value="0">All Departments</option>
                                         @foreach (var d in _departments)
                                         {
-                                            <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                                            <option value="@d.Id">@d.NameEn</option>
                                         }
-                                    </MudSelect>
-                                </MudItem>
+                                    </select>
+                                </div>
 
                                 <!-- Priority Dropdown -->
-                                <MudItem xs="12" sm="4">
-                                    <MudSelect T="string" Value="_priorityFilter" ValueChanged="OnPriorityFilterChanged" Label="Priority" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                        <MudSelectItem Value="@("All")">All Priorities</MudSelectItem>
-                                        <MudSelectItem Value="@("High")">High</MudSelectItem>
-                                        <MudSelectItem Value="@("Medium")">Medium</MudSelectItem>
-                                        <MudSelectItem Value="@("Low")">Low</MudSelectItem>
-                                    </MudSelect>
-                                </MudItem>
+                                <div>
+                                    <label class="form-label">Priority</label>
+                                    <select class="form-control" Value="@_priorityFilter" @onchange="OnPriorityFilterChanged">
+                                        <option value="All">All Priorities</option>
+                                        <option value="High">High</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="Low">Low</option>
+                                    </select>
+                                </div>
 
                                 <!-- Status Dropdown -->
-                                <MudItem xs="12" sm="4">
-                                    <MudSelect T="string" Value="_statusFilter" ValueChanged="OnStatusFilterChanged" Label="Status" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true">
-                                        <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
-                                        <MudSelectItem Value="@("Pending")">Pending</MudSelectItem>
-                                        <MudSelectItem Value="@("Approved")">Approved</MudSelectItem>
-                                        <MudSelectItem Value="@("Recruiting")">Recruiting</MudSelectItem>
-                                        <MudSelectItem Value="@("Filled")">Filled</MudSelectItem>
-                                        <MudSelectItem Value="@("Cancelled")">Cancelled</MudSelectItem>
-                                    </MudSelect>
-                                </MudItem>
+                                <div>
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" Value="@_statusFilter" @onchange="OnStatusFilterChanged">
+                                        <option value="All">All Statuses</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Recruiting">Recruiting</option>
+                                        <option value="Filled">Filled</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </div>
 
                                 <!-- Buttons -->
-                                <MudItem xs="12" Class="flex justify-end gap-2.5 pt-2">
-                                    <MudButton Variant="Variant.Outlined" Color="Color.Default" OnClick="ResetFilters" Size="Size.Small" StartIcon="@Icons.Material.Filled.Refresh">Reset</MudButton>
-                                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ApplyFilters" Size="Size.Small" StartIcon="@Icons.Material.Filled.FilterList">Apply Filters</MudButton>
-                                </MudItem>
-                            </MudGrid>
+                                <div class="col-span-1 sm:col-span-3 flex justify-end gap-2.5 pt-2">
+                                    <button class="btn btn-outlined btn-sm" @onclick="ResetFilters">
+                                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        Reset
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" @onclick="ApplyFilters">
+                                        <svg class="w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                                        </svg>
+                                        Apply Filters
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </MudCollapse>
+                    </div>
                 </div>
 
                 <!-- Requisitions Data Table -->
                 <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                    <MudTable Items="@_filteredRequisitions" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0" Filter="new Func<ManpowerRequirement, bool>(FilterFunc)">
-                        <ToolBarContent>
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Staff Requisitions</MudText>
-                            <MudSpacer />
-                            <MudTextField @bind-Value="_searchString"
-                                          Placeholder="Search role title, description..."
-                                          Adornment="Adornment.Start"
-                                          AdornmentIcon="@Icons.Material.Filled.Search"
-                                          IconSize="Size.Small"
-                                          Class="mt-0"
-                                          Variant="Variant.Outlined"
-                                          Margin="Margin.Dense"
-                                          Clearable="true" />
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.RoleTitle)">Role Title</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.Department?.NameEn ?? string.Empty)">Department</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.Section?.NameEn ?? string.Empty)">Section</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.Designation?.NameEn ?? string.Empty)">Designation</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.HeadcountNeeded)">Headcount Needed</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.TargetDate)">Target Date</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.Priority)">Priority</MudTableSortLabel></MudTh>
-                            <MudTh Style="text-align: center;"><MudTableSortLabel SortBy="new Func<ManpowerRequirement, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Role Title"><span class="fw-semibold text-zinc-800">@context.RoleTitle</span></MudTd>
-                            <MudTd DataLabel="Department">@(context.Department?.NameEn ?? "-")</MudTd>
-                            <MudTd DataLabel="Section">@(context.Section?.NameEn ?? "All Sections")</MudTd>
-                            <MudTd DataLabel="Designation">@(context.Designation?.NameEn ?? "All Designations")</MudTd>
-                            <MudTd Style="text-align: center;" DataLabel="Headcount Needed"><span class="font-mono fw-bold">@context.HeadcountNeeded</span></MudTd>
-                            <MudTd Style="text-align: center;" DataLabel="Target Date"><span class="font-mono">@context.TargetDate.ToString("yyyy-MM-dd")</span></MudTd>
-                            <MudTd Style="text-align: center;" DataLabel="Priority">
-                                @{
-                                    var priorityClass = context.Priority switch
-                                    {
-                                        "High" => "bg-red-50 text-red-700 border border-red-200",
-                                        "Medium" => "bg-amber-50 text-amber-700 border border-amber-200",
-                                        "Low" => "bg-green-50 text-green-700 border border-green-200",
-                                        _ => "bg-zinc-50 text-zinc-700"
-                                    };
+                    <div class="table-toolbar">
+                        <span class="text-sm font-bold font-heading">Staff Requisitions</span>
+                        <div class="relative">
+                            <input type="text" class="form-control pl-10" @bind="_searchString" placeholder="Search role title, description..." />
+                            <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="table-body">
+                        <table class="data-table-base">
+                            <thead>
+                                <tr>
+                                    <th><button class="sort-btn">Role Title</button></th>
+                                    <th><button class="sort-btn">Department</button></th>
+                                    <th><button class="sort-btn">Section</button></th>
+                                    <th><button class="sort-btn">Designation</button></th>
+                                    <th style="text-align:center;"><button class="sort-btn">Headcount Needed</button></th>
+                                    <th style="text-align:center;"><button class="sort-btn">Target Date</button></th>
+                                    <th style="text-align:center;"><button class="sort-btn">Priority</button></th>
+                                    <th style="text-align:center;"><button class="sort-btn">Status</button></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var context in _filteredRequisitions.Where(FilterFunc))
+                                {
+                                    <tr>
+                                        <td><span class="fw-semibold text-zinc-800">@context.RoleTitle</span></td>
+                                        <td>@(context.Department?.NameEn ?? "-")</td>
+                                        <td>@(context.Section?.NameEn ?? "All Sections")</td>
+                                        <td>@(context.Designation?.NameEn ?? "All Designations")</td>
+                                        <td style="text-align:center;"><span class="font-mono fw-bold">@context.HeadcountNeeded</span></td>
+                                        <td style="text-align:center;"><span class="font-mono">@context.TargetDate.ToString("yyyy-MM-dd")</span></td>
+                                        <td style="text-align:center;">
+                                            @{
+                                                var priorityClass = context.Priority switch
+                                                {
+                                                    "High" => "bg-red-50 text-red-700 border border-red-200",
+                                                    "Medium" => "bg-amber-50 text-amber-700 border border-amber-200",
+                                                    "Low" => "bg-green-50 text-green-700 border border-green-200",
+                                                    _ => "bg-zinc-50 text-zinc-700"
+                                                };
+                                            }
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @priorityClass">@context.Priority</span>
+                                        </td>
+                                        <td style="text-align:center;">
+                                            @{
+                                                var statusClass = context.Status switch
+                                                {
+                                                    "Approved" => "bg-indigo-50 text-indigo-700 border border-indigo-100",
+                                                    "Recruiting" => "bg-green-50 text-green-700 border border-green-100",
+                                                    "Pending" => "bg-zinc-50 text-zinc-600 border border-zinc-100",
+                                                    "Filled" => "bg-teal-50 text-teal-700 border border-teal-100",
+                                                    "Cancelled" => "bg-red-50 text-red-700 border border-red-100",
+                                                    _ => "bg-zinc-50 text-zinc-700"
+                                                };
+                                            }
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @statusClass">@context.Status</span>
+                                        </td>
+                                    </tr>
                                 }
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @priorityClass">@context.Priority</span>
-                            </MudTd>
-                            <MudTd Style="text-align: center;" DataLabel="Status">
-                                @{
-                                    var statusClass = context.Status switch
-                                    {
-                                        "Approved" => "bg-indigo-50 text-indigo-700 border border-indigo-100",
-                                        "Recruiting" => "bg-green-50 text-green-700 border border-green-100",
-                                        "Pending" => "bg-zinc-50 text-zinc-600 border border-zinc-100",
-                                        "Filled" => "bg-teal-50 text-teal-700 border border-teal-100",
-                                        "Cancelled" => "bg-red-50 text-red-700 border border-red-100",
-                                        _ => "bg-zinc-50 text-zinc-700"
-                                    };
-                                }
-                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @statusClass">@context.Status</span>
-                            </MudTd>
-                        </RowTemplate>
-                        <PagerContent>
-                            <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                        </PagerContent>
-                        <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8 font-body">No staffing requirements match the filters.</MudText>
-                        </NoRecordsContent>
-                    </MudTable>
+                            </tbody>
+                        </table>
+                    </div>
+                    @if (!_filteredRequisitions.Any(FilterFunc))
+                    {
+                        <div class="table-empty">
+                            <span class="text-sm text-zinc-500 font-body">No staffing requirements match the filters.</span>
+                        </div>
+                    }
                 </div>
             }
         </div>
@@ -197,7 +217,7 @@
                 <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-lg w-full p-6 mx-4">
                     <h3 class="text-base font-bold text-zinc-950 font-heading mb-1 font-heading">New Staffing Requisition</h3>
                     <p class="text-xs text-zinc-500 mb-4 font-body">Create a new headcount requirement for department approvals.</p>
-                    
+
                     <div class="space-y-4">
                         <div class="grid grid-cols-2 gap-4">
                             <div class="col-span-2">
@@ -344,7 +364,6 @@
         }
         catch
         {
-            // Fail silently
         }
     }
 
@@ -363,7 +382,7 @@
         {
             _requisitions = new();
             _filteredRequisitions = new();
-            Snackbar.Add($"Failed to load requisitions: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Failed to load requisitions: {ex.Message}");
         }
         finally
         {
@@ -389,21 +408,21 @@
         ApplyFilters();
     }
 
-    private void OnDepartmentFilterChanged(int deptId)
+    private void OnDepartmentFilterChanged(ChangeEventArgs e)
     {
-        _departmentIdFilter = deptId;
+        _departmentIdFilter = int.TryParse(e.Value?.ToString(), out var id) ? id : 0;
         ApplyFilters();
     }
 
-    private void OnPriorityFilterChanged(string priority)
+    private void OnPriorityFilterChanged(ChangeEventArgs e)
     {
-        _priorityFilter = priority ?? "All";
+        _priorityFilter = e.Value?.ToString() ?? "All";
         ApplyFilters();
     }
 
-    private void OnStatusFilterChanged(string status)
+    private void OnStatusFilterChanged(ChangeEventArgs e)
     {
-        _statusFilter = status ?? "All";
+        _statusFilter = e.Value?.ToString() ?? "All";
         ApplyFilters();
     }
 
@@ -489,12 +508,12 @@
     {
         if (string.IsNullOrWhiteSpace(_newReq.RoleTitle))
         {
-            Snackbar.Add("Please enter a role title.", Severity.Warning);
+            await Toast.ShowWarningAsync("Please enter a role title.");
             return;
         }
         if (_newReq.DepartmentId <= 0)
         {
-            Snackbar.Add("Please select a department.", Severity.Warning);
+            await Toast.ShowWarningAsync("Please select a department.");
             return;
         }
 
@@ -509,19 +528,19 @@
             var response = await Http.PostAsJsonAsync($"{baseUri}api/manpowerrequirements", _newReq);
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add("Staff requisition submitted successfully.", Severity.Success);
+                await Toast.ShowSuccessAsync("Staff requisition submitted successfully.");
                 _showAddModal = false;
                 await LoadData();
             }
             else
             {
                 var err = await response.Content.ReadAsStringAsync();
-                Snackbar.Add($"Failed to submit: {err}", Severity.Error);
+                await Toast.ShowErrorAsync($"Failed to submit: {err}");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Submission failed: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Submission failed: {ex.Message}");
         }
         finally
         {

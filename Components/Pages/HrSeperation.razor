@@ -1,9 +1,9 @@
-@page "/hr/seperation"
+﻿@page "/hr/seperation"
 @using ERPHub.Models
 @using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 @inject IJSRuntime JS
 
 <PageTitle>ERPHub - Employee Separations</PageTitle>
@@ -11,280 +11,246 @@
 <AuthorizeView Context="authContext">
     <Authorized>
         @* Header *@
-        <div class="d-flex align-center mb-6" style="flex-wrap:wrap; gap: 16px;width: 100%;">
+        <div class="d-flex justify-between align-center mb-6" style="flex-wrap:wrap; gap: 16px;width: 100%;">
             <div>
-                <MudText Typo="Typo.h5" Class="fw-extrabold">Employee Separations</MudText>
-                <MudText Typo="Typo.caption" Class="mud-secondary-text-color mt-1">View separation history — resignations, retirements, terminations and more.</MudText>
+                <h5 class="text-[22px] font-extrabold">Employee Separations</h5>
+                <p class="text-xs text-zinc-500 mt-1">View separation history — resignations, retirements, terminations and more.</p>
             </div>
-            <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                       StartIcon="@Icons.Material.Filled.PersonRemove"
-                       Size="Size.Small"
-                       Href="/hr/record-separation">
+            <a href="/hr/record-separation" class="btn btn-primary btn-sm mr-2">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2m7-10a4 4 0 100-8 4 4 0 000 8zm8-3v6m3-3h-6" />
+                </svg>
                 Record Separation
-            </MudButton>
+            </a>
         </div>
 
         @* Metrics *@
         @if (_separations.Count > 0)
         {
-            <MudGrid Spacing="3" Class="mb-4">
-                <MudItem xs="6" sm="3" md="2">
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px; border-left:4px solid #6366f1;">
-                        <MudText Typo="Typo.caption" Class="fw-bold text-uppercase" Style="color:#6366f1; letter-spacing:.05em;">Total</MudText>
-                        <MudText Typo="Typo.body1" Class="fw-extrabold mt-1">@_separations.Count</MudText>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="6" sm="3" md="2">
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px; border-left:4px solid #f59e0b;">
-                        <MudText Typo="Typo.caption" Class="fw-bold text-uppercase" Style="color:#f59e0b; letter-spacing:.05em;">Notice Period</MudText>
-                        <MudText Typo="Typo.body1" Class="fw-extrabold mt-1">@_separations.Count(s => s.Status == "Notice Period")</MudText>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="6" sm="3" md="2">
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px; border-left:4px solid #10b981;">
-                        <MudText Typo="Typo.caption" Class="fw-bold text-uppercase" Style="color:#10b981; letter-spacing:.05em;">Settled</MudText>
-                        <MudText Typo="Typo.body1" Class="fw-extrabold mt-1">@_separations.Count(s => s.Status == "Settled")</MudText>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="6" sm="3" md="2">
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px; border-left:4px solid #ef4444;">
-                        <MudText Typo="Typo.caption" Class="fw-bold text-uppercase" Style="color:#ef4444; letter-spacing:.05em;">Resigned</MudText>
-                        <MudText Typo="Typo.body1" Class="fw-extrabold mt-1">@_separations.Count(s => s.SeparationType == "Resignation")</MudText>
-                    </MudPaper>
-                </MudItem>
-                <MudItem xs="6" sm="3" md="2">
-                    <MudPaper Elevation="0" Outlined="true" Class="pa-3" Style="border-radius:8px; border-left:4px solid #8b5cf6;">
-                        <MudText Typo="Typo.caption" Class="fw-bold text-uppercase" Style="color:#8b5cf6; letter-spacing:.05em;">Retired</MudText>
-                        <MudText Typo="Typo.body1" Class="fw-extrabold mt-1">@_separations.Count(s => s.SeparationType == "Retirement")</MudText>
-                    </MudPaper>
-                </MudItem>
-            </MudGrid>
+            <div class="grid grid-cols-2 sm:grid-cols-3 max-xl:grid-cols-3 gap-3 mb-4">
+                <div class="bg-white border border-zinc-200 rounded-lg p-3" style="border-radius:8px; border-left:4px solid #6366f1;">
+                    <div class="text-xs font-bold text-uppercase" style="color:#6366f1; letter-spacing:.05em;">Total</div>
+                    <div class="text-sm font-extrabold mt-1">@_separations.Count</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-3" style="border-radius:8px; border-left:4px solid #f59e0b;">
+                    <div class="text-xs font-bold text-uppercase" style="color:#f59e0b; letter-spacing:.05em;">Resign</div>
+                    <div class="text-sm font-extrabold mt-1">@_separations.Count(s => s.SeparationType == "Resign")</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-3" style="border-radius:8px; border-left:4px solid #10b981;">
+                    <div class="text-xs font-bold text-uppercase" style="color:#10b981; letter-spacing:.05em;">Settled</div>
+                    <div class="text-sm font-extrabold mt-1">@_separations.Count(s => s.IsSettled)</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-3" style="border-radius:8px; border-left:4px solid #ef4444;">
+                    <div class="text-xs font-bold text-uppercase" style="color:#ef4444; letter-spacing:.05em;">Left</div>
+                    <div class="text-sm font-extrabold mt-1">@_separations.Count(s => s.SeparationType == "Left")</div>
+                </div>
+                <div class="bg-white border border-zinc-200 rounded-lg p-3" style="border-radius:8px; border-left:4px solid #8b5cf6;">
+                    <div class="text-xs font-bold text-uppercase" style="color:#8b5cf6; letter-spacing:.05em;">Close</div>
+                    <div class="text-sm font-extrabold mt-1">@_separations.Count(s => s.SeparationType == "Close")</div>
+                </div>
+            </div>
         }
 
         @* Advanced Filters *@
-        <MudPaper Elevation="0" Outlined="true" Class="pa-4 mb-4" Style="border-radius:8px;">
-            <MudGrid Spacing="3" class="align-items-end">
-                <MudItem xs="12" sm="4" md="2">
-                    <MudDatePicker Label="From Date"
-                                   Date="@_fromDate"
-                                   DateChanged="@(d => { if(d.HasValue) _fromDate = d.Value; })"
-                                   Editable="true"
-                                   DateFormat="yyyy-MM-dd"
-                                   dense="true"
-                                   Margin="Margin.Dense"
-                                   Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudDatePicker Label="To Date"
-                                   Date="@_toDate"
-                                   DateChanged="@(d => { if(d.HasValue) _toDate = d.Value; })"
-                                   Editable="true"
-                                   DateFormat="yyyy-MM-dd"
-                                   dense="true"
-                                   Margin="Margin.Dense"
-                                   Variant="Variant.Outlined" />
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudSelect Label="Department"
-                               @bind-Value="_deptFilter"
-                               Variant="Variant.Outlined"
-                               dense="true"
-                               Margin="Margin.Dense"
-                               Clearable="true">
-                        <MudSelectItem Value="0">All Departments</MudSelectItem>
+        <div class="bg-white border border-zinc-200 rounded-lg p-4 mb-4">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                    <label class="form-label">From Date</label>
+                    <input type="date" class="form-control" value="@_fromDate.ToString("yyyy-MM-dd")" @onchange="@(e => { if (DateTime.TryParse((e as ChangeEventArgs)?.Value?.ToString(), out var d)) _fromDate = d; })" />
+                </div>
+                <div>
+                    <label class="form-label">To Date</label>
+                    <input type="date" class="form-control" value="@_toDate.ToString("yyyy-MM-dd")" @onchange="@(e => { if (DateTime.TryParse((e as ChangeEventArgs)?.Value?.ToString(), out var d)) _toDate = d; })" />
+                </div>
+                <div>
+                    <label class="form-label">Department</label>
+                    <select class="form-control" @bind="_deptFilter">
+                        <option value="0">All Departments</option>
                         @foreach (var d in _departments)
                         {
-                            <MudSelectItem Value="@d.Id">@d.NameEn</MudSelectItem>
+                            <option value="@d.Id">@d.NameEn</option>
                         }
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudSelect Label="Separation Type"
-                               @bind-Value="_typeFilter"
-                               Variant="Variant.Outlined"
-                               dense="true"
-                               Margin="Margin.Dense">
-                        <MudSelectItem Value="@("All")">All Types</MudSelectItem>
-                        <MudSelectItem Value="@("Resign")">Resign</MudSelectItem>
-                        <MudSelectItem Value="@("Left")">Left</MudSelectItem>
-                        <MudSelectItem Value="@("Close")">Close</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2">
-                    <MudSelect Label="Status"
-                               @bind-Value="_statusFilter"
-                               Variant="Variant.Outlined"
-                               dense="true"
-                               Margin="Margin.Dense">
-                        <MudSelectItem Value="@("All")">All Statuses</MudSelectItem>
-                        <MudSelectItem Value="@("Initiated")">Initiated (New Joining Notice)</MudSelectItem>
-                        <MudSelectItem Value="@("Notice Period")">Notice Period</MudSelectItem>
-                        <MudSelectItem Value="@("Clearance")">Clearance</MudSelectItem>
-                        <MudSelectItem Value="@("Terminated")">Terminated (Resigned / Closed)</MudSelectItem>
-                        <MudSelectItem Value="@("Settled")">Settled (Left / Cleared)</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="12" sm="4" md="2" Class="d-flex align-center gap-2" Style="margin-top:10px;">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary"
-                               Disabled="@_isLoading" @onclick="LoadData" Class="flex-grow-1">
-                        Apply
-                    </MudButton>
-                    <MudButton Variant="Variant.Outlined" Color="Color.Default"
-                               @onclick="ResetFilters" Class="flex-grow-1">
-                        Clear
-                    </MudButton>
-                </MudItem>
-            </MudGrid>
-        </MudPaper>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Separation Type</label>
+                    <select class="form-control" @bind="_typeFilter">
+                        <option value="All">All Types</option>
+                        <option value="Resign">Resign</option>
+                        <option value="Left">Left</option>
+                        <option value="Close">Close</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="form-label">Status</label>
+                    <select class="form-control" @bind="_statusFilter">
+                        <option value="All">All Statuses</option>
+                        <option value="Recorded">Recorded</option>
+                        <option value="Settled">Settled</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <div class="flex gap-2 w-100 pt-3">
+                        <button class="btn btn-primary flex-grow-1" disabled="@_isLoading" @onclick="LoadData">Apply</button>
+                        <button class="btn btn-outlined flex-grow-1" @onclick="ResetFilters">Clear</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         @* Data Table *@
         @if (_isLoading)
         {
-            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Loading...</MudText>
+            <div class="text-center py-8 text-zinc-500 text-sm">Loading...</div>
         }
         else
         {
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_separations" Hover="true" SortLabel="Sort By" Dense="true" Elevation="0"
-                          Filter="new Func<Separation, bool>(FilterFunc)">
-                    <ToolBarContent>
-                        <MudText Typo="Typo.subtitle2" Class="fw-bold">Separation Records</MudText>
-                        <MudSpacer />
-                        <MudTextField @bind-Value="_searchString"
-                                      Placeholder="Search by name, ID, type..."
-                                      Adornment="Adornment.Start"
-                                      AdornmentIcon="@Icons.Material.Filled.Search"
-                                      IconSize="Size.Small"
-                                      Class="mt-0"
-                                      Variant="Variant.Outlined"
-                                      Margin="Margin.Dense"
-                                      Clearable="true" />
-                    </ToolBarContent>
-                    <HeaderContent>
-                        <MudTh Style="text-align:center;">Sl</MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<Separation, object>(x => x.EmployeeName)">Employee</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<Separation, object>(x => x.Department?.NameEn ?? string.Empty)">Department</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<Separation, object>(x => x.SeparationType)">Type</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<Separation, object>(x => x.ResignDate)">Resign Date</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<Separation, object>(x => x.LastWorkingDay)">Last Day</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<Separation, object>(x => x.ClearanceProgress)">Clearance</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align:center;"><MudTableSortLabel SortBy="new Func<Separation, object>(x => x.Status)">Status</MudTableSortLabel></MudTh>
-                        <MudTh Style="text-align:center;">Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd Style="text-align:center;" DataLabel="Sl">@(_separations.IndexOf(context) + 1)</MudTd>
-                        <MudTd DataLabel="Employee">
-                            <MudText Typo="Typo.body2" Class="fw-semibold">@context.EmployeeName</MudText>
-                            <MudText Typo="Typo.caption" Class="mud-secondary-text-color font-mono">@context.EmployeeId</MudText>
-                        </MudTd>
-                        <MudTd DataLabel="Department">
-                            <MudText Typo="Typo.body2">@(context.Department?.NameEn ?? "-")</MudText>
-                            @if (context.Designation != null)
+                <div class="table-toolbar">
+                    <span class="text-sm font-bold fw-bold">Separation Records</span>
+                    <div class="relative">
+                        <input type="text" class="form-control pl-10" @bind="_searchString" placeholder="Search by name, ID, type..." />
+                        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="table-body">
+                    <table class="data-table-base">
+                        <thead>
+                            <tr>
+                                <th style="text-align:center;">Sl</th>
+                                <th><button class="sort-btn">Employee</button></th>
+                                <th><button class="sort-btn">Department</button></th>
+                                <th style="text-align:center;"><button class="sort-btn">Type</button></th>
+                                <th style="text-align:center;"><button class="sort-btn">Separation Date</button></th>
+                                <th style="text-align:center;"><button class="sort-btn">Clearance</button></th>
+                                <th style="text-align:center;"><button class="sort-btn">Status</button></th>
+                                <th style="text-align:center;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var context in _separations.Where(FilterFunc))
                             {
-                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@context.Designation.NameEn</MudText>
+                                <tr>
+                                    <td style="text-align:center;">@(_separations.IndexOf(context) + 1)</td>
+                                    <td>
+                                        <span class="text-sm font-semibold">@context.EmployeeName</span>
+                                        <span class="text-xs text-zinc-500 font-mono">@context.EmployeeId</span>
+                                    </td>
+                                    <td>
+                                        <span class="text-sm">@(context.Department?.NameEn ?? "-")</span>
+                                        @if (context.Designation != null)
+                                        {
+                                            <span class="text-xs text-zinc-500">@context.Designation.NameEn</span>
+                                        }
+                                    </td>
+                                    <td style="text-align:center;">
+                                        @{
+                                            var typeClass = context.SeparationType switch
+                                            {
+                                                "Resign" => "bg-blue-50 text-blue-700 border border-blue-100",
+                                                "Left"   => "bg-violet-50 text-violet-700 border border-violet-100",
+                                                "Close"  => "bg-red-50 text-red-700 border border-red-100",
+                                                _        => "bg-zinc-50 text-zinc-600"
+                                            };
+                                        }
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @typeClass">@context.SeparationType</span>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <span class="text-sm font-mono">@context.SeparationDate.ToString("yyyy-MM-dd")</span>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="text-xs font-bold @(context.ClearanceProgress == 100 ? "text-emerald-600" : context.ClearanceProgress >= 50 ? "text-amber-600" : "text-zinc-500")">
+                                                @context.ClearanceProgress%
+                                            </span>
+                                            <div class="w-16 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
+                                                <div class="h-full rounded-full transition-all @(context.ClearanceProgress == 100 ? "bg-emerald-500" : context.ClearanceProgress >= 50 ? "bg-amber-400" : "bg-indigo-400")"
+                                                     style="width: @(context.ClearanceProgress)%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        @{
+                                            var statusClass = context.Status switch
+                                            {
+                                                "Initiated"     => "bg-zinc-50 text-zinc-600 border border-zinc-200",
+                                                "Notice Period" => "bg-amber-50 text-amber-700 border border-amber-200",
+                                                "Clearance"     => "bg-blue-50 text-blue-700 border border-blue-100",
+                                                "Terminated"    => "bg-red-50 text-red-700 border border-red-100",
+                                                "Settled"       => "bg-emerald-50 text-emerald-700 border border-emerald-100",
+                                                _               => "bg-zinc-50 text-zinc-600"
+                                            };
+                                        }
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @statusClass">@context.Status</span>
+                                    </td>
+                                    <td style="text-align:center;">
+                                        <div class="flex items-center justify-center gap-1">
+                                            <button class="btn-icon btn-icon-sm text-indigo-500" title="Update Status" @onclick="() => OpenUpdateModal(context)">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <button class="btn-icon btn-icon-sm text-red-500" title="Delete" @onclick="() => DeleteSeparation(context)">
+                                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
                             }
-                        </MudTd>
-                        <MudTd DataLabel="Type">
-                            @{
-                                var typeClass = context.SeparationType switch
-                                {
-                                    "Resign" => "bg-blue-50 text-blue-700 border border-blue-100",
-                                    "Left"   => "bg-violet-50 text-violet-700 border border-violet-100",
-                                    "Close"  => "bg-red-50 text-red-700 border border-red-100",
-                                    _        => "bg-zinc-50 text-zinc-600"
-                                };
-                            }
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @typeClass">@context.SeparationType</span>
-                        </MudTd>
-                        <MudTd Style="text-align:center;" DataLabel="Resign Date">
-                            <MudText Typo="Typo.body2" Class="font-mono">@context.ResignDate.ToString("yyyy-MM-dd")</MudText>
-                        </MudTd>
-                        <MudTd Style="text-align:center;" DataLabel="Last Day">
-                            <MudText Typo="Typo.body2" Class="font-mono">@context.LastWorkingDay.ToString("yyyy-MM-dd")</MudText>
-                        </MudTd>
-                        <MudTd Style="text-align:center;" DataLabel="Clearance">
-                            <div class="flex flex-col items-center gap-1">
-                                <span class="text-xs font-bold @(context.ClearanceProgress == 100 ? "text-emerald-600" : context.ClearanceProgress >= 50 ? "text-amber-600" : "text-zinc-500")">
-                                    @context.ClearanceProgress%
-                                </span>
-                                <div class="w-16 h-1.5 bg-zinc-100 rounded-full overflow-hidden">
-                                    <div class="h-full rounded-full transition-all @(context.ClearanceProgress == 100 ? "bg-emerald-500" : context.ClearanceProgress >= 50 ? "bg-amber-400" : "bg-indigo-400")"
-                                         style="width: @(context.ClearanceProgress)%"></div>
-                                </div>
-                            </div>
-                        </MudTd>
-                        <MudTd Style="text-align:center;" DataLabel="Status">
-                            @{
-                                var statusClass = context.Status switch
-                                {
-                                    "Initiated"     => "bg-zinc-50 text-zinc-600 border border-zinc-200",
-                                    "Notice Period" => "bg-amber-50 text-amber-700 border border-amber-200",
-                                    "Clearance"     => "bg-blue-50 text-blue-700 border border-blue-100",
-                                    "Terminated"    => "bg-red-50 text-red-700 border border-red-100",
-                                    "Settled"       => "bg-emerald-50 text-emerald-700 border border-emerald-100",
-                                    _               => "bg-zinc-50 text-zinc-600"
-                                };
-                            }
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @statusClass">@context.Status</span>
-                        </MudTd>
-                        <MudTd Style="text-align:center;" DataLabel="Actions">
-                            <div class="flex items-center justify-center gap-1">
-                                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" Color="Color.Primary"
-                                               title="Update Status" OnClick="() => OpenUpdateModal(context)" />
-                                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error"
-                                               title="Delete" OnClick="() => DeleteSeparation(context)" />
-                            </div>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                    <NoRecordsContent>
-                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No records found.</MudText>
-                    </NoRecordsContent>
-                </MudTable>
+                        </tbody>
+                    </table>
+                </div>
+                @if (!_separations.Any(FilterFunc))
+                {
+                    <div class="table-empty">
+                        <span class="text-sm text-zinc-500">No records found.</span>
+                    </div>
+                }
             </div>
         }
 
         @* Edit Modal *@
         @if (_showUpdateModal && _editSep != null)
         {
-            <MudOverlay Visible="true" DarkBackground="true" ZIndex="1000" />
-            <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1001;">
-                <MudPaper Elevation="4" Class="pa-6" Style="border-radius:10px; min-width:380px; max-width:500px; width:100%;">
-                    <MudText Typo="Typo.h6" Class="fw-bold mb-4">Update Separation Status</MudText>
-                    <MudText Typo="Typo.body2" Class="fw-semibold mb-4">@_editSep.EmployeeName (@_editSep.EmployeeId)</MudText>
-                    <MudGrid Spacing="2">
-                        <MudItem xs="12" sm="6">
-                            <MudSelect Label="Status" @bind-Value="_editSep.Status" Variant="Variant.Outlined" Margin="Margin.Dense">
-                                <MudSelectItem Value="@("Initiated")">Initiated</MudSelectItem>
-                                <MudSelectItem Value="@("Notice Period")">Notice Period</MudSelectItem>
-                                <MudSelectItem Value="@("Clearance")">Clearance</MudSelectItem>
-                                <MudSelectItem Value="@("Terminated")">Terminated</MudSelectItem>
-                                <MudSelectItem Value="@("Settled")">Settled</MudSelectItem>
-                            </MudSelect>
-                        </MudItem>
-                        <MudItem xs="12" sm="6">
-                            <MudNumericField Label="Clearance % (0-100)" @bind-Value="_editSep.ClearanceProgress"
-                                             Min="0" Max="100" Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </MudItem>
-                        <MudItem xs="12">
-                            <MudTextField Label="Approved By" @bind-Value="_editSep.ApprovedBy"
-                                          Variant="Variant.Outlined" Margin="Margin.Dense" />
-                        </MudItem>
-                        <MudItem xs="12">
-                            <MudTextField Label="Reason / Notes" @bind-Value="_editSep.Reason"
-                                          Variant="Variant.Outlined" Margin="Margin.Dense" Lines="3" />
-                        </MudItem>
-                    </MudGrid>
-                    <div class="d-flex justify-end gap-2 mt-4">
-                        <MudButton OnClick="CloseUpdateModal" Color="Color.Default" Variant="Variant.Outlined">Cancel</MudButton>
-                        <MudButton OnClick="SaveUpdate" Color="Color.Primary" Variant="Variant.Filled" Disabled="@_isSaving">
-                            @(_isSaving ? "Saving..." : "Save")
-                        </MudButton>
+            <div class="overlay"></div>
+            <div class="fixed inset-0 flex items-center justify-center z-[9999] animate-fade-in">
+                <div class="bg-white rounded-xl shadow-xl p-6" style="min-width:380px; max-width:500px; width:100%; margin:0 16px;">
+                    <h6 class="text-base font-bold mb-4">Update Separation Status</h6>
+                    <p class="text-sm font-semibold mb-4">@_editSep.EmployeeName (@_editSep.EmployeeId)</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="form-label">Status</label>
+                            <select class="form-control" @bind="_editSep.Status">
+                                <option value="Recorded">Recorded</option>
+                                <option value="Settled">Settled</option>
+                                <option value="Cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Clearance % (0-100)</label>
+                            <input type="number" class="form-control" @bind="_editSep.ClearanceProgress" min="0" max="100" />
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="form-label">Approved By</label>
+                            <input type="text" class="form-control" @bind="_editSep.ApprovedBy" />
+                        </div>
+                        <div class="col-span-1 sm:col-span-2">
+                            <label class="form-label">Reason / Notes</label>
+                            <textarea class="form-control" @bind="_editSep.Reason" rows="3"></textarea>
+                        </div>
                     </div>
-                </MudPaper>
+                    <div class="flex justify-end gap-2 mt-4">
+                        <button class="btn btn-outlined" @onclick="CloseUpdateModal">Cancel</button>
+                        <button class="btn btn-primary" @onclick="SaveUpdate" disabled="@_isSaving">
+                            @(_isSaving ? "Saving..." : "Save")
+                        </button>
+                    </div>
+                </div>
             </div>
         }
     </Authorized>
@@ -342,7 +308,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Failed to load: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Failed to load: {ex.Message}");
             _separations = new();
         }
         finally
@@ -378,20 +344,23 @@
         _editSep = new Separation
         {
             Id = sep.Id,
+            EmployeeRefId = sep.EmployeeRefId,
             EmployeeId = sep.EmployeeId,
             EmployeeName = sep.EmployeeName,
             DepartmentId = sep.DepartmentId,
             SectionId = sep.SectionId,
             DesignationId = sep.DesignationId,
+            CompanyId = sep.CompanyId,
             SeparationType = sep.SeparationType,
-            ResignDate = sep.ResignDate,
-            LastWorkingDay = sep.LastWorkingDay,
+            SeparationDate = sep.SeparationDate,
             ExitInterviewDate = sep.ExitInterviewDate,
             Reason = sep.Reason,
-            HandoverNotes = sep.HandoverNotes,
+            Remarks = sep.Remarks,
             Status = sep.Status,
             ClearanceProgress = sep.ClearanceProgress,
-            ApprovedBy = sep.ApprovedBy
+            ApprovedBy = sep.ApprovedBy,
+            IsSettled = sep.IsSettled,
+            IsCancelled = sep.IsCancelled
         };
         _showUpdateModal = true;
     }
@@ -408,16 +377,16 @@
             var response = await Http.PutAsJsonAsync($"{NavManager.BaseUri}api/separations/{_editSep.Id}", _editSep);
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add("Separation updated successfully.", Severity.Success);
+                await Toast.ShowSuccessAsync("Separation updated successfully.");
                 CloseUpdateModal();
                 await LoadData();
             }
             else
-                Snackbar.Add("Update failed.", Severity.Error);
+                await Toast.ShowErrorAsync("Update failed.");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Error: {ex.Message}");
         }
         finally
         {
@@ -432,15 +401,15 @@
             var response = await Http.DeleteAsync($"{NavManager.BaseUri}api/separations/{sep.Id}");
             if (response.IsSuccessStatusCode)
             {
-                Snackbar.Add($"{sep.EmployeeName} separation record deleted.", Severity.Info);
+                await Toast.ShowInfoAsync($"{sep.EmployeeName} separation record deleted.");
                 await LoadData();
             }
             else
-                Snackbar.Add("Delete failed.", Severity.Error);
+                await Toast.ShowErrorAsync("Delete failed.");
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Error: {ex.Message}");
         }
     }
 }

@@ -1,1 +1,29 @@
-<MudDatePicker @bind-Date="_dateValue" Label="Select date" Editable="true" Placeholder="Select Date" inputformat="yyyy-MM-dd" Culture="@_culture" Class="mud-datepicker-xs" dense="true" Margin="Margin.Dense" />
+<input type="date"
+       class="form-control"
+       value="@_dateValue?.ToString("yyyy-MM-dd")"
+       @onchange="OnDateChanged"
+       placeholder="Select Date" />
+
+@code {
+    [Parameter] public DateTime? Date { get; set; }
+    [Parameter] public EventCallback<DateTime?> DateChanged { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+
+    private DateTime? _dateValue;
+
+    protected override void OnInitialized()
+    {
+        _dateValue = Date;
+    }
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        if (DateTime.TryParse(value, out var parsed))
+            _dateValue = parsed;
+        else
+            _dateValue = null;
+        await DateChanged.InvokeAsync(_dateValue);
+    }
+}

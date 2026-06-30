@@ -1,4 +1,5 @@
-@page "/payroll/daily-salary-sheet"
+﻿@page "/payroll/daily-salary-sheet"
+@using ERPHub.Services
 
 <PageTitle>ERPHub - Daily Salary Sheet</PageTitle>
 
@@ -13,10 +14,10 @@
                 </div>
                 <div class="flex gap-2">
                     <button class="inline-flex items-center py-1.5 px-3 border border-zinc-200 rounded-md bg-white text-zinc-700 font-semibold hover:bg-zinc-50 transition-colors cursor-pointer text-xs" @onclick="RecalculateAll">
-                        <MudIcon Icon="@Icons.Material.Filled.Refresh" Size="Size.Small" Class="mr-1" /> Recalculate Sheet
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg> Recalculate Sheet
                     </button>
                     <button class="inline-flex items-center py-1.5 px-3 rounded-md bg-black text-white font-semibold hover:bg-zinc-800 transition-colors cursor-pointer text-xs" @onclick="ExportToExcel">
-                        <MudIcon Icon="@Icons.Material.Filled.Download" Size="Size.Small" Class="mr-1" /> Export Excel
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg> Export Excel
                     </button>
                 </div>
             </div>
@@ -50,120 +51,134 @@
                            @bind="_searchQuery" @bind:event="oninput" />
                     
                     <div class="w-48 max-sm:w-full">
-                        <MudSelect T="string" @bind-Value="_deptFilter" Placeholder="All Departments" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
-                            <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
-                            <MudSelectItem Value="@("Production")">Production</MudSelectItem>
-                            <MudSelectItem Value="@("HR")">HR</MudSelectItem>
-                            <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
-                            <MudSelectItem Value="@("Marketing")">Marketing</MudSelectItem>
-                            <MudSelectItem Value="@("Management")">Management</MudSelectItem>
-                        </MudSelect>
+                        <select class="form-control" @bind="_deptFilter">
+                            <option value="@((string?)null)">All Departments</option>
+                            <option value="IT">IT & Dev</option>
+                            <option value="Production">Production</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Management">Management</option>
+                        </select>
                     </div>
 
                     <div class="w-48 max-sm:w-full">
-                        <MudSelect T="string" @bind-Value="_statusFilter" Placeholder="All Statuses" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@((string?)null)">All Attendance</MudSelectItem>
-                            <MudSelectItem Value="@("Present")">Present</MudSelectItem>
-                            <MudSelectItem Value="@("Late")">Late</MudSelectItem>
-                            <MudSelectItem Value="@("On Leave")">On Leave</MudSelectItem>
-                            <MudSelectItem Value="@("Absent")">Absent</MudSelectItem>
-                        </MudSelect>
+                        <select class="form-control" @bind="_statusFilter">
+                            <option value="@((string?)null)">All Attendance</option>
+                            <option value="Present">Present</option>
+                            <option value="Late">Late</option>
+                            <option value="On Leave">On Leave</option>
+                            <option value="Absent">Absent</option>
+                        </select>
                     </div>
                 </div>
                 <div class="flex gap-2 items-center">
                     <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Date:</span>
-                    <MudDatePicker Date="@_sheetDate"
-                                   DateChanged="OnDateChanged"
-                                   Label="Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
+                    <input type="date" class="form-control" @bind="_sheetDate" @bind:format="yyyy-MM-dd" style="width:auto;" />
                 </div>
             </div>
 
             <!-- Data Table -->
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@FilteredRecords" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.EmpId)">Emp ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Name)">Employee Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Department)">Department</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.AttendanceStatus)">Attendance</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.DailyBasic)">Daily Basic</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.OtHours)">OT Hours</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.OtPay)">OT Pay</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Allowances)">Allowances</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Deductions)">Deductions</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.NetPay)">Net Daily Pay</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<DailySalaryUiRecord, object>(x=>x.Status)">Pay Status</MudTableSortLabel></MudTh>
-                        <MudTh Class="text-right">Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
-                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
-                        <MudTd DataLabel="Department">@context.Department</MudTd>
-                        <MudTd DataLabel="Attendance">
-                            @if (context.AttendanceStatus == "Present")
-                            {
-                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Present</span>
-                            }
-                            else if (context.AttendanceStatus == "Late")
-                            {
-                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Late</span>
-                            }
-                            else if (context.AttendanceStatus == "On Leave" || context.AttendanceStatus == "Leave")
-                            {
-                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">On Leave</span>
-                            }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Absent</span>
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Daily Basic">@context.DailyBasic.ToString("C")</MudTd>
-                        <MudTd DataLabel="OT Hours">@context.OtHours.ToString("F1") hrs</MudTd>
-                        <MudTd DataLabel="OT Pay" Class="text-emerald-700">@context.OtPay.ToString("C")</MudTd>
-                        <MudTd DataLabel="Allowances">@context.Allowances.ToString("C")</MudTd>
-                        <MudTd DataLabel="Deductions" Class="text-rose-600">@context.Deductions.ToString("C")</MudTd>
-                        <MudTd DataLabel="Net Daily Pay" Class="font-bold text-zinc-900">@context.NetPay.ToString("C")</MudTd>
-                        <MudTd DataLabel="Pay Status">
-                            @if (context.Status == "Approved")
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
-                            }
-                            else if (context.Status == "Pending")
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
-                            }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-zinc-50 text-zinc-600 border border-zinc-200">Processed</span>
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
-                            @if (context.Status == "Pending" || context.Status == "Processed")
-                            {
-                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" Size="@Size.Small" Color="Color.Success" title="Approve Pay" OnClick="() => ApprovePay(context)" />
-                            }
-                            <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="@Size.Small" Color="Color.Default" title="Edit Adjustment" OnClick="() => OpenAdjustmentDialog(context)" />
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                    <NoRecordsContent>
-                        <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No employee records match the filters.</MudText>
-                    </NoRecordsContent>
-                </MudTable>
+                <table class="w-full border-collapse" style="font-size:0.875rem;">
+                    <thead>
+                        <tr>
+                            <th><button class="sort-btn" @onclick="() => {}">Emp ID</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Employee Name</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Department</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Attendance</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Daily Basic</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">OT Hours</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">OT Pay</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Allowances</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Deductions</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Net Daily Pay</button></th>
+                            <th><button class="sort-btn" @onclick="() => {}">Pay Status</button></th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var rec in FilteredRecords)
+                        {
+                            <tr>
+                                <td data-label="Emp ID"><span class="font-mono text-xs font-semibold">@rec.EmpId</span></td>
+                                <td data-label="Employee Name" class="font-semibold text-zinc-900">@rec.Name</td>
+                                <td data-label="Department">@rec.Department</td>
+                                <td data-label="Attendance">
+                                    @if (rec.AttendanceStatus == "Present")
+                                    {
+                                        <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Present</span>
+                                    }
+                                    else if (rec.AttendanceStatus == "Late")
+                                    {
+                                        <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Late</span>
+                                    }
+                                    else if (rec.AttendanceStatus == "On Leave" || rec.AttendanceStatus == "Leave")
+                                    {
+                                        <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">On Leave</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1 py-0.5 px-2 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">Absent</span>
+                                    }
+                                </td>
+                                <td data-label="Daily Basic">@rec.DailyBasic.ToString("C")</td>
+                                <td data-label="OT Hours">@rec.OtHours.ToString("F1") hrs</td>
+                                <td data-label="OT Pay" class="text-emerald-700">@rec.OtPay.ToString("C")</td>
+                                <td data-label="Allowances">@rec.Allowances.ToString("C")</td>
+                                <td data-label="Deductions" class="text-rose-600">@rec.Deductions.ToString("C")</td>
+                                <td data-label="Net Daily Pay" class="font-bold text-zinc-900">@rec.NetPay.ToString("C")</td>
+                                <td data-label="Pay Status">
+                                    @if (rec.Status == "Approved")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Approved</span>
+                                    }
+                                    else if (rec.Status == "Pending")
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-zinc-50 text-zinc-600 border border-zinc-200">Processed</span>
+                                    }
+                                </td>
+                                <td data-label="Actions" class="text-right whitespace-nowrap">
+                                    @if (rec.Status == "Pending" || rec.Status == "Processed")
+                                    {
+                                        <button class="btn-icon btn-icon-sm" title="Approve Pay" @onclick="() => ApprovePay(rec)">
+                                            <svg class="w-4 h-4 text-emerald-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                        </button>
+                                    }
+                                    <button class="btn-icon btn-icon-sm" title="Edit Adjustment" @onclick="() => OpenAdjustmentDialog(rec)">
+                                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+                @if (!FilteredRecords.Any())
+                {
+                    <div class="table-empty">
+                        <span class="text-sm mud-secondary-text-color">No employee records match the filters.</span>
+                    </div>
+                }
+                <div class="table-footer">
+                    <div class="pagination">
+                        <select class="page-size-select">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="pagination-info">1-@FilteredRecords.Count() of @FilteredRecords.Count()</span>
+                    </div>
+                </div>
             </div>
         </div>
 
         @if (_showAdjustmentDialog && _activeRecord != null)
         {
-            <div class="fixed inset-0 bg-black/40 backdrop-blur-xs flex items-center justify-center z-[1000] animate-fade-in">
+            <div class="fixed inset-0 bg-black/40 backdrop-blur-md flex items-center justify-center z-[1000] animate-fade-in">
                 <div class="bg-white rounded-xl shadow-xl border border-zinc-200 max-w-md w-full p-6 mx-4">
                     <h3 class="text-base font-bold text-zinc-950 font-heading mb-1">Adjust Pay: @_activeRecord.Name</h3>
                     <p class="text-xs text-zinc-500 mb-4">Modify allowances and deductions for @_sheetDate.ToString("MMMM dd, yyyy").</p>
@@ -215,9 +230,9 @@
 </AuthorizeView>
 
 @code {
-    [Inject] private IErpService ErpService { get; set; } = default!;
-    [Inject] private AttendanceService AttendanceService { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private ToastService Toast { get; set; } = default!;
+    [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] private NavigationManager NavManager { get; set; } = default!;
 
     private string _searchQuery = string.Empty;
     private string _deptFilter = string.Empty;
@@ -228,6 +243,8 @@
     private DailySalaryUiRecord? _activeRecord;
 
     private List<DailySalaryUiRecord> _records = new();
+    private DailySalarySummaryDto? _summary;
+    private string BaseUri => NavManager.BaseUri;
 
     protected override async Task OnInitializedAsync()
     {
@@ -236,42 +253,52 @@
 
     private async Task LoadData()
     {
-        var dbRecords = await ErpService.GetDailySalaryRecordsAsync(_sheetDate);
-        if (!dbRecords.Any())
+        try
         {
-            await ErpService.CalculateDailySalariesAsync(_sheetDate);
-            dbRecords = await ErpService.GetDailySalaryRecordsAsync(_sheetDate);
-        }
+            var sheetTask = Http.GetFromJsonAsync<List<DailySalarySheetDto>>(
+                $"{BaseUri}api/payroll/daily-sheet?date={_sheetDate:yyyy-MM-dd}");
+            var summaryTask = Http.GetFromJsonAsync<DailySalarySummaryDto>(
+                $"{BaseUri}api/payroll/daily-sheet/summary?date={_sheetDate:yyyy-MM-dd}");
 
-        var employees = await ErpService.GetEmployeesAsync();
-        var departments = await ErpService.GetDepartmentsAsync();
-        var attendanceRecords = await AttendanceService.GetAttendanceRecordsAsync(_sheetDate, _sheetDate);
+            await Task.WhenAll(sheetTask, summaryTask);
 
-        var empMap = employees.GroupBy(e => e.EmployeeId).ToDictionary(g => g.Key, g => g.First());
-        var deptMap = departments.GroupBy(d => d.Id).ToDictionary(g => g.Key, g => g.First().NameEn);
-        var attMap = attendanceRecords.GroupBy(a => a.EmployeeId).ToDictionary(g => g.Key, g => g.First().AttendanceStatus);
-
-        _records = dbRecords.Select(db => {
-            empMap.TryGetValue(db.EmployeeId, out var emp);
-            string deptName = (emp != null && deptMap.TryGetValue(emp.DepartmentId, out var dn)) ? dn : "IT";
-            attMap.TryGetValue(db.EmployeeId, out var attStatus);
-
-            return new DailySalaryUiRecord
+            var dtoRecords = await sheetTask ?? [];
+            if (dtoRecords.Count == 0)
             {
-                Id = db.Id,
-                EmpId = db.EmployeeId,
-                Name = emp?.EmployeeName ?? "Unknown",
-                Department = deptName,
-                AttendanceStatus = attStatus ?? "Absent",
-                DailyBasic = db.DailyBasic,
-                OtHours = db.OtHours,
-                OtPay = db.OtPay,
-                Allowances = db.Allowances,
-                Deductions = db.Deductions,
-                Status = db.Status,
-                DbRecord = db
-            };
-        }).ToList();
+                await Http.PostAsync($"{BaseUri}api/payroll/calculate-daily?date={_sheetDate:yyyy-MM-dd}", null);
+                sheetTask = Http.GetFromJsonAsync<List<DailySalarySheetDto>>(
+                    $"{BaseUri}api/payroll/daily-sheet?date={_sheetDate:yyyy-MM-dd}");
+                summaryTask = Http.GetFromJsonAsync<DailySalarySummaryDto>(
+                    $"{BaseUri}api/payroll/daily-sheet/summary?date={_sheetDate:yyyy-MM-dd}");
+                await Task.WhenAll(sheetTask, summaryTask);
+                dtoRecords = await sheetTask ?? [];
+                _summary = await summaryTask;
+            }
+            else
+            {
+                _summary = await summaryTask;
+            }
+
+            _records = dtoRecords.Select(d => new DailySalaryUiRecord
+            {
+                Id = d.RecordId,
+                EmpId = d.EmployeeId,
+                Name = d.EmployeeName,
+                Department = d.Department,
+                AttendanceStatus = d.AttendanceStatus,
+                DailyBasic = d.DailyBasic,
+                OtHours = d.OtHours,
+                OtPay = d.OtPay,
+                Allowances = d.Allowances,
+                Deductions = d.Deductions,
+                Status = d.Status
+            }).ToList();
+        }
+        catch
+        {
+            _records = new();
+            _summary = null;
+        }
     }
 
     private async Task OnDateChanged(DateTime? date)
@@ -280,15 +307,23 @@
         {
             _sheetDate = date.Value;
             await LoadData();
-            Snackbar.Add($"Loaded daily salary sheet for {_sheetDate.ToString("yyyy-MM-dd")}", Severity.Info);
+            await Toast.ShowInfoAsync($"Loaded daily salary sheet for {_sheetDate:yyyy-MM-dd}");
         }
     }
 
     private async Task ApprovePay(DailySalaryUiRecord record)
     {
-        await ErpService.ApproveDailySalaryRecordAsync(record.Id);
-        await LoadData();
-        Snackbar.Add($"Daily payment approved for {record.Name}", Severity.Success);
+        try
+        {
+            var resp = await Http.PostAsync($"{BaseUri}api/payroll/daily-sheet/{record.Id}/approve", null);
+            resp.EnsureSuccessStatusCode();
+            await LoadData();
+            await Toast.ShowSuccessAsync($"Daily payment approved for {record.Name}");
+        }
+        catch (Exception ex)
+        {
+            await Toast.ShowErrorAsync($"Approval failed: {ex.Message}");
+        }
     }
 
     private void OpenAdjustmentDialog(DailySalaryUiRecord record)
@@ -305,8 +340,7 @@
             OtPay = record.OtPay,
             Allowances = record.Allowances,
             Deductions = record.Deductions,
-            Status = record.Status,
-            DbRecord = record.DbRecord
+            Status = record.Status
         };
         _showAdjustmentDialog = true;
     }
@@ -330,40 +364,61 @@
 
     private async Task SaveAdjustment()
     {
-        if (_activeRecord != null)
+        if (_activeRecord == null) return;
+        try
         {
-            var db = _activeRecord.DbRecord;
-            db.DailyBasic = _activeRecord.DailyBasic;
-            db.OtHours = _activeRecord.OtHours;
-            db.OtPay = _activeRecord.OtPay;
-            db.Allowances = _activeRecord.Allowances;
-            db.Deductions = _activeRecord.Deductions;
-            db.NetPay = _activeRecord.NetPay;
-            db.Status = _activeRecord.Status;
-
-            await ErpService.UpdateDailySalaryRecordAsync(db);
+            var dto = new DailySalaryRecord
+            {
+                Id = _activeRecord.Id,
+                EmployeeId = _activeRecord.EmpId,
+                SalaryDate = _sheetDate.Date,
+                DailyBasic = _activeRecord.DailyBasic,
+                DailyGross = _activeRecord.DailyBasic,
+                OtHours = _activeRecord.OtHours,
+                OtPay = _activeRecord.OtPay,
+                Allowances = _activeRecord.Allowances,
+                Deductions = _activeRecord.Deductions,
+                NetPay = _activeRecord.NetPay,
+                Status = _activeRecord.Status
+            };
+            var resp = await Http.PutAsJsonAsync($"{BaseUri}api/payroll/daily-sheet/{_activeRecord.Id}", dto);
+            resp.EnsureSuccessStatusCode();
             await LoadData();
-            Snackbar.Add($"Pay adjustment saved for {_activeRecord.Name}", Severity.Success);
+            await Toast.ShowSuccessAsync($"Pay adjustment saved for {_activeRecord.Name}");
+        }
+        catch (Exception ex)
+        {
+            await Toast.ShowErrorAsync($"Save failed: {ex.Message}");
         }
         CloseAdjustmentDialog();
     }
 
     private async Task RecalculateAll()
     {
-        await ErpService.CalculateDailySalariesAsync(_sheetDate);
-        await LoadData();
-        Snackbar.Add("Recalculation complete. All wages re-synced with daily attendance records.", Severity.Success);
+        try
+        {
+            var resp = await Http.PostAsync($"{BaseUri}api/payroll/calculate-daily?date={_sheetDate:yyyy-MM-dd}", null);
+            resp.EnsureSuccessStatusCode();
+            await LoadData();
+            await Toast.ShowSuccessAsync("Recalculation complete. All wages re-synced with daily attendance records.");
+        }
+        catch (Exception ex)
+        {
+            await Toast.ShowErrorAsync($"Recalculation failed: {ex.Message}");
+        }
     }
 
-    private void ExportToExcel()
+    private async Task ExportToExcel()
     {
-        Snackbar.Add($"Daily Salary Sheet exported to ERPHub_Daily_Salary_{_sheetDate:yyyyMMdd}.xlsx successfully.", Severity.Success);
+        var url = $"{BaseUri}api/payroll/export/daily-sheet?date={_sheetDate:yyyy-MM-dd}";
+        await Toast.ShowInfoAsync("Downloading daily salary Excel...");
+        NavManager.NavigateTo(url, forceLoad: true);
     }
 
-    private int TotalEmployees => FilteredRecords.Count();
-    private decimal TotalBasicPay => FilteredRecords.Sum(r => r.AttendanceStatus == "Absent" ? 0m : r.DailyBasic);
-    private decimal TotalOtPay => FilteredRecords.Sum(r => r.OtPay);
-    private decimal NetDailyPayout => FilteredRecords.Sum(r => r.NetPay);
+    private int TotalEmployees => _summary?.TotalEmployees ?? FilteredRecords.Count();
+    private decimal TotalBasicPay => _summary?.TotalBasicPay ?? 0;
+    private decimal TotalOtPay => _summary?.TotalOtPay ?? 0;
+    private decimal NetDailyPayout => _summary?.NetDailyPayout ?? 0;
 
     private IEnumerable<DailySalaryUiRecord> FilteredRecords =>
         _records.Where(r => 
@@ -389,6 +444,5 @@
         public string Status { get; set; } = string.Empty;
 
         public decimal NetPay => (AttendanceStatus == "Absent" ? 0m : DailyBasic) + OtPay + Allowances - Deductions;
-        public ERPHub.Models.DailySalaryRecord DbRecord { get; set; } = default!;
     }
 }

@@ -14,25 +14,13 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg p-6 mb-4 flex flex-wrap gap-4 items-end">
-                <div>
-                    <MudDatePicker Date="@_fromDate"
-                                   DateChanged="@(d => { if (d.HasValue) _fromDate = d.Value; })"
-                                   Label="Start Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Start Date</label>
+                    <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_fromDate" />
                 </div>
-                <div>
-                    <MudDatePicker Date="@_toDate"
-                                   DateChanged="@(d => { if (d.HasValue) _toDate = d.Value; })"
-                                   Label="End Date"
-                                   Editable="true"
-                                   Placeholder="Select Date"
-                                   DateFormat="yyyy-MM-dd"
-                                   Variant="Variant.Outlined"
-                                   Margin="Margin.Dense" />
+                <div class="flex flex-col gap-1.5">
+                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">End Date</label>
+                    <input type="date" class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_toDate" />
                 </div>
                 <div>
                     <button type="button" class="px-5 py-2 bg-black text-white text-xs font-semibold rounded-lg hover:bg-zinc-800 transition-colors flex items-center gap-2" @onclick="SyncFromDevice" disabled="@_isSyncing">

@@ -14,26 +14,53 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_checks" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ClosureCheck, object>(x=>x.Target)">Verification Target</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ClosureCheck, object>(x=>x.Role)">Assigned Role</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<ClosureCheck, object>(x=>x.Status)">Status</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Verification Target">@context.Target</MudTd>
-                        <MudTd DataLabel="Assigned Role">@context.Role</MudTd>
-                        <MudTd DataLabel="Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @context.BadgeClass">@context.Status</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <div class="table-responsive-wrapper">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Verification Target <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Assigned Role <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Status <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (_checks.Any())
+                            {
+                                @foreach (var item in _checks)
+                                {
+                                    <tr>
+                                        <td data-label="Verification Target">@item.Target</td>
+                                        <td data-label="Assigned Role">@item.Role</td>
+                                        <td data-label="Status">
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold @item.BadgeClass">@item.Status</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-center py-8 text-muted">Data Not Available</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="flex items-center gap-3">
+                        <span class="pagination-info">Rows per page:</span>
+                        <select class="page-size-select">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn" disabled>‹</button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn" disabled>›</button>
+                    </div>
+                </div>
             </div>
 
             <div class="flex gap-3 justify-end mt-6">

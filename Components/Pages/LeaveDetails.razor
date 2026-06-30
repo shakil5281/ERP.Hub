@@ -1,10 +1,11 @@
-@page "/leave/details"
+﻿@page "/leave/details"
 @using ERPHub.Models
 @using LeaveApp = ERPHub.Models.LeaveApplication
 @using LeaveTypeModel = ERPHub.Models.LeaveType
+@using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 
 <PageTitle>ERPHub - Leave Balance Ledger</PageTitle>
 
@@ -31,7 +32,7 @@
             @if (_isLoading)
             {
                 <div class="flex justify-center items-center py-20">
-                    <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                    <div class="spinner spinner-lg"></div>
                 </div>
             }
             else
@@ -77,60 +78,81 @@
 
                 <!-- Employee Leave Ledger Table -->
                 <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                    <MudTable Items="@_ledgerRows" Hover="true" Dense="true" SortLabel="Sort By" Elevation="0" Filter="new Func<LedgerRow, bool>(FilterLedger)">
-                        <ToolBarContent>
-                            <MudText Typo="Typo.subtitle2" Class="fw-bold font-heading">Employee Leave Balance</MudText>
-                            <MudSpacer />
-                            <MudTextField @bind-Value="_search" Placeholder="Search employee..."
-                                          Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search"
-                                          IconSize="Size.Small" Variant="Variant.Outlined" Margin="Margin.Dense" Clearable="true" Class="mt-0" />
-                        </ToolBarContent>
-                        <HeaderContent>
-                            <MudTh><MudTableSortLabel SortBy="new Func<LedgerRow, object>(x => x.EmployeeName)">Employee</MudTableSortLabel></MudTh>
-                            <MudTh><MudTableSortLabel SortBy="new Func<LedgerRow, object>(x => x.Department)">Department</MudTableSortLabel></MudTh>
-                            @foreach (var lt in _leaveTypes)
-                            {
-                                <MudTh Style="text-align:center">
-                                    <span class="text-[10px] font-bold" style="color:@lt.Color">@lt.Code</span>
-                                </MudTh>
-                            }
-                            <MudTh Style="text-align:center"><MudTableSortLabel SortBy="new Func<LedgerRow, object>(x => x.TotalConsumed)">Total</MudTableSortLabel></MudTh>
-                        </HeaderContent>
-                        <RowTemplate>
-                            <MudTd DataLabel="Employee">
-                                <div class="flex flex-col">
-                                    <span class="fw-semibold text-zinc-900 text-sm">@context.EmployeeName</span>
-                                    <span class="text-zinc-400 text-[10px] font-mono">@context.EmployeeId</span>
-                                </div>
-                            </MudTd>
-                            <MudTd DataLabel="Department"><span class="text-xs text-zinc-600">@context.Department</span></MudTd>
-                            @foreach (var lt in _leaveTypes)
-                            {
-                                var days = context.Consumed.TryGetValue(lt.Name, out var d) ? d : 0;
-                                var max = lt.MaxDaysPerYear;
-                                <MudTd Style="text-align:center">
-                                    @if (days > 0)
+                    <div class="flex items-center justify-between px-5 py-3.5 border-b border-zinc-100">
+                        <span class="text-sm font-bold text-zinc-800 font-heading">Employee Leave Balance</span>
+                        <div class="flex-1"></div>
+                        <div class="relative">
+                            <span class="material-icons text-sm absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400">search</span>
+                            <input type="text" class="w-64 border border-zinc-200 rounded-lg py-2 pl-10 pr-3 text-sm outline-none focus:border-black" @bind="_search" placeholder="Search employee..." @bind:event="oninput" />
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-xs">
+                            <thead>
+                                <tr class="bg-zinc-50 border-b border-zinc-100">
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Employee</th>
+                                    <th class="text-left px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Department</th>
+                                    @foreach (var lt in _leaveTypes)
                                     {
-                                        <div class="flex flex-col items-center gap-0.5">
-                                            <span class="text-xs font-bold" style="color:@lt.Color">@days</span>
-                                            <span class="text-[9px] text-zinc-300">/ @max</span>
-                                        </div>
+                                        <th class="text-center px-4 py-3">
+                                            <span class="text-[10px] font-bold" style="color:@lt.Color">@lt.Code</span>
+                                        </th>
                                     }
-                                    else
-                                    {
-                                        <span class="text-zinc-200 text-xs">—</span>
-                                    }
-                                </MudTd>
-                            }
-                            <MudTd Style="text-align:center">
-                                <span class="text-sm font-extrabold @(context.TotalConsumed > 15 ? "text-rose-600" : "text-zinc-800")">@context.TotalConsumed</span>
-                            </MudTd>
-                        </RowTemplate>
-                        <PagerContent><MudTablePager PageSizeOptions="new int[] { 15, 25, 50 }" /></PagerContent>
-                        <NoRecordsContent>
-                            <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">No records found.</MudText>
-                        </NoRecordsContent>
-                    </MudTable>
+                                    <th class="text-center px-4 py-3 font-bold text-zinc-500 uppercase tracking-wider">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in _ledgerRows)
+                                {
+                                    <tr class="border-b border-zinc-50 hover:bg-zinc-50 transition-colors">
+                                        <td data-label="Employee" class="px-4 py-3">
+                                            <div class="flex flex-col">
+                                                <span class="font-semibold text-zinc-900 text-sm">@row.EmployeeName</span>
+                                                <span class="text-zinc-400 text-[10px] font-mono">@row.EmployeeId</span>
+                                            </div>
+                                        </td>
+                                        <td data-label="Department" class="px-4 py-3"><span class="text-xs text-zinc-600">@row.Department</span></td>
+                                        @foreach (var lt in _leaveTypes)
+                                        {
+                                            var days = row.Consumed.TryGetValue(lt.Name, out var d) ? d : 0;
+                                            var max = lt.MaxDaysPerYear;
+                                            <td class="text-center px-4 py-3">
+                                                @if (days > 0)
+                                                {
+                                                    <div class="flex flex-col items-center gap-0.5">
+                                                        <span class="text-xs font-bold" style="color:@lt.Color">@days</span>
+                                                        <span class="text-[9px] text-zinc-300">/ @max</span>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-zinc-200 text-xs">—</span>
+                                                }
+                                            </td>
+                                        }
+                                        <td class="text-center px-4 py-3">
+                                            <span class="text-sm font-extrabold @(row.TotalConsumed > 15 ? "text-rose-600" : "text-zinc-800")">@row.TotalConsumed</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="flex items-center justify-between px-4 py-3 border-t border-zinc-100">
+                        <div class="text-xs text-zinc-400">@_ledgerRows.Count record(s)</div>
+                        <div class="flex items-center gap-2 text-xs text-zinc-500">
+                            <span>Rows per page:</span>
+                            <select class="border border-zinc-200 rounded px-2 py-1 text-xs bg-white outline-none">
+                                <option>15</option>
+                                <option>25</option>
+                                <option>50</option>
+                            </select>
+                        </div>
+                    </div>
+                    @if (!_ledgerRows.Any())
+                    {
+                        <div class="text-center py-8 text-zinc-400 text-xs">No records found.</div>
+                    }
                 </div>
             }
         </div>
@@ -183,7 +205,7 @@
             _applications = await Http.GetFromJsonAsync<List<LeaveApp>>($"{NavManager.BaseUri}api/leaveapplications") ?? new();
             ApplyAndBuildLedger();
         }
-        catch (Exception ex) { Snackbar.Add($"Error: {ex.Message}", Severity.Error); }
+        catch (Exception ex) { await Toast.ShowErrorAsync($"Error: {ex.Message}"); }
         finally { _isLoading = false; }
     }
 

@@ -1,8 +1,9 @@
-@page "/hr/import-employees"
+﻿@page "/hr/import-employees"
 @using ERPHub.Models
+@using ERPHub.Services
 @inject HttpClient Http
 @inject NavigationManager NavManager
-@inject ISnackbar Snackbar
+@inject ToastService Toast
 @inject IJSRuntime JSRuntime
 
 <PageTitle>ERPHub - Bulk Employee Import</PageTitle>
@@ -165,16 +166,16 @@
                 var bytes = await response.Content.ReadAsByteArrayAsync();
                 var base64 = Convert.ToBase64String(bytes);
                 await JSRuntime.InvokeVoidAsync("downloadFile", "employee_import_template.xlsx", base64, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-                Snackbar.Add("Import template downloaded", Severity.Success);
+                await Toast.ShowSuccessAsync("Import template downloaded");
             }
             else
             {
-                Snackbar.Add("Failed to download template.", Severity.Error);
+                await Toast.ShowErrorAsync("Failed to download template.");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Error: {ex.Message}");
         }
     }
 
@@ -202,22 +203,22 @@
                 _result = await response.Content.ReadFromJsonAsync<ImportResultDto>();
                 if (_result?.Success == true)
                 {
-                    Snackbar.Add($"Imported {_result.SuccessCount} employees successfully!", Severity.Success);
+                    await Toast.ShowSuccessAsync($"Imported {_result.SuccessCount} employees successfully!");
                 }
                 else
                 {
-                    Snackbar.Add("Import failed with validation errors.", Severity.Warning);
+                    await Toast.ShowWarningAsync("Import failed with validation errors.");
                 }
             }
             else
             {
                 var errorBody = await response.Content.ReadAsStringAsync();
-                Snackbar.Add($"Upload failed: {errorBody}", Severity.Error);
+                await Toast.ShowErrorAsync($"Upload failed: {errorBody}");
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add($"Error during import: {ex.Message}", Severity.Error);
+            await Toast.ShowErrorAsync($"Error during import: {ex.Message}");
         }
         finally
         {

@@ -1,0 +1,4 @@
+{
+  "Source": "wwwroot/scss",
+  "Target": "wwwroot/css"
+}

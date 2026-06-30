@@ -1,4 +1,5 @@
-@page "/attendance/missing-entry"
+﻿@page "/attendance/missing-entry"
+@using ERPHub.Services
 
 <PageTitle>ERPHub - Missing Entries</PageTitle>
 
@@ -38,71 +39,91 @@
                            @bind="_searchQuery" @bind:event="oninput" />
                     
                     <div class="w-48 max-sm:w-full">
-                        <MudSelect T="string" @bind-Value="_deptFilter" Placeholder="Department" Class="mud-select-square" dense="true" Margin="Margin.Dense" Variant="Variant.Outlined">
-                            <MudSelectItem Value="@((string?)null)">All Departments</MudSelectItem>
-                            <MudSelectItem Value="@("IT")">IT & Dev</MudSelectItem>
-                            <MudSelectItem Value="@("Production")">Production</MudSelectItem>
-                            <MudSelectItem Value="@("Finance")">Finance</MudSelectItem>
-                        </MudSelect>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2 px-3 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_deptFilter">
+                            <option value="">All Departments</option>
+                            <option value="IT">IT & Dev</option>
+                            <option value="Production">Production</option>
+                            <option value="Finance">Finance</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
             <!-- Table -->
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@FilteredRecords" Hover="true" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh>Date</MudTh>
-                        <MudTh>Emp ID</MudTh>
-                        <MudTh>Employee Name</MudTh>
-                        <MudTh>Department</MudTh>
-                        <MudTh>Shift</MudTh>
-                        <MudTh>Check-In Time</MudTh>
-                        <MudTh>Check-Out Time</MudTh>
-                        <MudTh>Status</MudTh>
-                        <MudTh Class="text-right">Actions</MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Date">@context.LogDate.ToString("yyyy-MM-dd")</MudTd>
-                        <MudTd DataLabel="Emp ID"><span class="font-mono text-xs font-semibold">@context.EmpId</span></MudTd>
-                        <MudTd DataLabel="Employee Name" Class="font-semibold text-zinc-900">@context.Name</MudTd>
-                        <MudTd DataLabel="Department">@context.Department</MudTd>
-                        <MudTd DataLabel="Shift">@context.Shift</MudTd>
-                        <MudTd DataLabel="Check-In Time">
-                            @if (string.IsNullOrEmpty(context.CheckIn))
+                <div class="table-responsive-wrapper">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Emp ID</th>
+                                <th>Employee Name</th>
+                                <th>Department</th>
+                                <th>Shift</th>
+                                <th>Check-In Time</th>
+                                <th>Check-Out Time</th>
+                                <th>Status</th>
+                                <th class="text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (FilteredRecords.Any())
                             {
-                                <span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-100 text-xs">Missing</span>
+                                @foreach (var item in FilteredRecords)
+                                {
+                                    <tr>
+                                        <td data-label="Date">@item.LogDate.ToString("yyyy-MM-dd")</td>
+                                        <td data-label="Emp ID"><span class="font-mono text-xs font-semibold">@item.EmpId</span></td>
+                                        <td data-label="Employee Name" class="font-semibold text-zinc-900">@item.Name</td>
+                                        <td data-label="Department">@item.Department</td>
+                                        <td data-label="Shift">@item.Shift</td>
+                                        <td data-label="Check-In Time">
+                                            @if (string.IsNullOrEmpty(item.CheckIn))
+                                            {
+                                                <span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-100 text-xs">Missing</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@item.CheckIn</span>
+                                            }
+                                        </td>
+                                        <td data-label="Check-Out Time">
+                                            @if (string.IsNullOrEmpty(item.CheckOut))
+                                            {
+                                                <span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-100 text-xs">Missing</span>
+                                            }
+                                            else
+                                            {
+                                                <span>@item.CheckOut</span>
+                                            }
+                                        </td>
+                                        <td data-label="Status">
+                                            @if (item.Status == "Pending")
+                                            {
+                                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending Correction</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Resolved</span>
+                                            }
+                                        </td>
+                                        <td data-label="Actions" class="text-right whitespace-nowrap">
+                                            <button class="btn-icon btn-icon-sm" title="Resolve Incomplete Log" @onclick="() => OpenResolveDialog(item)">
+                                                <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
                             }
                             else
                             {
-                                <span>@context.CheckIn</span>
+                                <tr>
+                                    <td colspan="9" class="text-center py-8 text-muted">Data Not Available</td>
+                                </tr>
                             }
-                        </MudTd>
-                        <MudTd DataLabel="Check-Out Time">
-                            @if (string.IsNullOrEmpty(context.CheckOut))
-                            {
-                                <span class="text-rose-600 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-100 text-xs">Missing</span>
-                            }
-                            else
-                            {
-                                <span>@context.CheckOut</span>
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Status">
-                            @if (context.Status == "Pending")
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">Pending Correction</span>
-                            }
-                            else
-                            {
-                                <span class="inline-flex items-center gap-1.5 py-0.5 px-2.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Resolved</span>
-                            }
-                        </MudTd>
-                        <MudTd DataLabel="Actions" Class="text-right whitespace-nowrap">
-                            <MudIconButton Icon="@Icons.Material.Filled.Build" Size="@Size.Small" Color="Color.Primary" title="Resolve Incomplete Log" OnClick="() => OpenResolveDialog(context)" />
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
@@ -145,7 +166,7 @@
 @code {
     [Inject] private IErpService ErpService { get; set; } = default!;
     [Inject] private AttendanceService AttendanceService { get; set; } = default!;
-    [Inject] private ISnackbar Snackbar { get; set; } = default!;
+    [Inject] private ToastService Toast { get; set; } = default!;
 
     private string _searchQuery = string.Empty;
     private string _deptFilter = string.Empty;
@@ -169,7 +190,8 @@
         var fromDate = DateTime.Today.AddDays(-30);
         var toDate = DateTime.Today;
 
-        var dbRecords = await AttendanceService.GetAttendanceRecordsAsync(fromDate, toDate);
+        // Default to active employees only (exclude Resign, Left, Close)
+        var dbRecords = await AttendanceService.GetAttendanceRecordsAsync(fromDate, toDate, null, true);
         var employees = await ErpService.GetEmployeesAsync();
         var departments = await ErpService.GetDepartmentsAsync();
         var shifts = await ErpService.GetShiftsAsync();
@@ -253,7 +275,7 @@
 
             if (!inPunch.HasValue && !outPunch.HasValue)
             {
-                Snackbar.Add("Both Check-In and Check-Out cannot be empty.", Severity.Warning);
+                await Toast.ShowWarningAsync("Both Check-In and Check-Out cannot be empty.");
                 return;
             }
 
@@ -262,7 +284,7 @@
 
             await AttendanceService.UpdateAttendanceRecordPunchAsync(_activeEntry.Id, inPunch, outPunch, reason);
             await LoadData();
-            Snackbar.Add($"Missing log updated and approved for {_activeEntry.Name}", Severity.Success);
+            await Toast.ShowSuccessAsync($"Missing log updated and approved for {_activeEntry.Name}");
         }
         CloseResolveDialog();
     }

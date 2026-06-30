@@ -23,9 +23,42 @@ namespace ERPHub.Controllers
 
         // GET: api/employees
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees()
+        public async Task<ActionResult<IEnumerable<Employee>>> GetEmployees(
+            [FromQuery] string? searchQuery = null,
+            [FromQuery] string? employeeId = null,
+            [FromQuery] string? company = null,
+            [FromQuery] string? department = null,
+            [FromQuery] string? section = null,
+            [FromQuery] string? designation = null,
+            [FromQuery] string? line = null,
+            [FromQuery] string? status = null,
+            [FromQuery] string? year = null)
         {
-            var employees = await _erpService.GetEmployeesAsync();
+            List<Employee> employees;
+
+            if (searchQuery != null || employeeId != null || company != null ||
+                department != null || section != null || designation != null ||
+                line != null || status != null || year != null)
+            {
+                var filter = new EmployeeFilter
+                {
+                    SearchQuery = searchQuery,
+                    EmployeeId = employeeId,
+                    Company = company,
+                    Department = department,
+                    Section = section,
+                    Designation = designation,
+                    Line = line,
+                    Status = status,
+                    Year = year
+                };
+                employees = await _erpService.GetFilteredEmployeesAsync(filter);
+            }
+            else
+            {
+                employees = await _erpService.GetEmployeesAsync();
+            }
+
             return Ok(employees);
         }
 

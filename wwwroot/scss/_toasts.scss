@@ -1,0 +1,111 @@
+@use 'variables' as *;
+
+/* ============================================================
+   TOAST NOTIFICATIONS
+   ============================================================ */
+
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: $z-toast;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  min-width: 300px;
+  max-width: 420px;
+  background: $surface;
+  border-radius: $radius-md;
+  box-shadow: $shadow-lg;
+  border: 1px solid $border;
+  pointer-events: auto;
+  animation: toastIn 0.25s ease;
+}
+
+.toast.success { border-left: 3px solid $success; }
+.toast.error { border-left: 3px solid $danger; }
+.toast.warning { border-left: 3px solid $warning; }
+.toast.info { border-left: 3px solid $info; }
+
+.toast-icon {
+  flex-shrink: 0;
+  font-size: 18px;
+  margin-top: 1px;
+}
+
+.toast.success .toast-icon { color: $success; }
+.toast.error .toast-icon { color: $danger; }
+.toast.warning .toast-icon { color: $warning; }
+.toast.info .toast-icon { color: $info; }
+
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 2px;
+}
+
+.toast-message {
+  font-size: 12px;
+  color: $text-secondary;
+  line-height: 1.4;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: $text-muted;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.toast-close:hover {
+  background: $bg-hover;
+  color: $text-primary;
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes toastOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+}
+
+.toast.out {
+  animation: toastOut 0.2s ease forwards;
+}

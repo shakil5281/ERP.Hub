@@ -1,11 +1,12 @@
-@page "/payroll/payslip"
+﻿@page "/payroll/payslip"
+@using ERPHub.Services
 
 <PageTitle>ERPHub - Employee Payslips</PageTitle>
 
 <AuthorizeView Context="authContext">
     <Authorized>
         <div class="animate-fade-in">
-            <!-- Header Block -->
+            <!-- Header -->
             <div class="flex justify-between items-center mb-6 max-sm:flex-col max-sm:items-start max-sm:gap-3">
                 <div>
                     <h2 class="text-[22px] font-extrabold text-black tracking-tight font-heading">Employee Payslips</h2>
@@ -13,57 +14,146 @@
                 </div>
             </div>
 
-            <!-- Filter Panel -->
-            <div class="bg-white border border-zinc-200 rounded-lg p-5 shadow-sm mb-6 flex gap-4 items-end max-sm:flex-col max-sm:items-stretch">
-                <div class="flex-1 flex flex-col gap-1.5">
-                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Select Employee</label>
-                    <select class="border border-zinc-200 rounded-lg p-2.5 px-3.5 bg-white outline-none text-xs cursor-pointer hover:bg-zinc-50 transition-colors">
-                        <option value="1">Jane Doe (Leadership - CEO)</option>
-                        <option value="2">John Smith (HR Admin - Director)</option>
-                        <option value="3">Sarah Connor (Finance - CFO)</option>
-                    </select>
+            <!-- Advanced Filter Section -->
+            <div class="bg-white border border-zinc-200 rounded-lg p-5 shadow-sm mb-6">
+                <div class="flex gap-4 items-end max-sm:flex-col max-sm:items-stretch">
+                    <div class="flex-[2] flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Employee</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_selectedEmployeeId">
+                            <option value="">Search &amp; Select Employee...</option>
+                            @foreach (var emp in _employees)
+                            {
+                                <option value="@emp.EmployeeId">
+                                    @emp.EmployeeName (@emp.EmployeeId - @emp.Department?.NameEn)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Year</label>
+                        <input type="number" class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors" @bind="_year" min="2020" max="2035" />
+                    </div>
+                    <div class="flex-1 flex flex-col gap-1.5">
+                        <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Month</label>
+                        <select class="w-full bg-white border border-zinc-200 rounded-lg p-2.5 px-3.5 text-zinc-900 font-body text-sm outline-none focus:border-black transition-colors cursor-pointer" @bind="_month">
+                            @for (int m = 1; m <= 12; m++)
+                            {
+                                var cap = m;
+                                <option value="@cap">
+                                    @System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(cap)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                    <div class="flex gap-2">
+                        <button class="btn btn-primary" disabled="@_busy" @onclick="GeneratePayslip">Generate</button>
+                        <button class="btn btn-outlined" disabled="@(_payslip == null)" @onclick="ClearPayslip">Clear</button>
+                    </div>
                 </div>
-                <div class="flex-1 flex flex-col gap-1.5">
-                    <label class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Pay Cycle Month</label>
-                    <select class="border border-zinc-200 rounded-lg p-2.5 px-3.5 bg-white outline-none text-xs cursor-pointer hover:bg-zinc-50 transition-colors">
-                        <option value="2026-06">June 2026</option>
-                        <option value="2026-05">May 2026</option>
-                        <option value="2026-04">April 2026</option>
-                    </select>
-                </div>
-                <button type="button" class="bg-black text-white text-xs font-semibold py-2.5 px-5 rounded-md hover:bg-zinc-800 transition-colors cursor-pointer max-sm:text-center">
-                    Preview Payslip
-                </button>
             </div>
 
-            <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-                <MudTable Items="@_payslips" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.EmpId)">Emp ID</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.Name)">Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.GrossEarnings)">Gross Earnings</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.Deductions)">Deductions</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.NetPayout)">Net Payout</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<PayslipRecord, object>(x=>x.Status)">Print Status</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Emp ID">@context.EmpId</MudTd>
-                        <MudTd DataLabel="Name">@context.Name</MudTd>
-                        <MudTd DataLabel="Gross Earnings">@context.GrossEarnings</MudTd>
-                        <MudTd DataLabel="Deductions">@context.Deductions</MudTd>
-                        <MudTd DataLabel="Net Payout">@context.NetPayout</MudTd>
-                        <MudTd DataLabel="Print Status">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700">@context.Status</span>
-                        </MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
-            </div>
+            <!-- Loading -->
+            @if (_busy)
+            {
+                <div class="flex justify-center py-12">
+                    <div class="spinner"></div>
+                </div>
+            }
+
+            <!-- Payslip Detail Card -->
+            @if (_payslip != null)
+            {
+                <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+                    <!-- Employee Header -->
+                    <div class="bg-zinc-50 border-b border-zinc-200 px-6 py-4 flex justify-between items-center max-sm:flex-col max-sm:items-start max-sm:gap-2">
+                        <div>
+                            <h3 class="text-lg font-bold text-black">@_payslip.EmployeeName</h3>
+                            <p class="text-xs text-zinc-500 mt-0.5">
+                                @_payslip.EmployeeId | @_payslip.Department | @_payslip.Designation
+                            </p>
+                        </div>
+                        <div class="text-right max-sm:text-left">
+                            <p class="text-xs text-zinc-500">
+                                Period: @(new DateTime(_payslip.Year, _payslip.Month, 1).ToString("MMMM yyyy"))
+                            </p>
+                            <p class="text-xs text-zinc-500">
+                                Days: P @_payslip.PresentDays / A @_payslip.AbsentDays / L @_payslip.LeaveDays
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Earnings -->
+                        <div>
+                            <h4 class="text-sm font-bold text-zinc-700 mb-3 border-b border-zinc-200 pb-2">Earnings</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Basic Salary</span><span>@_payslip.BasicSalary.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">House Rent</span><span>@_payslip.HouseRent.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Medical Allowance</span><span>@_payslip.MedicalAllowance.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Transport Allowance</span><span>@_payslip.TransportAllowance.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Food Allowance</span><span>@_payslip.FoodAllowance.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Special Allowance</span><span>@_payslip.SpecialAllowance.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Attendance Bonus</span><span>@_payslip.AttendanceBonus.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Production Bonus</span><span>@_payslip.ProductionBonus.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Overtime Pay</span><span>@_payslip.OvertimePay.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Night Bill Pay</span><span>@_payslip.NightBillPay.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Holiday Bill Pay</span><span>@_payslip.HolidayBillPay.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm font-bold text-black pt-2 border-t border-zinc-200">
+                                    <span>Gross Earnings</span>
+                                    <span>@_payslip.GrossEarnings.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Deductions -->
+                        <div>
+                            <h4 class="text-sm font-bold text-zinc-700 mb-3 border-b border-zinc-200 pb-2">Deductions</h4>
+                            <div class="space-y-2">
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Absent Deduction</span><span>@_payslip.AbsentDeduction.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Late Deduction</span><span>@_payslip.LateDeduction.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">LWOP Deduction</span><span>@_payslip.LwopDeduction.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Loan Deduction</span><span>@_payslip.LoanDeduction.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Advance Deduction</span><span>@_payslip.AdvanceDeduction.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Tax Deduction</span><span>@_payslip.TaxDeduction.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm"><span class="text-zinc-600">Other Deduction</span><span>@_payslip.OtherDeduction.ToString("N2")</span></div>
+                                <div class="flex justify-between text-sm font-bold text-red-600 pt-2 border-t border-zinc-200">
+                                    <span>Total Deductions</span>
+                                    <span>@_payslip.TotalDeductions.ToString("N2")</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Net Pay Footer -->
+                    <div class="bg-black text-white px-6 py-4 flex justify-between items-center">
+                        <span class="text-sm font-semibold uppercase tracking-wider">Net Payable</span>
+                        <span class="text-xl font-bold">@_payslip.NetPay.ToString("N2")</span>
+                    </div>
+
+                    <!-- Bank Details -->
+                    @if (!string.IsNullOrEmpty(_payslip.BankName))
+                    {
+                        <div class="bg-zinc-50 border-t border-zinc-200 px-6 py-3 flex gap-6 text-xs text-zinc-500">
+                            <span>Bank: @_payslip.BankName</span>
+                            <span>A/C: @_payslip.BankAccountNumber</span>
+                            <span>Branch: @_payslip.BranchName</span>
+                            <span>Routing: @_payslip.RoutingNumber</span>
+                        </div>
+                    }
+                </div>
+            }
+
+            @if (_payslip == null && !_busy && _hasSearched)
+            {
+                <div class="alert alert-warning mt-4">
+                    <span class="alert-icon">
+                        <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </span>
+                    <div class="alert-body">
+                        <div class="alert-message">No payslip data found for the selected employee and period. The payroll may not have been processed yet.</div>
+                    </div>
+                </div>
+            }
         </div>
     </Authorized>
     <NotAuthorized>
@@ -72,20 +162,83 @@
 </AuthorizeView>
 
 @code {
-    public class PayslipRecord
+    [Inject] private HttpClient Http { get; set; } = default!;
+    [Inject] private NavigationManager NavManager { get; set; } = default!;
+    [Inject] private ToastService Toast { get; set; } = default!;
+
+    private List<Employee> _employees = new();
+    private string? _selectedEmployeeId;
+    private int _year = DateTime.Today.Year;
+    private int _month = DateTime.Today.Month;
+    private bool _busy;
+    private bool _hasSearched;
+    private PayslipDetailDto? _payslip;
+
+    private string BaseUri => NavManager.BaseUri;
+
+    protected override async Task OnInitializedAsync()
     {
-        public string EmpId { get; set; } = string.Empty;
-        public string Name { get; set; } = string.Empty;
-        public string GrossEarnings { get; set; } = string.Empty;
-        public string Deductions { get; set; } = string.Empty;
-        public string NetPayout { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        await LoadEmployees();
     }
 
-    private List<PayslipRecord> _payslips = new()
+    private async Task LoadEmployees()
     {
-        new PayslipRecord { EmpId = "EMP-2026-001", Name = "Jane Doe", GrossEarnings = "$18,500.00", Deductions = "-$2,100.00", NetPayout = "$16,400.00", Status = "Printed" },
-        new PayslipRecord { EmpId = "EMP-2026-002", Name = "John Smith", GrossEarnings = "$11,200.00", Deductions = "-$1,200.00", NetPayout = "$10,000.00", Status = "Printed" },
-        new PayslipRecord { EmpId = "EMP-2026-003", Name = "Sarah Connor", GrossEarnings = "$13,400.00", Deductions = "-$1,400.00", NetPayout = "$12,000.00", Status = "Pending" }
-    };
+        try
+        {
+            _employees = await Http.GetFromJsonAsync<List<Employee>>($"{BaseUri}api/employees") ?? new();
+        }
+        catch
+        {
+            _employees = new();
+        }
+    }
+
+    private async Task GeneratePayslip()
+    {
+        if (string.IsNullOrEmpty(_selectedEmployeeId))
+        {
+            await Toast.ShowWarningAsync("Please select an employee.");
+            return;
+        }
+
+        _busy = true;
+        _hasSearched = true;
+        _payslip = null;
+
+        try
+        {
+            var filter = new PayslipFilterDto
+            {
+                EmployeeId = _selectedEmployeeId,
+                Year = _year,
+                Month = _month
+            };
+
+            var resp = await Http.PostAsJsonAsync($"{BaseUri}api/payroll/payslip/detail", filter);
+            if (resp.IsSuccessStatusCode)
+            {
+                _payslip = await resp.Content.ReadFromJsonAsync<PayslipDetailDto>();
+                await Toast.ShowSuccessAsync($"Payslip generated for {_payslip?.EmployeeName}");
+            }
+            else
+            {
+                await Toast.ShowWarningAsync("No payslip data found for this period.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await Toast.ShowErrorAsync($"Error: {ex.Message}");
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private void ClearPayslip()
+    {
+        _payslip = null;
+        _hasSearched = false;
+        _selectedEmployeeId = null;
+    }
 }

@@ -1,7 +1,7 @@
-<MudDialog Class="search-dialog" Options="_dialogOptions">
-    <DialogContent>
+<div class="modal-overlay search-dialog" @onclick="CloseOverlay" @onkeydown="HandleKeydown" @ref="_overlayRef">
+    <div class="modal" @onclick:stopPropagation>
         <div class="search-input-wrapper">
-            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Small" Class="search-input-icon" />
+            <span class="material-icons search-input-icon">search</span>
             <input @ref="_searchInput"
                    @bind="_query"
                    @bind:event="oninput"
@@ -12,7 +12,7 @@
             @if (!string.IsNullOrEmpty(_query))
             {
                 <button class="search-clear-btn" @onclick="ClearSearch">
-                    <MudIcon Icon="@Icons.Material.Filled.Close" Size="Size.Small" />
+                    <span class="material-icons" style="font-size:14px;">close</span>
                 </button>
             }
             <div class="search-kbd-hint">
@@ -23,9 +23,7 @@
         @if (_selectedIndex >= 0 && _filteredResults.Any())
         {
             <div class="search-active-indicator">
-                <MudText Typo="Typo.caption" Class="mud-secondary-text-color">
-                    @_selectedIndex of @_filteredResults.Count results
-                </MudText>
+                <span class="text-xs text-muted">@(_selectedIndex + 1) of @_filteredResults.Count results</span>
             </div>
         }
 
@@ -44,16 +42,16 @@
                                  @onclick="() => NavigateTo(result.Url)"
                                  @onmouseenter="() => _selectedIndex = idx">
                                 <div class="search-result-icon">
-                                    <MudIcon Icon="@result.Icon" Size="Size.Small" Color="Color.Primary" />
+                                    <span class="material-icons" style="color:#4f46e5;">@result.Icon</span>
                                 </div>
                                 <div class="search-result-content">
-                                    <MudText Typo="Typo.body2" Class="fw-semibold search-result-title">@result.Title</MudText>
-                                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@result.Description</MudText>
+                                    <div class="search-result-title fw-semibold">@result.Title</div>
+                                    <div class="text-xs text-muted">@result.Description</div>
                                 </div>
-                                <div class="search-result-path">
-                                    <MudText Typo="Typo.caption" Class="mud-secondary-text-color">@result.Url</MudText>
+                                <div class="search-result-path text-muted">
+                                    <span class="text-xs">@result.Url</span>
                                 </div>
-                                <MudIcon Icon="@Icons.Material.Filled.ArrowForward" Size="Size.Small" Class="mud-secondary-text-color search-result-arrow" />
+                                <span class="material-icons search-result-arrow text-muted" style="font-size:16px;">arrow_forward</span>
                             </div>
                         }
                     </div>
@@ -61,9 +59,9 @@
                 else
                 {
                     <div class="search-empty">
-                        <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Class="mud-secondary-text-color" />
-                        <MudText Typo="Typo.body2" Class="mud-secondary-text-color">No results found</MudText>
-                        <MudText Typo="Typo.caption" Class="mud-secondary-text-color">Try a different search term</MudText>
+                        <span class="material-icons" style="font-size:36px;color:#9ca3af;">search_off</span>
+                        <span class="text-sm text-muted">No results found</span>
+                        <span class="text-xs text-muted">Try a different search term</span>
                     </div>
                 }
             }
@@ -75,7 +73,7 @@
                         @foreach (var link in _quickLinks)
                         {
                             <button class="search-quick-link" @onclick="() => NavigateTo(link.Url)">
-                                <MudIcon Icon="@link.Icon" Size="Size.Small" />
+                                <span class="material-icons" style="font-size:16px;">@link.Icon</span>
                                 <span>@link.Title</span>
                             </button>
                         }
@@ -85,97 +83,96 @@
                         @foreach (var recentPage in _recentPages.Take(5))
                         {
                             <div class="search-recent-item" @onclick="() => NavigateTo(recentPage.Url)">
-                                <MudIcon Icon="@recentPage.Icon" Size="Size.Small" Class="mud-secondary-text-color" />
-                                <MudText Typo="Typo.body2">@recentPage.Title</MudText>
-                                <MudText Typo="Typo.caption" Class="mud-secondary-text-color ms-auto">@recentPage.Url</MudText>
+                                <span class="material-icons text-muted" style="font-size:16px;">@recentPage.Icon</span>
+                                <span class="text-sm">@recentPage.Title</span>
+                                <span class="text-xs text-muted ms-auto">@recentPage.Url</span>
                             </div>
                         }
                     </div>
                 </div>
             }
         </div>
-    </DialogContent>
-</MudDialog>
+    </div>
+</div>
 
 @code {
-    [CascadingParameter] private IMudDialogInstance MudDialog { get; set; } = default!;
+    [Parameter] public EventCallback OnClose { get; set; }
     [Inject] private NavigationManager NavigationManager { get; set; } = default!;
 
     private ElementReference _searchInput;
+    private ElementReference _overlayRef;
     private string _query = string.Empty;
     private int _selectedIndex = -1;
     private List<SearchResult> _filteredResults = new();
 
-    private static readonly DialogOptions _dialogOptions = new()
-    {
-        FullWidth = true,
-        MaxWidth = MaxWidth.Medium,
-        Position = DialogPosition.TopCenter,
-        BackdropClick = true,
-        CloseOnEscapeKey = true,
-        NoHeader = true
-    };
-
     private readonly List<SearchItem> _quickLinks = new()
     {
-        new() { Title = "Dashboard", Url = "/", Icon = Icons.Material.Filled.Dashboard },
-        new() { Title = "Employees", Url = "/hr/employees", Icon = Icons.Material.Filled.People },
-        new() { Title = "Daily Attendance", Url = "/attendance/daily", Icon = Icons.Material.Filled.Schedule },
-        new() { Title = "OT Sheet", Url = "/ot/daily-sheet", Icon = Icons.Material.Filled.WorkHistory },
-        new() { Title = "Salary Process", Url = "/payroll/process", Icon = Icons.Material.Filled.AttachMoney },
-        new() { Title = "Leave Application", Url = "/leave/application", Icon = Icons.Material.Filled.CalendarMonth },
-        new() { Title = "Companies", Url = "/companies", Icon = Icons.Material.Filled.Business },
+        new() { Title = "Dashboard", Url = "/", Icon = "dashboard" },
+        new() { Title = "Employees", Url = "/hr/employees", Icon = "people" },
+        new() { Title = "Daily Attendance", Url = "/attendance/daily", Icon = "schedule" },
+        new() { Title = "OT Sheet", Url = "/ot/daily-sheet", Icon = "work_history" },
+        new() { Title = "Salary Process", Url = "/payroll/process", Icon = "attach_money" },
+        new() { Title = "Leave Application", Url = "/leave/application", Icon = "calendar_month" },
+        new() { Title = "Companies", Url = "/companies", Icon = "business" },
     };
 
     private readonly List<SearchItem> _recentPages = new()
     {
-        new() { Title = "Company Info", Url = "/companies", Icon = Icons.Material.Filled.Business },
-        new() { Title = "Shift Management", Url = "/shift", Icon = Icons.Material.Filled.Schedule },
-        new() { Title = "Attendance Summary", Url = "/attendance/daily-summary", Icon = Icons.Material.Filled.Assessment },
-        new() { Title = "Salary Sheet", Url = "/payroll/salary-sheet", Icon = Icons.Material.Filled.TableChart },
-        new() { Title = "Punch Log", Url = "/datacollect/punch-log", Icon = Icons.Material.Filled.Fingerprint },
+        new() { Title = "Company Info", Url = "/companies", Icon = "business" },
+        new() { Title = "Shift Management", Url = "/shift", Icon = "schedule" },
+        new() { Title = "Attendance Summary", Url = "/attendance/daily-summary", Icon = "assessment" },
+        new() { Title = "Salary Sheet", Url = "/payroll/salary-sheet", Icon = "table_chart" },
+        new() { Title = "Punch Log", Url = "/datacollect/punch-log", Icon = "fingerprint" },
     };
 
     private readonly List<SearchResult> _allPages = new()
     {
-        new() { Title = "Company Info", Description = "Manage company details", Url = "/companies", Icon = Icons.Material.Filled.Business },
-        new() { Title = "Organogram", Description = "Company hierarchy", Url = "/organogram", Icon = Icons.Material.Filled.AccountTree },
-        new() { Title = "Shift", Description = "Manage work shifts", Url = "/shift", Icon = Icons.Material.Filled.Schedule },
-        new() { Title = "Address", Description = "Address management", Url = "/address", Icon = Icons.Material.Filled.LocationOn },
-        new() { Title = "Group", Description = "Group management", Url = "/group", Icon = Icons.Material.Filled.Groups },
-        new() { Title = "Floor", Description = "Floor management", Url = "/floor", Icon = Icons.Material.Filled.Layers },
-        new() { Title = "Employee", Description = "Manage employees", Url = "/hr/employees", Icon = Icons.Material.Filled.People },
-        new() { Title = "Manpower", Description = "Manpower planning", Url = "/hr/manpower", Icon = Icons.Material.Filled.Groups },
-        new() { Title = "Manpower Requirement", Description = "Staffing requirements", Url = "/hr/manpower-requirement", Icon = Icons.Material.Filled.PersonAdd },
-        new() { Title = "Separation", Description = "Employee separation", Url = "/hr/seperation", Icon = Icons.Material.Filled.ExitToApp },
-        new() { Title = "Daily Attendance", Description = "Daily attendance records", Url = "/attendance/daily", Icon = Icons.Material.Filled.Schedule },
-        new() { Title = "Attendance Summary", Description = "Attendance overview", Url = "/attendance/daily-summary", Icon = Icons.Material.Filled.Assessment },
-        new() { Title = "Job Cards", Description = "Manage employee job cards", Url = "/attendance/job-cards", Icon = Icons.Material.Filled.Badge },
-        new() { Title = "Missing Entry", Description = "Correct missing punch entry logs", Url = "/attendance/missing-entry", Icon = Icons.Material.Filled.HourglassDisabled },
-        new() { Title = "Manual Entry", Description = "Manually record punches", Url = "/attendance/manual-entry", Icon = Icons.Material.Filled.EditCalendar },
-        new() { Title = "Absent Status", Description = "Track and classify absent employees", Url = "/attendance/absent-status", Icon = Icons.Material.Filled.PersonOff },
-        new() { Title = "Overtime Deduction", Description = "Track overtime deduction logs", Url = "/attendance/overtime-deduction", Icon = Icons.Material.Filled.TrendingDown },
-        new() { Title = "ID Card", Description = "Print and view employee ID cards", Url = "/attendance/id-card", Icon = Icons.Material.Filled.ContactPage },
-        new() { Title = "Daily OT Sheet", Description = "Overtime tracking", Url = "/ot/daily-sheet", Icon = Icons.Material.Filled.WorkHistory },
-        new() { Title = "OT Summary", Description = "Overtime summary report", Url = "/ot/daily-summary", Icon = Icons.Material.Filled.Summarize },
-        new() { Title = "Salary Process", Description = "Process payroll", Url = "/payroll/process", Icon = Icons.Material.Filled.AttachMoney },
-        new() { Title = "Salary Sheet", Description = "View salary sheets", Url = "/payroll/salary-sheet", Icon = Icons.Material.Filled.TableChart },
-        new() { Title = "Daily Salary Sheet", Description = "View daily salary register", Url = "/payroll/daily-salary-sheet", Icon = Icons.Material.Filled.TableRows },
-        new() { Title = "Payslips", Description = "Employee payslips", Url = "/payroll/payslip", Icon = Icons.Material.Filled.Receipt },
-        new() { Title = "Increment", Description = "Salary increments", Url = "/payroll/increment", Icon = Icons.Material.Filled.TrendingUp },
-        new() { Title = "Advance", Description = "Salary advances", Url = "/payroll/advance", Icon = Icons.Material.Filled.Money },
-        new() { Title = "Night Bill", Description = "Night shift billing", Url = "/payroll/night-bill", Icon = Icons.Material.Filled.NightsStay },
-        new() { Title = "Holiday Bill", Description = "Holiday billing", Url = "/payroll/holiday-bill", Icon = Icons.Material.Filled.Celebration },
-        new() { Title = "Leave Type", Description = "Manage leave types", Url = "/leave/type", Icon = Icons.Material.Filled.Category },
-        new() { Title = "Leave Application", Description = "Apply for leave", Url = "/leave/application", Icon = Icons.Material.Filled.CalendarMonth },
-        new() { Title = "Leave Details", Description = "Leave records", Url = "/leave/details", Icon = Icons.Material.Filled.ListAlt },
-        new() { Title = "Monthly Summary", Description = "Monthly reports", Url = "/reports/monthly", Icon = Icons.Material.Filled.Assessment },
-        new() { Title = "Monthly Report", Description = "Payroll reports", Url = "/reports/payroll", Icon = Icons.Material.Filled.Summarize },
-        new() { Title = "Punch Log", Description = "Collect punch data", Url = "/datacollect/punch-log", Icon = Icons.Material.Filled.Fingerprint },
-        new() { Title = "Daily Attendance Process", Description = "Process daily attendance", Url = "/datacollect/daily-attendance-process", Icon = Icons.Material.Filled.DateRange },
-        new() { Title = "Monthly Process", Description = "Monthly data processing", Url = "/datacollect/monthly-process", Icon = Icons.Material.Filled.CalendarMonth },
-        new() { Title = "Lifecycle", Description = "Lifecycle management", Url = "/lifecycle", Icon = Icons.Material.Filled.CurrencyExchange },
+        new() { Title = "Company Info", Description = "Manage company details", Url = "/companies", Icon = "business" },
+        new() { Title = "Organogram", Description = "Company hierarchy", Url = "/organogram", Icon = "account_tree" },
+        new() { Title = "Shift", Description = "Manage work shifts", Url = "/shift", Icon = "schedule" },
+        new() { Title = "Address", Description = "Address management", Url = "/address", Icon = "location_on" },
+        new() { Title = "Group", Description = "Group management", Url = "/group", Icon = "groups" },
+        new() { Title = "Floor", Description = "Floor management", Url = "/floor", Icon = "layers" },
+        new() { Title = "Employee", Description = "Manage employees", Url = "/hr/employees", Icon = "people" },
+        new() { Title = "Manpower", Description = "Manpower planning", Url = "/hr/manpower", Icon = "groups" },
+        new() { Title = "Manpower Requirement", Description = "Staffing requirements", Url = "/hr/manpower-requirement", Icon = "person_add" },
+        new() { Title = "Separation", Description = "Employee separation", Url = "/hr/seperation", Icon = "exit_to_app" },
+        new() { Title = "Daily Attendance", Description = "Daily attendance records", Url = "/attendance/daily", Icon = "schedule" },
+        new() { Title = "Attendance Summary", Description = "Attendance overview", Url = "/attendance/daily-summary", Icon = "assessment" },
+        new() { Title = "Job Cards", Description = "Manage employee job cards", Url = "/attendance/job-cards", Icon = "badge" },
+        new() { Title = "Missing Entry", Description = "Correct missing punch entry logs", Url = "/attendance/missing-entry", Icon = "hourglass_disabled" },
+        new() { Title = "Manual Entry", Description = "Manually record punches", Url = "/attendance/manual-entry", Icon = "edit_calendar" },
+        new() { Title = "Absent Status", Description = "Track and classify absent employees", Url = "/attendance/absent-status", Icon = "person_off" },
+        new() { Title = "Overtime Deduction", Description = "Track overtime deduction logs", Url = "/attendance/overtime-deduction", Icon = "trending_down" },
+        new() { Title = "ID Card", Description = "Print and view employee ID cards", Url = "/attendance/id-card", Icon = "contact_page" },
+        new() { Title = "Daily OT Sheet", Description = "Overtime tracking", Url = "/ot/daily-sheet", Icon = "work_history" },
+        new() { Title = "OT Summary", Description = "Overtime summary report", Url = "/ot/daily-summary", Icon = "summarize" },
+        new() { Title = "Salary Process", Description = "Process payroll", Url = "/payroll/process", Icon = "attach_money" },
+        new() { Title = "Salary Sheet", Description = "View salary sheets", Url = "/payroll/salary-sheet", Icon = "table_chart" },
+        new() { Title = "Daily Salary Sheet", Description = "View daily salary register", Url = "/payroll/daily-salary-sheet", Icon = "table_rows" },
+        new() { Title = "Payslips", Description = "Employee payslips", Url = "/payroll/payslip", Icon = "receipt" },
+        new() { Title = "Increment", Description = "Salary increments", Url = "/payroll/increment", Icon = "trending_up" },
+        new() { Title = "Advance", Description = "Salary advances", Url = "/payroll/advance", Icon = "money" },
+        new() { Title = "Night Bill", Description = "Night shift billing", Url = "/payroll/night-bill", Icon = "nights_stay" },
+        new() { Title = "Holiday Bill", Description = "Holiday billing", Url = "/payroll/holiday-bill", Icon = "celebration" },
+        new() { Title = "Leave Type", Description = "Manage leave types", Url = "/leave/type", Icon = "category" },
+        new() { Title = "Leave Application", Description = "Apply for leave", Url = "/leave/application", Icon = "calendar_month" },
+        new() { Title = "Leave Details", Description = "Leave records", Url = "/leave/details", Icon = "list_alt" },
+        new() { Title = "Monthly Summary", Description = "Monthly reports", Url = "/reports/monthly", Icon = "assessment" },
+        new() { Title = "Monthly Report", Description = "Payroll reports", Url = "/reports/payroll", Icon = "summarize" },
+        new() { Title = "Punch Log", Description = "Collect punch data", Url = "/datacollect/punch-log", Icon = "fingerprint" },
+        new() { Title = "Daily Attendance Process", Description = "Process daily attendance", Url = "/datacollect/daily-attendance-process", Icon = "date_range" },
+        new() { Title = "Monthly Process", Description = "Monthly data processing", Url = "/datacollect/monthly-process", Icon = "calendar_month" },
+        new() { Title = "Lifecycle", Description = "Lifecycle management", Url = "/lifecycle", Icon = "currency_exchange" },
     };
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await _searchInput.FocusAsync();
+        }
+    }
 
     private void PerformSearch()
     {
@@ -220,15 +217,25 @@
         }
         else if (e.Key == "Escape")
         {
-            MudDialog.Cancel();
+            _ = Close();
         }
 
         PerformSearch();
     }
 
+    private async void CloseOverlay(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
+    {
+        await Close();
+    }
+
+    private async Task Close()
+    {
+        await OnClose.InvokeAsync();
+    }
+
     private void NavigateTo(string url)
     {
-        MudDialog.Close();
+        _ = Close();
         NavigationManager.NavigateTo(url);
     }
 
@@ -237,13 +244,13 @@
         public string Title { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
-        public string Icon { get; set; } = Icons.Material.Filled.Search;
+        public string Icon { get; set; } = "search";
     }
 
     private class SearchItem
     {
         public string Title { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
-        public string Icon { get; set; } = Icons.Material.Filled.Link;
+        public string Icon { get; set; } = "link";
     }
 }

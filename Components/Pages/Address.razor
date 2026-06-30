@@ -14,26 +14,53 @@
             </div>
 
             <div class="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden mb-6">
-                <MudTable Items="@_locations" Hover="true" SortLabel="Sort By" Dense="true" Striped="false" Outlined="false" Elevation="0">
-                    <HeaderContent>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.BranchName)">Branch Name</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.Type)">Type</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.StreetAddress)">Street Address</MudTableSortLabel></MudTh>
-                        <MudTh><MudTableSortLabel SortBy="new Func<BranchLocation, object>(x=>x.Country)">Country</MudTableSortLabel></MudTh>
-                    </HeaderContent>
-                    <RowTemplate>
-                        <MudTd DataLabel="Branch Name">@context.BranchName</MudTd>
-                        <MudTd DataLabel="Type">@context.Type</MudTd>
-                        <MudTd DataLabel="Street Address">@context.StreetAddress</MudTd>
-                        <MudTd DataLabel="Country">@context.Country</MudTd>
-                    </RowTemplate>
-                    <PagerContent>
-                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50 }" />
-                    </PagerContent>
-                <NoRecordsContent>
-                    <MudText Typo="Typo.body2" Class="text-center mud-secondary-text-color py-8">Data Not Available</MudText>
-                </NoRecordsContent>
-                </MudTable>
+                <div class="table-responsive-wrapper">
+                    <table class="w-full">
+                        <thead>
+                            <tr>
+                                <th>Branch Name <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Type <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Street Address <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                                <th>Country <button class="sort-btn" @onclick="() => {}">↕</button></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (_locations.Any())
+                            {
+                                @foreach (var item in _locations)
+                                {
+                                    <tr>
+                                        <td data-label="Branch Name">@item.BranchName</td>
+                                        <td data-label="Type">@item.Type</td>
+                                        <td data-label="Street Address">@item.StreetAddress</td>
+                                        <td data-label="Country">@item.Country</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center py-8 text-muted">Data Not Available</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-footer">
+                    <div class="flex items-center gap-3">
+                        <span class="pagination-info">Rows per page:</span>
+                        <select class="page-size-select">
+                            <option>10</option>
+                            <option>25</option>
+                            <option>50</option>
+                        </select>
+                    </div>
+                    <div class="pagination">
+                        <button class="pagination-btn" disabled>‹</button>
+                        <button class="pagination-btn active">1</button>
+                        <button class="pagination-btn" disabled>›</button>
+                    </div>
+                </div>
             </div>
         </div>
     </Authorized>
